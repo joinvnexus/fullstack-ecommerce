@@ -18,6 +18,7 @@ export interface IProduct extends Document {
   variants: Array<{
     name: string;
     options: Array<{
+      _id?: mongoose.Types.ObjectId;
       name: string;
       priceAdjustment: number;
       skuSuffix: string;

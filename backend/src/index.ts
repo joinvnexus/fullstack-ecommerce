@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-// import { errorHandler } from './middleware/errorHandler';
+ import { errorHandler } from './middleware/errorHandler.js';
 // import authRoutes from './routes/auth';
 
 dotenv.config();
@@ -48,7 +48,7 @@ app.get('/api/test', (req, res) => {
 });
 
 // 404 handler
-app.use('*', (req, res) => {
+app.use( (req, res) => {
   res.status(404).json({
     success: false,
     message: `Route ${req.originalUrl} not found`,
@@ -56,7 +56,7 @@ app.use('*', (req, res) => {
 });
 
 // Error handler (must be last middleware)
-// app.use(errorHandler);
+app.use(errorHandler);
 
 // Database connection
 const connectDB = async () => {

@@ -2,6 +2,7 @@ import express from 'express';
 import Category from '../models/Category.js';
 import { authenticate, authorizeAdmin } from '../utils/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
+import mongoose from 'mongoose';
 
 const router = express.Router();
 
@@ -133,11 +134,14 @@ router.put('/:id', authenticate, authorizeAdmin, async (req, res, next) => {
     const { id } = req.params;
     const updates = req.body;
 
+    // Convert id to ObjectId
+    const categoryId = new mongoose.Types.ObjectId(id);
+
     // Check if slug is being updated and is unique
     if (updates.slug) {
       const existingCategory = await Category.findOne({
         slug: updates.slug,
-        _id: { $ne: id },
+        _id: { $ne: categoryId },
       });
       if (existingCategory) {
         throw new AppError('Another category with this slug exists', 400);
@@ -145,7 +149,7 @@ router.put('/:id', authenticate, authorizeAdmin, async (req, res, next) => {
     }
 
     const category = await Category.findByIdAndUpdate(
-      id,
+      categoryId,
       { $set: updates },
       { new: true, runValidators: true }
     );
@@ -169,8 +173,11 @@ router.delete('/:id', authenticate, authorizeAdmin, async (req, res, next) => {
   try {
     const { id } = req.params;
 
+    // Convert id to ObjectId
+    const categoryId = new mongoose.Types.ObjectId(id);
+
     // Check if category has children
-    const category = await Category.findById(id);
+    const category = await Category.findById(categoryId);
     if (!category) {
       throw new AppError('Category not found', 404);
     }
@@ -184,7 +191,7 @@ router.delete('/:id', authenticate, authorizeAdmin, async (req, res, next) => {
 
     // Check if category has products
     const Product = require('../models/Product').default;
-    const productCount = await Product.countDocuments({ category: id });
+    const productCount = await Product.countDocuments({ category: categoryId });
     if (productCount > 0) {
       throw new AppError(
         'Cannot delete category with products. Remove products first.',
@@ -195,11 +202,11 @@ router.delete('/:id', authenticate, authorizeAdmin, async (req, res, next) => {
     // Remove from parent's children array
     if (category.parent) {
       await Category.findByIdAndUpdate(category.parent, {
-        $pull: { children: id },
+        $pull: { children: categoryId },
       });
     }
 
-    await Category.findByIdAndDelete(id);
+    await Category.findByIdAndDelete(categoryId);
 
     res.json({
       success: true,

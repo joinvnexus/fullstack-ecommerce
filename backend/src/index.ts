@@ -1,7 +1,9 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { errorHandler } from "./middleware/errorHandler.js";
 import authRoutes from "./routes/auth.js";
@@ -10,7 +12,6 @@ import categoryRoutes from "./routes/categories.js";
 import cartRoutes from './routes/cart.js';
 import orderRoutes from './routes/orders.js';
 import router from "./routes/auth.js";
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -48,7 +49,7 @@ app.get("/api/health", (req, res) => {
       mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",
       routers:[
         '/api/auth',
-      '/api/products', 
+      '/api/products',
       '/api/categories',
       '/api/cart',
       '/api/orders'

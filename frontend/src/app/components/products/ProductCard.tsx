@@ -2,6 +2,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Product } from '@/types';
 import { ShoppingCart, Star, Heart } from 'lucide-react';
+import useCartStore from '@/store/cartStore';
+import { useState } from 'react';
 
 interface ProductCardProps {
   product: Product;
@@ -9,7 +11,24 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) => {
+  const { addItem } = useCartStore();
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const primaryImage = product.images.find(img => img.isPrimary) || product.images[0];
+
+  const handleAddToCart = async () => {
+    if (product.stock === 0) return;
+
+    try {
+      setIsAddingToCart(true);
+      await addItem(product._id, 1);
+      // Could add a toast notification here
+    } catch (error) {
+      console.error('Failed to add item to cart:', error);
+      // Could show error toast
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
 
   if (viewMode === 'list') {
     return (
@@ -77,7 +96,8 @@ const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) => {
               <div className="flex flex-col gap-2 ml-4">
                 <button
                   className="flex items-center justify-center bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-                  disabled={product.stock === 0}
+                  onClick={handleAddToCart}
+                  disabled={product.stock === 0 || isAddingToCart}
                   title={product.stock === 0 ? 'Out of stock' : 'Add to cart'}
                 >
                   <ShoppingCart size={20} />
@@ -149,7 +169,8 @@ const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) => {
 
           <button
             className="flex items-center justify-center bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-            disabled={product.stock === 0}
+            onClick={handleAddToCart}
+            disabled={product.stock === 0 || isAddingToCart}
             title={product.stock === 0 ? 'Out of stock' : 'Add to cart'}
           >
             <ShoppingCart size={18} />

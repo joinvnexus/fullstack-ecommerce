@@ -27,6 +27,7 @@ export interface IProduct extends Document {
   category: mongoose.Types.ObjectId;
   tags: string[];
   status: 'draft' | 'active' | 'archived';
+  isFeatured: boolean;
   seo?: {
     title: string;
     description: string;

@@ -9,13 +9,10 @@ export interface JwtPayload {
   role: "customer" | "admin";
 }
 
-// Ensure secrets exist
-const JWT_SECRET = process.env.JWT_SECRET as string;
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET as string;
-
 class AuthUtils {
   // Generate JWT token
   static generateToken(payload: JwtPayload): string {
+    const JWT_SECRET = process.env.JWT_SECRET as string;
     const expiresIn: number =
       Number(process.env.JWT_EXPIRE) || 7 * 24 * 60 * 60; // 7 days in seconds
     const options: SignOptions = { expiresIn };
@@ -24,6 +21,7 @@ class AuthUtils {
 
   // Verify JWT token
   static verifyToken(token: string): JwtPayload | null {
+    const JWT_SECRET = process.env.JWT_SECRET as string;
     try {
       return jwt.verify(token, JWT_SECRET) as JwtPayload;
     } catch {
@@ -47,12 +45,14 @@ class AuthUtils {
 
   // Generate refresh token
   static generateRefreshToken(payload: JwtPayload): string {
+    const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET as string;
     const options: SignOptions = { expiresIn: "30d" };
     return jwt.sign(payload, JWT_REFRESH_SECRET, options);
   }
 
   // Verify refresh token
   static verifyRefreshToken(token: string): JwtPayload | null {
+    const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET as string;
     try {
       return jwt.verify(token, JWT_REFRESH_SECRET) as JwtPayload;
     } catch {

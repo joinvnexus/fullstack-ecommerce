@@ -140,7 +140,7 @@ const CartPage = () => {
                       {/* Product image */}
                       <div className="flex-shrink-0">
                         <div className="relative h-24 w-24 rounded-md overflow-hidden">
-                          {typeof item.productId !== 'string' && item.productId.images?.[0] ? (
+                          {item.productId && typeof item.productId !== 'string' && item.productId.images?.[0] ? (
                             <Image
                               src={item.productId.images[0].url}
                               alt={item.productId.images[0].alt}
@@ -161,7 +161,7 @@ const CartPage = () => {
                         <div className="flex justify-between">
                           <div>
                             <h3 className="text-lg font-medium text-gray-900">
-                              {typeof item.productId !== 'string' 
+                              {item.productId && typeof item.productId !== 'string' 
                                 ? item.productId.title 
                                 : 'Product'}
                             </h3>

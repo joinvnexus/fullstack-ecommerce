@@ -1,19 +1,20 @@
-import Link from 'next/link';
-import Image from 'next/image';
-import { Product } from '@/types';
-import { ShoppingCart, Star, Heart } from 'lucide-react';
-import useCartStore from '@/store/cartStore';
-import { useState } from 'react';
+import Link from "next/link";
+import Image from "next/image";
+import { Product } from "@/types";
+import { ShoppingCart, Star, Heart } from "lucide-react";
+import useCartStore from "@/store/cartStore";
+import { useState } from "react";
 
 interface ProductCardProps {
   product: Product;
-  viewMode?: 'grid' | 'list';
+  viewMode?: "grid" | "list";
 }
 
-const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) => {
+const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
   const { addItem } = useCartStore();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const primaryImage = product.images.find(img => img.isPrimary) || product.images[0];
+  const primaryImage =
+    product.images.find((img) => img.isPrimary) || product.images[0];
 
   const handleAddToCart = async () => {
     if (product.stock === 0) return;
@@ -22,15 +23,16 @@ const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) => {
       setIsAddingToCart(true);
       await addItem(product._id, 1);
       // Could add a toast notification here
+      console.log("Item added to cart");
     } catch (error) {
-      console.error('Failed to add item to cart:', error);
+      console.error("Failed to add item to cart:", error);
       // Could show error toast
     } finally {
       setIsAddingToCart(false);
     }
   };
 
-  if (viewMode === 'list') {
+  if (viewMode === "list") {
     return (
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
         <div className="flex flex-col md:flex-row">
@@ -65,16 +67,22 @@ const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) => {
                     {product.title}
                   </h3>
                 </Link>
-                
+
                 <div className="mt-2 flex items-center space-x-1">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
                       size={16}
-                      className={i < 4 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}
+                      className={
+                        i < 4
+                          ? "text-yellow-400 fill-yellow-400"
+                          : "text-gray-300"
+                      }
                     />
                   ))}
-                  <span className="text-sm text-gray-500 ml-2">(0 reviews)</span>
+                  <span className="text-sm text-gray-500 ml-2">
+                    (0 reviews)
+                  </span>
                 </div>
 
                 <p className="mt-4 text-gray-600 line-clamp-2">
@@ -98,7 +106,7 @@ const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) => {
                   className="flex items-center justify-center bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                   onClick={handleAddToCart}
                   disabled={product.stock === 0 || isAddingToCart}
-                  title={product.stock === 0 ? 'Out of stock' : 'Add to cart'}
+                  title={product.stock === 0 ? "Out of stock" : "Add to cart"}
                 >
                   <ShoppingCart size={20} />
                 </button>
@@ -148,13 +156,15 @@ const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) => {
             {product.title}
           </h3>
         </Link>
-        
+
         <div className="mt-2 flex items-center space-x-1">
           {[...Array(5)].map((_, i) => (
             <Star
               key={i}
               size={14}
-              className={i < 4 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}
+              className={
+                i < 4 ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
+              }
             />
           ))}
           <span className="text-sm text-gray-500 ml-2">(0)</span>
@@ -171,7 +181,7 @@ const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) => {
             className="flex items-center justify-center bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
             onClick={handleAddToCart}
             disabled={product.stock === 0 || isAddingToCart}
-            title={product.stock === 0 ? 'Out of stock' : 'Add to cart'}
+            title={product.stock === 0 ? "Out of stock" : "Add to cart"}
           >
             <ShoppingCart size={18} />
           </button>

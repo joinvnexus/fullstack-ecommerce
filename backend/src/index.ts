@@ -9,9 +9,8 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import authRoutes from "./routes/auth.js";
 import productRoutes from "./routes/products.js";
 import categoryRoutes from "./routes/categories.js";
-import cartRoutes from './routes/cart.js';
-import orderRoutes from './routes/orders.js';
-import router from "./routes/auth.js";
+import cartRoutes from "./routes/cart.js";
+import orderRoutes from "./routes/orders.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -34,10 +33,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/orders', orderRoutes);
-
-
+app.use("/api/cart", cartRoutes);
+app.use("/api/orders", orderRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
@@ -47,13 +44,13 @@ app.get("/api/health", (req, res) => {
     service: "Ecommerce API",
     database:
       mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",
-      routers:[
-        '/api/auth',
-      '/api/products',
-      '/api/categories',
-      '/api/cart',
-      '/api/orders'
-      ]
+    routers: [
+      "/api/auth",
+      "/api/products",
+      "/api/categories",
+      "/api/cart",
+      "/api/orders",
+    ],
   });
 });
 
@@ -66,8 +63,8 @@ app.get("/api/test", (req, res) => {
       auth: ["POST /register", "POST /login", "GET /me"],
       products: ["GET /", "GET /:slug", "GET /category/:categorySlug"],
       categories: ["GET /", "GET /:slug"],
-       cart: ['GET /', 'POST /items', 'PUT /items/:id', 'DELETE /items/:id'],
-      orders: ['POST /', 'GET /my-orders', 'GET /:id'],
+      cart: ["GET /", "POST /items", "PUT /items/:id", "DELETE /items/:id"],
+      orders: ["POST /", "GET /my-orders", "GET /:id"],
     },
   });
 });

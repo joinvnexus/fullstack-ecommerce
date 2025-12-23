@@ -1,3 +1,4 @@
+//backend/src/models/Cart.ts
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ICartItem {

@@ -11,6 +11,7 @@ import productRoutes from "./routes/products.js";
 import categoryRoutes from "./routes/categories.js";
 import cartRoutes from "./routes/cart.js";
 import orderRoutes from "./routes/orders.js";
+import paymentRoutes from "./routes/payments.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -35,6 +36,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/payments", paymentRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
@@ -50,6 +52,7 @@ app.get("/api/health", (req, res) => {
       "/api/categories",
       "/api/cart",
       "/api/orders",
+      "/api/payments",
     ],
   });
 });
@@ -65,6 +68,7 @@ app.get("/api/test", (req, res) => {
       categories: ["GET /", "GET /:slug"],
       cart: ["GET /", "POST /items", "PUT /items/:id", "DELETE /items/:id"],
       orders: ["POST /", "GET /my-orders", "GET /:id"],
+      payments: ["POST /process", "GET /methods"],
     },
   });
 });

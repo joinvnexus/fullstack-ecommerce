@@ -36,10 +36,11 @@ const getOrCreateCart = async (userId?: string, guestId?: string) => {
 };
 
 // Get cart (authenticated or guest)
-router.get('/', async (req, res, next) => {
+router.get('/', authenticate, async (req, res, next) => {
   try {
-    const userId = (req as any).user?.userId;
-    const guestId = req.query.guestId as string;
+    const userId = (req as any).user.userId;
+    // Remove guestId for authenticated users
+    const guestId = undefined;
 
     if (!userId && !guestId) {
       throw new AppError('User ID or Guest ID required', 400);
@@ -63,11 +64,12 @@ router.get('/', async (req, res, next) => {
 });
 
 // Add item to cart
-router.post('/items', validate(addToCartSchema), async (req, res, next) => {
+router.post('/items', authenticate, validate(addToCartSchema), async (req, res, next) => {
   try {
     const { productId, variantId, quantity } = req.body;
-    const userId = (req as any).user?.userId;
-    const guestId = req.body.guestId as string;
+    const userId = (req as any).user.userId;
+    // Remove guestId for authenticated users
+    const guestId = undefined;
 
     if (!userId && !guestId) {
       throw new AppError('User ID or Guest ID required', 400);
@@ -153,12 +155,13 @@ router.post('/items', validate(addToCartSchema), async (req, res, next) => {
 });
 
 // Update cart item quantity
-router.put('/items/:itemId', async (req, res, next) => {
+router.put('/items/:itemId', authenticate, async (req, res, next) => {
   try {
     const { itemId } = req.params;
     const { quantity } = req.body;
-    const userId = (req as any).user?.userId;
-    const guestId = req.body.guestId as string;
+    const userId = (req as any).user.userId;
+    // Remove guestId for authenticated users
+    const guestId = undefined;
 
     if (!userId && !guestId) {
       throw new AppError('User ID or Guest ID required', 400);
@@ -212,11 +215,12 @@ router.put('/items/:itemId', async (req, res, next) => {
 });
 
 // Remove item from cart
-router.delete('/items/:itemId', async (req, res, next) => {
+router.delete('/items/:itemId', authenticate, async (req, res, next) => {
   try {
     const { itemId } = req.params;
-    const userId = (req as any).user?.userId;
-    const guestId = req.query.guestId as string;
+    const userId = (req as any).user.userId;
+    // Remove guestId for authenticated users
+    const guestId = undefined;
 
     if (!userId && !guestId) {
       throw new AppError('User ID or Guest ID required', 400);
@@ -253,10 +257,11 @@ router.delete('/items/:itemId', async (req, res, next) => {
 });
 
 // Clear cart
-router.delete('/', async (req, res, next) => {
+router.delete('/', authenticate, async (req, res, next) => {
   try {
-    const userId = (req as any).user?.userId;
-    const guestId = req.query.guestId as string;
+    const userId = (req as any).user.userId;
+    // Remove guestId for authenticated users
+    const guestId = undefined;
 
     if (!userId && !guestId) {
       throw new AppError('User ID or Guest ID required', 400);

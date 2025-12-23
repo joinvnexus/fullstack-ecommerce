@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Cart, CartItem } from '@/types';
 import { cartApi } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CartStore {
   cart: Cart | null;

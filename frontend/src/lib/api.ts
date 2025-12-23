@@ -81,4 +81,10 @@ export const ordersApi = {
   getOrder: (id: string) => api.get(`/orders/${id}`),
 };
 
+// Payments API
+export const paymentsApi = {
+  processPayment: (data: any) => api.post('/payments/process', data),
+  getPaymentMethods: () => api.get('/payments/methods'),
+};
+
 export default api;

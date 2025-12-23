@@ -5,11 +5,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ShoppingCart, User, Menu, X, Search } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import useCartStore from '@/store/cartStore';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { user, logout } = useAuth();
+  const { cart } = useCartStore();
   const pathname = usePathname();
 
   const navLinks = [
@@ -75,7 +77,7 @@ const Navbar = () => {
             >
               <ShoppingCart size={20} />
               <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                0
+                {cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0}
               </span>
             </Link>
 

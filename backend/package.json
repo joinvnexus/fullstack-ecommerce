@@ -14,6 +14,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@types/stripe": "^8.0.416",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -21,6 +22,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.0.2",
+    "stripe": "^20.1.0",
     "zod": "^4.2.1"
   },
   "devDependencies": {

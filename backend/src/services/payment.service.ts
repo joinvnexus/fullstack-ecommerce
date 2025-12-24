@@ -1,12 +1,12 @@
 import Stripe from 'stripe';
-import { IOrder } from '../models/Order.js';
+import type { IOrder } from '../models/Order.js';
 import Order from '../models/Order.js';
 
 export class PaymentService {
   private stripe: Stripe;
 
   constructor() {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY || " ", {
       apiVersion: '2023-10-16' as any,
     });
   }
@@ -160,7 +160,12 @@ export class PaymentService {
   }
 
   private async handleDispute(dispute: Stripe.Dispute) {
-    const order = await Order.findOne({ 'payment.chargeId': dispute.charge });
+    const chargeId = typeof dispute.charge === 'string'
+      ? dispute.charge
+      : dispute.charge.id;
+    const order = await Order.findOne({
+      'payment.chargeId': chargeId
+    });
     
     if (order) {
       await Order.findByIdAndUpdate(
@@ -186,23 +191,29 @@ export class PaymentService {
         throw new Error('Order or charge ID not found');
       }
 
-      const refund = await this.stripe.refunds.create({
+          const refundParams: Stripe.RefundCreateParams = {
         charge: order.payment.chargeId,
-        amount: amount ? Math.round(amount * 100) : undefined,
         metadata: {
           orderId: order._id.toString(),
           orderNumber: order.orderNumber,
         },
-      });
+      };
 
-      // Update order status
+      if (amount) {
+        refundParams.amount = Math.round(amount * 100);
+      }
+
+
+
+      const refund = await this.stripe.refunds.create(refundParams);
+
+      // Update order status after successful refund
       await Order.findByIdAndUpdate(orderId, {
         status: 'refunded',
         'payment.status': 'refunded',
         updatedAt: new Date(),
       });
 
-      return refund;
     } catch (error) {
       console.error('Error creating refund:', error);
       throw error;
@@ -215,7 +226,7 @@ export class PaymentService {
       return this.stripe.webhooks.constructEvent(
         payload,
         signature,
-        process.env.STRIPE_WEBHOOK_SECRET!
+        process.env.STRIPE_WEBHOOK_SECRET! || ''
       );
     } catch (error) {
       console.error('Error verifying Stripe signature:', error);

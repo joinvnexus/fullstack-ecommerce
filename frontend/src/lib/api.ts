@@ -84,8 +84,10 @@ export const ordersApi = {
 
 // Payments API
 export const paymentsApi = {
-  processPayment: (data: any) => api.post('/payments/process', data),
+   createStripeIntent: (data: any) => api.post('/payments/stripe/intent', data),
+  getPaymentStatus: (orderId: string) => api.get(`/payments/${orderId}/status`),
   getPaymentMethods: () => api.get('/payments/methods'),
+  processRefund: (orderId: string, data: any) => api.post(`/payments/${orderId}/refund`, data),
 };
 
 export default api;

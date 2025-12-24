@@ -27,6 +27,8 @@ const ProductsPage = () => {
     limit: 12,
     total: 0,
     totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
   });
 
   useEffect(() => {
@@ -284,7 +286,7 @@ const ProductsPage = () => {
                     <nav className="flex items-center gap-2">
                       <button
                         onClick={() => handlePageChange(pagination.page - 1)}
-                        disabled={pagination.page === 1}
+                        disabled={!pagination.hasPrevPage}
                         className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                       >
                         Previous
@@ -306,7 +308,7 @@ const ProductsPage = () => {
                       
                       <button
                         onClick={() => handlePageChange(pagination.page + 1)}
-                        disabled={pagination.page === pagination.totalPages}
+                        disabled={!pagination.hasNextPage}
                         className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                       >
                         Next

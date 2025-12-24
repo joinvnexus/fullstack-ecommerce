@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { PaginatedResponse, Product, Category } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -51,15 +52,15 @@ export const authApi = {
 
 // Products API
 export const productsApi = {
-  getAll: (params?: any) => api.get('/products', { params }),
+  getAll: (params?: any): Promise<PaginatedResponse<Product>> => api.get('/products', { params }),
   getBySlug: (slug: string) => api.get(`/products/${slug}`),
-  getByCategory: (categorySlug: string, params?: any) => 
+  getByCategory: (categorySlug: string, params?: any) =>
     api.get(`/products/category/${categorySlug}`, { params }),
 };
 
 // Categories API
 export const categoriesApi = {
-  getAll: () => api.get('/categories'),
+  getAll: (): Promise<{ data: Category[] }> => api.get('/categories'),
   getBySlug: (slug: string) => api.get(`/categories/${slug}`),
 };
 

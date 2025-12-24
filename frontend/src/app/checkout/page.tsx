@@ -21,7 +21,7 @@ const checkoutSchema = z.object({
     email: z.string().email('Invalid email address'),
   }),
   billingAddress: z.object({
-    sameAsShipping: z.boolean().default(true),
+    sameAsShipping: z.boolean(),
     street: z.string().optional(),
     city: z.string().optional(),
     state: z.string().optional(),
@@ -73,6 +73,11 @@ const CheckoutPage = () => {
       shippingMethod: shippingMethods[0],
       billingAddress: {
         sameAsShipping: true,
+        street: "",
+        city: "",
+        state: "",
+        country: "",
+        zipCode: "",
       },
       paymentMethod: 'card',
     },

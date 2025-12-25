@@ -134,6 +134,17 @@ router.post('/', authenticate, async (req, res, next) => {
       notes,
     });
 
+    // Generate order number if not set
+    if (!order.orderNumber) {
+      const date = new Date();
+      const year = date.getFullYear().toString().slice(-2);
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
+      order.orderNumber = `ORD${year}${month}${day}${randomNum}`;
+    }
+
     await order.save();
 
     // Reserve stock (decrement product stock)

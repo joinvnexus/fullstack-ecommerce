@@ -99,6 +99,10 @@ router.post(
       const { orderId } = req.params;
       const { amount, reason } = req.body;
 
+      if (!orderId) {
+        throw new AppError("Order ID is required", 400);
+      }
+
       const order = await Order.findById(orderId);
 
       if (!order) {
@@ -112,8 +116,14 @@ router.post(
       if (!order.payment.chargeId) {
         throw new AppError("Charge ID not found", 400);
       }
-      // Process refund
-      const refund = await paymentService.createRefund(orderId, amount ? Number(amount) : undefined);
+
+      // Process refund with proper type handling
+      const refundAmount = amount ? Number(amount) : undefined;
+      const refund = await paymentService.createRefund(
+        orderId as string,
+        refundAmount
+      );
+
       // Update order notes
       order.notes = `${order.notes || ""}\nRefund: ${reason} - Amount: $${
         amount || order.totals.grandTotal

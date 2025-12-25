@@ -94,8 +94,9 @@ const CheckoutPage = () => {
 
       setCreatedOrder(res.data);
       setPaymentStep("payment");
-    } catch (err) {
-      alert("Order creation failed");
+    } catch (err: any) {
+      console.error("Order creation error:", err);
+      alert(`Order creation failed: ${err.message || err}`);
     } finally {
       setIsSubmitting(false);
     }

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Smartphone, AlertCircle } from 'lucide-react';
+import { paymentsApi } from '@/lib/api';
 
 interface BkashCheckoutProps {
   orderId: string;
@@ -20,23 +21,14 @@ const BkashCheckout = ({ orderId, amount, onSuccess, onError }: BkashCheckoutPro
 
     try {
       // Create bKash payment
-      const response = await fetch('/api/payments/bkash/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ orderId, amount }),
-      });
+      const result = await paymentsApi.createBkashPayment({ orderId, amount }) as any;
 
-      const { data, success } = await response.json();
-
-      if (!success) {
+      if (!result.success) {
         throw new Error('Failed to create bKash payment');
       }
 
       // Redirect to bKash payment page
-      window.location.href = data.bkashURL;
+      window.location.href = result.data.bkashURL;
     } catch (err: any) {
       setError(err.message);
       onError(err.message);

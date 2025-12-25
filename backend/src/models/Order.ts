@@ -84,7 +84,7 @@ const AddressSchema: Schema = new Schema({
 const PaymentInfoSchema: Schema = new Schema({
   provider: {
     type: String,
-    enum: ['stripe', 'bkash', 'nagad', 'sslcommerz'],
+    enum: ['pending', 'stripe', 'bkash', 'nagad', 'sslcommerz'],
     required: true,
   },
   intentId: { type: String },

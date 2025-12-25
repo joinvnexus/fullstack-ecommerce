@@ -53,7 +53,7 @@ export class BkashService {
       this.token = response.data.id_token;
       this.tokenExpires = new Date(Date.now() + 3599 * 1000); // 1 hour
 
-      return this.token;
+      return this.token || ''; // Return the token or an empty string if null
     } catch (error: any) {
       console.error('Error getting bKash token:', error);
       throw new AppError('Failed to get bKash token', 500);

@@ -93,4 +93,25 @@ export const paymentsApi = {
   verifyNagadPayment: (data: any) => api.post('/payments/nagad/verify', data),
 };
 
+// Admin API
+export const adminApi = {
+  // Dashboard
+  getDashboardStats: () => api.get('/admin/dashboard/stats'),
+  
+  // Products
+  getAdminProducts: (params?: any) => api.get('/admin/products', { params }),
+  createProduct: (data: any) => api.post('/admin/products', data),
+  updateProduct: (id: string, data: any) => api.put(`/admin/products/${id}`, data),
+  deleteProduct: (id: string) => api.delete(`/admin/products/${id}`),
+  bulkProductAction: (data: any) => api.post('/admin/products/bulk', data),
+  
+  // Orders
+  getAdminOrders: (params?: any) => api.get('/admin/orders', { params }),
+  updateOrderStatus: (id: string, data: any) => api.patch(`/admin/orders/${id}/status`, data),
+  
+  // Users
+  getAdminUsers: (params?: any) => api.get('/admin/users', { params }),
+  updateUserRole: (id: string, data: any) => api.patch(`/admin/users/${id}/role`, data),
+};
+
 export default api;

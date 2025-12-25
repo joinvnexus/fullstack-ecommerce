@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw } from 'lucide-react';
 import { productsApi } from '@/lib/api';
 import { Product } from '@/types';
+import WishlistButton from '@/app/components/wishlist/WishlistButton';
 
 const ProductDetailPage = () => {
   const params = useParams();
@@ -254,12 +255,14 @@ const ProductDetailPage = () => {
                 >
                   Buy Now
                 </button>
-                <button
-                  className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  title="Add to wishlist"
-                >
-                  <Heart size={20} />
-                </button>
+                <WishlistButton 
+    productId={product._id}
+    productName={product.title}
+    size="lg"
+    variant="button"
+    showLabel
+    className="flex-1"
+  />
               </div>
             </div>
 

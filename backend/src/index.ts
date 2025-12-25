@@ -13,6 +13,7 @@ import cartRoutes from "./routes/cart.js";
 import orderRoutes from "./routes/orders.js";
 import paymentRoutes from "./routes/payments.js";
 import adminRoutes from './routes/admin.js';
+import wishlistRoutes from './routes/wishlist.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -39,6 +40,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/wishlist', wishlistRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
@@ -56,6 +58,7 @@ app.get("/api/health", (req, res) => {
       "/api/orders",
       "/api/payments",
       "/api/admin",
+      "/api/wishlist",
     ],
   });
 });

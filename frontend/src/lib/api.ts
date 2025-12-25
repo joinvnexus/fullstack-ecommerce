@@ -114,4 +114,18 @@ export const adminApi = {
   updateUserRole: (id: string, data: any) => api.patch(`/admin/users/${id}/role`, data),
 };
 
+// Wishlist API
+export const wishlistApi = {
+  getWishlists: () => api.get('/wishlist'),
+  getDefaultWishlist: () => api.get('/wishlist/default'),
+  createWishlist: (data: any) => api.post('/wishlist', data),
+  getWishlist: (wishlistId: string) => api.get(`/wishlist/${wishlistId}`),
+  updateWishlist: (wishlistId: string, data: any) => api.put(`/wishlist/${wishlistId}`, data),
+  deleteWishlist: (wishlistId: string) => api.delete(`/wishlist/${wishlistId}`),
+  addToWishlist: (wishlistId: string, data: any) => api.post(`/wishlist/${wishlistId}/items`, data),
+  removeFromWishlist: (wishlistId: string, productId: string) => 
+    api.delete(`/wishlist/${wishlistId}/items/${productId}`),
+  moveItem: (data: any) => api.post('/wishlist/move-item', data),
+  checkProductInWishlist: (productId: string) => api.get(`/wishlist/check/${productId}`),
+};
 export default api;

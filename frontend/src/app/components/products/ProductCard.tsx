@@ -4,6 +4,7 @@ import { Product } from "@/types";
 import { ShoppingCart, Star, Heart } from "lucide-react";
 import useCartStore from "@/store/cartStore";
 import { useState } from "react";
+import WishlistButton from "@/app/components/wishlist/WishlistButton";
 
 interface ProductCardProps {
   product: Product;
@@ -67,7 +68,11 @@ const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
                     {product.title}
                   </h3>
                 </Link>
-
+                <WishlistButton
+                  productId={product._id}
+                  productName={product.title}
+                  size="sm"
+                />
                 <div className="mt-2 flex items-center space-x-1">
                   {[...Array(5)].map((_, i) => (
                     <Star
@@ -185,6 +190,11 @@ const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
           >
             <ShoppingCart size={18} />
           </button>
+            <WishlistButton 
+    productId={product._id}
+    productName={product.title}
+    size="md"
+  />
         </div>
       </div>
     </div>

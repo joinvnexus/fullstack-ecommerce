@@ -23,6 +23,15 @@ import StripeCheckout from "../components/payments/StripeCheckout";
 import BkashCheckout from "../components/payments/BkashCheckout";
 import NagadCheckout from "../components/payments/NagadCheckout";
 
+// ✅ Stripe
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
+
+// ✅ Stripe Promise
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
+);
+
 const checkoutSchema = z.object({
   shippingAddress: z.object({
     street: z.string().min(1),
@@ -113,15 +122,17 @@ const CheckoutPage = () => {
 
           {/* ✅ STRIPE */}
           {selectedPaymentMethod === "stripe" && (
-            <StripeCheckout
-              orderId={createdOrder._id}
-              amount={totalAmount}
-              onSuccess={() => {
-                useCartStore.getState().clearCart();
-                router.push("/checkout/success");
-              }}
-              onError={(error: string) => alert(error)}
-            />
+            <Elements stripe={stripePromise}>
+              <StripeCheckout
+                orderId={createdOrder._id}
+                amount={totalAmount}
+                onSuccess={() => {
+                  useCartStore.getState().clearCart();
+                  router.push("/checkout/success");
+                }}
+                onError={(error: string) => alert(error)}
+              />
+            </Elements>
           )}
 
           {/* ✅ BKASH */}

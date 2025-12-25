@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Smartphone, AlertCircle } from 'lucide-react';
+import { paymentsApi } from '@/lib/api';
 
 interface NagadCheckoutProps {
   orderId: string;
@@ -20,23 +21,14 @@ const NagadCheckout = ({ orderId, amount, onSuccess, onError }: NagadCheckoutPro
 
     try {
       // Initialize Nagad payment
-      const response = await fetch('/api/payments/nagad/initialize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ orderId, amount }),
-      });
+      const result = await paymentsApi.initializeNagadPayment({ orderId, amount }) as any;
 
-      const { data, success } = await response.json();
-
-      if (!success) {
+      if (!result.success) {
         throw new Error('Failed to initialize Nagad payment');
       }
 
       // Redirect to Nagad payment page
-      window.location.href = data.checkoutURL;
+      window.location.href = result.data.checkoutURL;
     } catch (err: any) {
       setError(err.message);
       onError(err.message);

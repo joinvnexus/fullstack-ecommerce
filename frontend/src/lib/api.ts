@@ -54,8 +54,7 @@ export const authApi = {
 export const productsApi = {
   getAll: (params?: any): Promise<PaginatedResponse<Product>> => api.get('/products', { params }),
   getBySlug: (slug: string) => api.get(`/products/${slug}`),
-  getByCategory: (categorySlug: string, params?: any) =>
-    api.get(`/products/category/${categorySlug}`, { params }),
+  getByCategory: (categorySlug: string, params?: any) => api.get(`/products/category/${categorySlug}`, { params }),
 };
 
 // Categories API
@@ -84,10 +83,14 @@ export const ordersApi = {
 
 // Payments API
 export const paymentsApi = {
-   createStripeIntent: (data: any) => api.post('/payments/stripe/intent', data),
+  createStripeIntent: (data: any) => api.post('/payments/stripe/intent', data),
   getPaymentStatus: (orderId: string) => api.get(`/payments/${orderId}/status`),
   getPaymentMethods: () => api.get('/payments/methods'),
   processRefund: (orderId: string, data: any) => api.post(`/payments/${orderId}/refund`, data),
+  createBkashPayment: (data: any) => api.post('/payments/bkash/create', data),
+  executeBkashPayment: (data: any) => api.post('/payments/bkash/execute', data),
+  initializeNagadPayment: (data: any) => api.post('/payments/nagad/initialize', data),
+  verifyNagadPayment: (data: any) => api.post('/payments/nagad/verify', data),
 };
 
 export default api;

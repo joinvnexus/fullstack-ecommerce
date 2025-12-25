@@ -40,6 +40,17 @@ export class NagadService {
         throw new AppError('Order not found', 404);
       }
 
+      // For demo purposes, return mock data if using placeholder credentials
+      if (this.config.merchantId === 'your_nagad_merchant_id') {
+        const mockPaymentRefId = `NAGAD_MOCK_${Date.now()}`;
+
+        return {
+          paymentReferenceId: mockPaymentRefId,
+          checkoutURL: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/checkout/success?mock=true`,
+          success: true,
+        };
+      }
+
       const datetime = new Date().toISOString().replace(/[-:]/g, '').split('.')[0];
       const merchantID = this.config.merchantId;
       const invoiceNo = order.orderNumber;

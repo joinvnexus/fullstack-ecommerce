@@ -28,6 +28,7 @@ const useCartStore = create<CartStore>()(
       isLoading: false,
       error: null,
       guestId: null,
+      
 
       initializeCart: async () => {
         try {

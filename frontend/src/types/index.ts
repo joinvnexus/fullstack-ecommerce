@@ -99,6 +99,10 @@ export interface Cart {
   guestId?: string;
   items: CartItem[];
   subtotal: number;
+  tax: number;
+  shipping: number;
+  discount: number;
+  grandTotal: number;
   currency: string;
   updatedAt: string;
 }

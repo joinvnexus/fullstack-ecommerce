@@ -103,7 +103,9 @@ const ProductsPage = () => {
     try {
       // In real implementation, update via API
       const updatedProducts = products.map(product =>
-        product._id === productId ? { ...product, status } : product
+        product._id === productId 
+          ? { ...product, status: status as 'draft' | 'active' | 'archived' } 
+          : product
       );
       setProducts(updatedProducts);
     } catch (error) {

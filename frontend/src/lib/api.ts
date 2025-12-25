@@ -128,4 +128,16 @@ export const wishlistApi = {
   moveItem: (data: any) => api.post('/wishlist/move-item', data),
   checkProductInWishlist: (productId: string) => api.get(`/wishlist/check/${productId}`),
 };
+
+// Search API
+export const searchApi = {
+  searchProducts: (params: any) => api.get('/search/products', { params }),
+  autocomplete: (params: any) => api.get('/search/autocomplete', { params }),
+  getSuggestions: (params: any) => api.get('/search/suggestions', { params }),
+  getPopularSearches: (params?: any) => api.get('/search/popular', { params }),
+  getTrendingProducts: (params?: any) => api.get('/search/trending', { params }),
+  searchCategory: (categorySlug: string, params?: any) =>
+    api.get(`/search/category/${categorySlug}`, { params }),
+  advancedSearch: (data: any) => api.post('/search/advanced', data),
+};
 export default api;

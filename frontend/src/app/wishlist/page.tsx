@@ -482,7 +482,7 @@ const {
                                     <button className="p-2 border border-gray-300 rounded-md hover:bg-gray-50">
                                       <MoreVertical size={18} />
                                     </button>
-                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
+                                    <div className="absolute right-0  mt-[-0.2rem] w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
                                       <div className="px-4 py-2 text-sm font-medium text-gray-700 border-b">
                                         Move to...
                                       </div>

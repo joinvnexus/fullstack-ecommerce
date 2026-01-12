@@ -22,29 +22,29 @@ const productSchema = z.object({
   sku: z.string().min(1, 'SKU is required'),
   price: z.object({
     amount: z.number().min(0, 'Price must be positive'),
-    currency: z.string().default('USD'),
+    currency: z.string(),
   }),
   stock: z.number().min(0, 'Stock cannot be negative'),
   category: z.string().min(1, 'Category is required'),
-  tags: z.array(z.string()).optional(),
-  status: z.enum(['draft', 'active']).default('draft'),
+  tags: z.array(z.object({ name: z.string().min(1, 'Tag name is required') })).optional(),
+  status: z.enum(['draft', 'active']),
   images: z.array(z.object({
     url: z.string().url('Invalid URL'),
     alt: z.string().min(1, 'Alt text is required'),
-    isPrimary: z.boolean().default(false),
+    isPrimary: z.boolean(),
   })).min(1, 'At least one image is required'),
   variants: z.array(z.object({
     name: z.string().min(1, 'Variant name is required'),
     options: z.array(z.object({
       name: z.string().min(1, 'Option name is required'),
-      priceAdjustment: z.number().default(0),
+      priceAdjustment: z.number(),
       skuSuffix: z.string().min(1, 'SKU suffix is required'),
     })).min(1, 'At least one option is required'),
   })).optional(),
   seo: z.object({
     title: z.string().optional(),
     description: z.string().optional(),
-    keywords: z.array(z.string()).optional(),
+    keywords: z.string().optional(),
   }).optional(),
 });
 
@@ -173,7 +173,7 @@ const ProductFormPage = () => {
   const addTag = () => {
     const newTag = prompt('Enter a tag:');
     if (newTag) {
-      appendTag(newTag);
+      appendTag({ name: newTag });
     }
   };
 
@@ -576,7 +576,7 @@ const ProductFormPage = () => {
                   key={field.id}
                   className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full"
                 >
-                  <span>{field}</span>
+                  <span>{field.name}</span>
                   <button
                     type="button"
                     onClick={() => removeTag(index)}

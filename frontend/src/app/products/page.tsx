@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Filter, Grid, List, ChevronDown, X } from 'lucide-react';
 import ProductCard from '../components/products/ProductCard';
@@ -8,7 +8,7 @@ import ProductListSkeleton from '../components/products/ProductListSkeleton';
 import { productsApi, categoriesApi } from '@/lib/api';
 import { Product, Category } from '@/types';
 
-const ProductsPage = () => {
+const ProductsContent = () => {
   const searchParams = useSearchParams();
   const categorySlug = searchParams.get('category');
   
@@ -324,5 +324,11 @@ const ProductsPage = () => {
     </div>
   );
 };
+
+const ProductsPage = () => (
+  <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div><p className="mt-4 text-gray-600">Loading products...</p></div></div>}>
+    <ProductsContent />
+  </Suspense>
+);
 
 export default ProductsPage;

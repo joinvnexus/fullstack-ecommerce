@@ -84,7 +84,6 @@ const ProductSchema: Schema = new Schema(
 );
 
 // Indexes
-ProductSchema.index({ slug: 1 });
 ProductSchema.index({ category: 1, status: 1, price: 1 });
 ProductSchema.index({ 'price.amount': 1 });
 

@@ -1,44 +1,28 @@
 {
-  // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
-    // File Layout
-    "rootDir": "./src",
-    "outDir": "./dist",
-
-    // Environment Settings
-    // See also https://aka.ms/tsconfig/module
-    "module": "nodenext",
-    "target": "esnext",
-    "types": [],
-    // For nodejs:
-    // "lib": ["esnext"],
-    // "types": ["node"],
-    // and npm install -D @types/node
-
-    // Other Outputs
+    "target": "ES2020",          // JavaScript ES2020 version compile korbe
+    "module": "ESNext",        // ESNext modules use korbe (Node.js er jonno)
+    "lib": ["ES2020"],          // ES2020 features allow korbe
+    "outDir": "./dist",         // Compiled files jabe "dist" folder e
+    "rootDir": "./src",            // Source files current directory theke
+    "strict": true,             // Strict TypeScript checking enable
+    "esModuleInterop": true,    // ES6 modules er compatibility
+    "skipLibCheck": true,       // Library files check korbe na (fast compile)
+    "forceConsistentCasingInFileNames": true, // File name case sensitive
+    "resolveJsonModule": true,  // JSON files import kora jabe
+    "moduleResolution": "node", // Node.js style module resolution
+    "types": ["node"],   // Node.js types include
+    "typeRoots": ["./types", "./node_modules/@types"], // Types er location
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-
-    // Stricter Typechecking Options
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-
-    // Style Options
-    // "noImplicitReturns": true,
-    // "noImplicitOverride": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    // "noFallthroughCasesInSwitch": true,
-    // "noPropertyAccessFromIndexSignature": true,
-
-    // Recommended Options
-    "strict": true,
-    "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
-    "skipLibCheck": true,
-  }
+    "moduleDetection": "force"
+  },
+  "include": ["**/*.ts", "**/*.d.ts"], // .ts sob files include
+  "exclude": ["node_modules", "dist"]  // Ei folder gula exclude
 }

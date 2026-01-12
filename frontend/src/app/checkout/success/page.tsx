@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
+
+export const dynamic = 'force-dynamic';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle, Package, Home, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 
-const CheckoutSuccessPage = () => {
+const CheckoutSuccessContent = () => {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
   const [order, setOrder] = useState<any>(null);
@@ -122,5 +124,11 @@ const CheckoutSuccessPage = () => {
     </div>
   );
 };
+
+const CheckoutSuccessPage = () => (
+  <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div><p className="mt-4 text-gray-600">Loading...</p></div></div>}>
+    <CheckoutSuccessContent />
+  </Suspense>
+);
 
 export default CheckoutSuccessPage;

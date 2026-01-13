@@ -5,7 +5,7 @@ import { Providers } from './providers';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 
-const inter = Inter({ subsets: ['latin'] }); //  Using Google Font 'Inter' for the website
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' }); //  Using Google Font 'Inter' for the website
 
 export const metadata: Metadata = {
   title: 'Ecommerce Store',
@@ -19,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className} suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans`} suppressHydrationWarning>
         <Providers>
           <div className="min-h-screen flex flex-col">
             <Navbar />

@@ -125,6 +125,7 @@ export const useSearch = () => {
     filters,
 
     // Actions
+    setFilters,
     handleSearch,
     handleFilterChange,
     handlePageChange,

@@ -144,7 +144,7 @@ export class SearchService {
       // Add sorting
       if (query && query.trim()) {
         // For search results, sort by score first
-        pipeline.push({ $sort: { score: { $meta: 'textScore' } } });
+        pipeline.push({ $sort: { score: { $meta: 'searchScore' } } });
       } else if (sort.field === 'relevance' || sort.field === '_score') {
         // If no query but relevance sort requested, sort by createdAt
         pipeline.push({ $sort: { createdAt: -1 } });
@@ -260,9 +260,14 @@ export class SearchService {
     // Build query
     const searchQuery: any = { status: 'active' };
 
-    // Text search
+    // Text search using regex for fallback
     if (query && query.trim()) {
-      searchQuery.$text = { $search: query };
+      searchQuery.$or = [
+        { title: { $regex: query, $options: 'i' } },
+        { description: { $regex: query, $options: 'i' } },
+        { tags: { $regex: query, $options: 'i' } },
+        { sku: { $regex: query, $options: 'i' } },
+      ];
     }
 
     // Apply filters
@@ -287,7 +292,8 @@ export class SearchService {
     // Build sort
     let sortOptions: any = {};
     if (query && query.trim()) {
-      sortOptions = { score: { $meta: 'textScore' } };
+      // For text search, sort by relevance (title match first, then description)
+      sortOptions = { title: 1 }; // Simple sort for now
     } else {
       sortOptions[sort.field] = sort.order === 'asc' ? 1 : -1;
     }

@@ -178,7 +178,7 @@ const SearchBar = ({
                     })}
                     className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-left group"
                   >
-                    {product.images?.[0] && (
+                    {product.images?.[0] && product.images[0] !== '' && (
                       <div className="w-10 h-10 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
                         <Image
                           src={product.images[0]}

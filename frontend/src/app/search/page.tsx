@@ -50,10 +50,7 @@ export default function SearchPage() {
     ]);
   }, []);
 
-  // Sync URL params → search trigger (hook-এ already আছে, but reinforce)
-  useEffect(() => {
-    performSearch();
-  }, [searchParams, filters]); // dependencies
+
 
   const toggleMobileFilters = () => setShowMobileFilters(!showMobileFilters);
 

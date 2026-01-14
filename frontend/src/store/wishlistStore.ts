@@ -240,7 +240,8 @@ const useWishlistStore = create<WishlistStore>()(
       isProductInWishlist: (productId: string) => {
         const { wishlists } = get();
         return wishlists.some(wishlist =>
-          wishlist.items.some(item => item.productId._id === productId)
+          Array.isArray(wishlist.items) &&
+          wishlist.items.some(item => item?.productId?._id === productId)
         );
       },
 

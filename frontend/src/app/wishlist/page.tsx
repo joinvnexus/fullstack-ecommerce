@@ -419,12 +419,13 @@ const {
                   ) : (
                     <div className="space-y-6">
                       {filteredItems.map((item) => {
-                        const product = item.productId;
+                        const product = item?.productId;
+                        if (!product || !product.slug) return null;
                         return (
                           <div key={item._id} className="flex flex-col sm:flex-row gap-4 p-4 border border-gray-200 rounded-lg">
                             {/* Product image */}
                             <div className="flex-shrink-0">
-                              <Link href={`/products/${product.slug}`}>
+                              <Link href={`/products/${product.slug}`}> 
                                 <div className="relative h-32 w-32 rounded-md overflow-hidden">
                                   {product.images?.[0] ? (
                                     <Image

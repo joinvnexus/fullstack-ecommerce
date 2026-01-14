@@ -97,7 +97,8 @@ export const useWishlist = () => {
     // Helpers
     getProductWishlistStatus: (productId: string) => {
       const wishlist = wishlists.find(w =>
-        w.items.some(item => item.productId._id === productId)
+        Array.isArray(w.items) &&
+        w.items.some(item => item?.productId?._id === productId)
       );
       return {
         isInWishlist: !!wishlist,

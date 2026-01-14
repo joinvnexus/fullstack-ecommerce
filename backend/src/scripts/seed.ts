@@ -168,6 +168,15 @@ const seedDatabase = async () => {
     console.log('📧 Email:', adminUser.email);
     console.log('🔑 Password:', adminUser.password);
 
+    // Create text index for search
+    await Product.collection.createIndex({
+      title: 'text',
+      description: 'text',
+      tags: 'text',
+      sku: 'text'
+    });
+    console.log('✅ Created text index for search');
+
     console.log('\n🎉 Seeding completed successfully!');
     console.log('\n🌐 API Endpoints:');
     console.log('   GET    /api/products');

@@ -125,6 +125,114 @@ const products = [
     tags: ["tshirt", "men", "cotton"],
     status: "active",
   },
+  {
+    title: "Non-Stick Frying Pan",
+    slug: "non-stick-frying-pan",
+    description: "Durable non-stick frying pan for healthy cooking.",
+    price: { amount: 1800, currency: 'BDT' },
+    sku: "HK-FRYPAN-001",
+    stock: 60,
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1519864600265-abb23847ef2c?w=500",
+        alt: "Non-Stick Frying Pan",
+        isPrimary: true,
+      },
+    ],
+    category: "Home & Kitchen",
+    tags: ["cookware", "kitchen", "frying pan"],
+    status: "active",
+  },
+  {
+    title: "Electric Kettle",
+    slug: "electric-kettle",
+    description: "Fast boiling electric kettle with auto shut-off.",
+    price: { amount: 2200, currency: 'BDT' },
+    sku: "HK-KETTLE-002",
+    stock: 40,
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500",
+        alt: "Electric Kettle",
+        isPrimary: true,
+      },
+    ],
+    category: "Home & Kitchen",
+    tags: ["kettle", "appliance", "kitchen"],
+    status: "active",
+  },
+  {
+    title: "The Alchemist",
+    slug: "the-alchemist",
+    description: "Inspirational novel by Paulo Coelho.",
+    price: { amount: 550, currency: 'BDT' },
+    sku: "BK-ALCHEMIST-001",
+    stock: 80,
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=500",
+        alt: "The Alchemist Book",
+        isPrimary: true,
+      },
+    ],
+    category: "Books",
+    tags: ["novel", "inspirational", "book"],
+    status: "active",
+  },
+  {
+    title: "Atomic Habits",
+    slug: "atomic-habits",
+    description: "Best-selling self-help book by James Clear.",
+    price: { amount: 650, currency: 'BDT' },
+    sku: "BK-ATOMICHABITS-002",
+    stock: 70,
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?w=500",
+        alt: "Atomic Habits Book",
+        isPrimary: true,
+      },
+    ],
+    category: "Books",
+    tags: ["self-help", "book", "habits"],
+    status: "active",
+  },
+  {
+    title: "Football (Size 5)",
+    slug: "football-size-5",
+    description: "High quality football for outdoor sports.",
+    price: { amount: 1200, currency: 'BDT' },
+    sku: "SP-FOOTBALL-001",
+    stock: 90,
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=500",
+        alt: "Football Size 5",
+        isPrimary: true,
+      },
+    ],
+    category: "Sports",
+    tags: ["football", "sports", "outdoor"],
+    status: "active",
+  },
+  {
+    title: "Badminton Racket",
+    slug: "badminton-racket",
+    description: "Lightweight badminton racket for fast play.",
+    price: { amount: 950, currency: 'BDT' },
+    sku: "SP-BADMINTON-002",
+    stock: 55,
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1519864600265-abb23847ef2c?w=500",
+        alt: "Badminton Racket",
+        isPrimary: true,
+      },
+    ],
+    category: "Sports",
+    tags: ["badminton", "sports", "racket"],
+    status: "active",
+  },
 ];
 
 const adminUser = {
@@ -169,12 +277,12 @@ const seedDatabase = async () => {
     console.log('🔑 Password:', adminUser.password);
 
     // Create text index for search
-    await Product.collection.createIndex({
-      title: 'text',
-      description: 'text',
-      tags: 'text',
-      sku: 'text'
-    });
+    // await Product.collection.createIndex({
+    //   title: 'text',
+    //   description: 'text',
+    //   tags: 'text',
+    //   sku: 'text'
+    // });
     console.log('✅ Created text index for search');
 
     console.log('\n🎉 Seeding completed successfully!');

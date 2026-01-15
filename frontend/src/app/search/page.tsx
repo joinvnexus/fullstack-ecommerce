@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSearch } from "@/hooks/useSearch";
+import { categoriesApi } from "@/lib/api";
 import ProductCard from "@/app/components/ui/ProductCard"; // তোমার স্ট্রাকচার অনুসারে path
 import Pagination from "@/app/components/ui/Pagination"; // যদি না থাকে, নিচে দিবো
  import { Checkbox } from "@/app/components/ui/Checkbox"; // shadcn/ui বা custom
@@ -33,30 +34,54 @@ export default function SearchPage() {
     resetFilters,
   } = useSearch();
 
-  // Dynamic categories (real app-এ API থেকে load করো)
-  const [categories, setCategories] = useState<{ _id: string; name: string }[]>([]);
+  const [categories, setCategories] = useState<{ _id: string; name: string; slug: string }[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [priceRange, setPriceRange] = useState<number[]>([0, 50000]); // adjust max price
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // Fetch categories (dummy data for now — real-এ API call করো)
+  // Fetch categories from API
   useEffect(() => {
-    // async function fetchCategories() { ... }
-    setCategories([
-      { _id: "electronics", name: "Electronics" },
-      { _id: "fashion", name: "Fashion" },
-      { _id: "home", name: "Home & Kitchen" },
-      { _id: "beauty", name: "Beauty" },
-      // ...
-    ]);
+    const fetchCategories = async () => {
+      try {
+        setCategoriesLoading(true);
+        const response = await categoriesApi.getAll();
+        // Flatten hierarchical categories for filter display
+        const flattenedCategories: { _id: string; name: string; slug: string }[] = [];
+
+        const flatten = (cats: any[]) => {
+          cats.forEach(cat => {
+            flattenedCategories.push({
+              _id: cat._id,
+              name: cat.name,
+              slug: cat.slug
+            });
+            if (cat.children && cat.children.length > 0) {
+              flatten(cat.children);
+            }
+          });
+        };
+
+        flatten(response.data);
+        setCategories(flattenedCategories);
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        // Fallback to empty array
+        setCategories([]);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    fetchCategories();
   }, []);
 
 
 
   const toggleMobileFilters = () => setShowMobileFilters(!showMobileFilters);
 
-  const handleCategoryToggle = (catId: string, checked: boolean) => {
+  const handleCategoryToggle = (catSlug: string, checked: boolean) => {
     // For simplicity single category; multi হলে array use করো
-    setFilters({ category: checked ? catId : undefined });
+    setFilters({ category: checked ? catSlug : undefined });
   };
 
   const handlePriceChange = (values: number[]) => {
@@ -158,20 +183,31 @@ export default function SearchPage() {
             <div className="mb-8">
               <h3 className="font-semibold mb-3">Categories</h3>
               <div className="space-y-2.5">
-                {categories.map((cat) => (
-                  <div key={cat._id} className="flex items-center">
-                    <Checkbox
-                      id={cat._id}
-                      checked={filters.category === cat._id}
-                      onCheckedChange={(checked) =>
-                        handleCategoryToggle(cat._id, !!checked)
-                      }
-                    />
-                    <label htmlFor={cat._id} className="ml-2 text-sm cursor-pointer">
-                      {cat.name}
-                    </label>
+                {categoriesLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="ml-2 text-sm text-gray-500">Loading categories...</span>
                   </div>
-                ))}
+                ) : categories.length === 0 ? (
+                  <p className="text-sm text-gray-500">No categories available</p>
+                ) : (
+                  <>
+                    {categories.map((cat) => (
+                      <div key={cat.slug} className="flex items-center">
+                        <Checkbox
+                          id={cat.slug}
+                          checked={filters.category === cat.slug}
+                          onCheckedChange={(checked) =>
+                            handleCategoryToggle(cat.slug, !!checked)
+                          }
+                        />
+                        <label htmlFor={cat.slug} className="ml-2 text-sm cursor-pointer">
+                          {cat.name}
+                        </label>
+                      </div>
+                    ))}
+                  </>
+                )}
               </div>
             </div>
 

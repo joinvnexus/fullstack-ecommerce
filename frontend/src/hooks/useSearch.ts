@@ -77,19 +77,20 @@ export const useSearch = () => {
     router.push(`/search?${params.toString()}`);
   }, [query, filters, router]);
 
+  // Perform search when query or filters change
+  useEffect(() => {
+    performSearch();
+  }, [debouncedQuery, filters, performSearch]);
+
   // Get suggestions when debounced query changes
   useEffect(() => {
     if (debouncedQuery.length >= 2) {
       getSuggestions(debouncedQuery);
-    }
-  }, [debouncedQuery, getSuggestions]);
-
-  // Clear suggestions when debounced query is short
-  useEffect(() => {
-    if (debouncedQuery.length < 2) {
+    } else {
+      // Clear suggestions when query is short
       useSearchStore.setState({ suggestions: { products: [], categories: [], tags: [] } });
     }
-  }, [debouncedQuery]);
+  }, [debouncedQuery, getSuggestions]);
 
   const handleSearch = (searchQuery: string, performSearchNow = false) => {
     setQuery(searchQuery);

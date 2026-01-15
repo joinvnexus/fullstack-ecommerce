@@ -104,6 +104,7 @@ const SearchBar = ({
           <input
             ref={inputRef}
             type="text"
+            name="q"
             value={query}
             onChange={handleInputChange}
             onFocus={() => setIsOpen(true)}

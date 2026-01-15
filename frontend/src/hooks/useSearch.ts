@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import useSearchStore from '@/store/searchStore';
 import { useDebounce } from './useDebounce';
 
 export const useSearch = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   
   const {
     query,
@@ -77,10 +78,12 @@ export const useSearch = () => {
     router.push(`/search?${params.toString()}`);
   }, [query, filters, router]);
 
-  // Perform search when query or filters change
+  // Perform search when query or filters change (only on search page)
   useEffect(() => {
-    performSearch();
-  }, [debouncedQuery, filters, performSearch]);
+    if (pathname === '/search') {
+      performSearch();
+    }
+  }, [debouncedQuery, filters, performSearch, pathname]);
 
   // Get suggestions when debounced query changes
   useEffect(() => {

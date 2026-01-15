@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSearch } from "@/hooks/useSearch";
 import { categoriesApi } from "@/lib/api";
@@ -18,7 +18,7 @@ import Pagination from "@/app/components/ui/Pagination"; // যদি না থ
 import { Loader2, SlidersHorizontal, X,  } from "lucide-react";
 import SearchBar from "@/app/components/search/SearchBar";
 
-export default function SearchPage() {
+function SearchPage() {
   const searchParams = useSearchParams();
   const {
     query,
@@ -295,3 +295,13 @@ export default function SearchPage() {
     </div>
   );
 }
+
+function SearchPageWrapper() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-blue-600" /></div>}>
+      <SearchPage />
+    </Suspense>
+  );
+}
+
+export default SearchPageWrapper;

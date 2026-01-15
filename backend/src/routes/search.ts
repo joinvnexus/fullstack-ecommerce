@@ -22,7 +22,14 @@ router.get('/products', async (req, res, next) => {
 
     const filters: any = {};
 
-    if (category) filters.category = category as string;
+    if (category) {
+      // Find category by slug and use _id
+      const Category = (await import('../models/Category.js')).default;
+      const cat = await Category.findOne({ slug: category });
+      if (cat) {
+        filters.category = cat._id.toString();
+      }
+    }
     if (minPrice) filters.minPrice = parseFloat(minPrice as string);
     if (maxPrice) filters.maxPrice = parseFloat(maxPrice as string);
     if (inStock) filters.inStock = inStock === 'true';

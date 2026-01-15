@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from 'lucide-react';
 import useCartStore from '@/store/cartStore';
 import { useAuth } from '@/hooks/useAuth';
-
+import { useSearch } from '@/hooks/useSearch';
 const CartPage = () => {
   const { cart, isLoading, addItem, updateQuantity, removeItem, clearCart, initializeCart, mergeCart } = useCartStore();
   const { user } = useAuth();

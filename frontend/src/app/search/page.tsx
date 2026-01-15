@@ -83,6 +83,12 @@ export default function SearchPage() {
   return (
     <div className="min-h-screen bg-gray-50/50 py-6 md:py-10">
       <div className="container mx-auto px-4 max-w-7xl">
+        {/* Error UI */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+            <strong>Error:</strong> {error}
+          </div>
+        )}
         {/* Header */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>

@@ -35,7 +35,7 @@ const categories = [
 ];
 
 const products = [
-  {
+  {    
     title: "Samsung Galaxy S24 Ultra",
     slug: "samsung-galaxy-s24-ultra",
     description: "Latest flagship smartphone with advanced camera and AI features",

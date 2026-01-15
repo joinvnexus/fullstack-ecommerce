@@ -66,14 +66,14 @@ const SearchBar = ({
     e.preventDefault();
     if (query.trim()) {
       saveRecentSearch(query);
-      handleSearch(query);
+      handleSearch(query, true);
       setIsOpen(false);
       onSearch?.(query);
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleSearch(e.target.value);
+    handleSearch(e.target.value, false);
     setIsOpen(e.target.value.length >= 1);
   };
 
@@ -146,7 +146,7 @@ const SearchBar = ({
                   <button
                     key={search}
                     onClick={() => {
-                      handleSearch(search);
+                      handleSearch(search, true);
                       setIsOpen(false);
                     }}
                     className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-gray-50 rounded-lg transition-colors group"
@@ -262,7 +262,7 @@ const SearchBar = ({
                   <button
                     key={term}
                     onClick={() => {
-                      handleSearch(term);
+                      handleSearch(term, true);
                       setIsOpen(false);
                     }}
                     className="px-3 py-1 bg-gray-100 text-sm rounded-full hover:bg-gray-200 transition-colors"

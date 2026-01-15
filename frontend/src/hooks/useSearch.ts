@@ -60,13 +60,6 @@ export const useSearch = () => {
     }
   }, []);
 
-  // Search when query changes
-  useEffect(() => {
-    if (debouncedQuery.length >= 2) {
-      performSearch();
-    }
-  }, [debouncedQuery, filters]);
-
   const performSearch = useCallback(async (page = 1) => {
     await search({ page });
     
@@ -84,9 +77,23 @@ export const useSearch = () => {
     router.push(`/search?${params.toString()}`);
   }, [query, filters, router]);
 
-  const handleSearch = (searchQuery: string) => {
+  // Get suggestions when debounced query changes
+  useEffect(() => {
+    if (debouncedQuery.length >= 2) {
+      getSuggestions(debouncedQuery);
+    }
+  }, [debouncedQuery, getSuggestions]);
+
+  // Clear suggestions when debounced query is short
+  useEffect(() => {
+    if (debouncedQuery.length < 2) {
+      useSearchStore.setState({ suggestions: { products: [], categories: [], tags: [] } });
+    }
+  }, [debouncedQuery]);
+
+  const handleSearch = (searchQuery: string, performSearchNow = false) => {
     setQuery(searchQuery);
-    if (searchQuery.length >= 2) {
+    if (performSearchNow && searchQuery.length >= 2) {
       performSearch(1);
     }
   };

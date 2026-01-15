@@ -54,9 +54,6 @@ const useSearchStore = create<SearchState>((set, get) => ({
 
   setQuery: (query: string) => {
     set({ query });
-    if (query.length >= 2) {
-      get().getSuggestions(query);
-    }
   },
 
   setFilters: (filters) => {

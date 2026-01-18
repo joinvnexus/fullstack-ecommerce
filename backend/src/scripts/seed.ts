@@ -134,7 +134,7 @@ const products = [
     stock: 60,
     images: [
       {
-        url: "https://images.unsplash.com/photo-1519864600265-abb23847ef2c?w=500",
+        url: "https://images.unsplash.com/photo-1566843971842-237cdbeaa75f?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=500",
         alt: "Non-Stick Frying Pan",
         isPrimary: true,
       },
@@ -224,7 +224,7 @@ const products = [
     stock: 55,
     images: [
       {
-        url: "https://images.unsplash.com/photo-1519864600265-abb23847ef2c?w=500",
+        url: "https://images.unsplash.com/photo-1708312604109-16c0be9326cd?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=500",
         alt: "Badminton Racket",
         isPrimary: true,
       },

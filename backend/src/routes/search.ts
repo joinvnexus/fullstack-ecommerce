@@ -1,6 +1,7 @@
 import express from 'express';
 import { searchService } from '../services/search.service.js';
 import { AppError } from '../middleware/errorHandler.js';
+import Category from '../models/Category.js';
 
 const router = express.Router();
 
@@ -24,7 +25,6 @@ router.get('/products', async (req, res, next) => {
 
     if (category) {
       // Find category by slug and use _id
-      const Category = (await import('../models/Category.js')).default;
       const cat = await Category.findOne({ slug: category });
       if (cat) {
         filters.category = cat._id.toString();
@@ -155,7 +155,6 @@ router.get('/category/:categorySlug', async (req, res, next) => {
     } = req.query;
 
     // First get category ID
-    const Category = (await import('../models/Category.js')).default;
     const category = await Category.findOne({ slug: categorySlug });
 
     if (!category) {

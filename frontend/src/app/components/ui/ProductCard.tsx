@@ -96,7 +96,7 @@ const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
 
                 <div className="mt-4 flex items-center gap-4">
                   <span className="text-2xl font-bold text-gray-900">
-                    ${product.price.amount.toFixed(2)}
+                    ${product.price.amount.toLocaleString()}
                   </span>
                   {product.stock > 0 && (
                     <span className="text-sm text-green-600">
@@ -178,7 +178,7 @@ const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
         <div className="mt-3 flex items-center justify-between">
           <div>
             <span className="text-2xl font-bold text-gray-900">
-              ${product.price.amount.toFixed(2)}
+              ${product.price.amount.toLocaleString()}
             </span>
           </div>
 

@@ -131,13 +131,13 @@ export const wishlistApi = {
 
 // Search API
 export const searchApi = {
-  searchProducts: (params: any) => api.get('/search/products', { params }),
-  autocomplete: (params: any) => api.get('/search/autocomplete', { params }),
-  getSuggestions: (params: any) => api.get('/search/suggestions', { params }),
-  getPopularSearches: (params?: any) => api.get('/search/popular', { params }),
-  getTrendingProducts: (params?: any) => api.get('/search/trending', { params }),
-  searchCategory: (categorySlug: string, params?: any) =>
-    api.get(`/search/category/${categorySlug}`, { params }),
-  advancedSearch: (data: any) => api.post('/search/advanced', data),
+  searchProducts: (params: any, config: any = {}) => api.get('/search/products', { params, ...config }),
+  autocomplete: (params: any, config: any = {}) => api.get('/search/autocomplete', { params, ...config }),
+  getSuggestions: (params: any, config: any = {}) => api.get('/search/suggestions', { params, ...config }),
+  getPopularSearches: (params?: any, config: any = {}) => api.get('/search/popular', { params, ...config }),
+  getTrendingProducts: (params?: any, config: any = {}) => api.get('/search/trending', { params, ...config }),
+  searchCategory: (categorySlug: string, params?: any, config: any = {}) =>
+    api.get(`/search/category/${categorySlug}`, { params, ...config }),
+  advancedSearch: (data: any, config: any = {}) => api.post('/search/advanced', data, config),
 };
 export default api;

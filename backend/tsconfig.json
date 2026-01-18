@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2020",          // JavaScript ES2020 version compile korbe
-    "module": "ESNext",        // ESNext modules use korbe (Node.js er jonno)
+    "module": "node16",        // Node.js ESM modules
     "lib": ["ES2020"],          // ES2020 features allow korbe
     "outDir": "./dist",         // Compiled files jabe "dist" folder e
     "rootDir": "./src",            // Source files current directory theke
@@ -10,7 +10,7 @@
     "skipLibCheck": true,       // Library files check korbe na (fast compile)
     "forceConsistentCasingInFileNames": true, // File name case sensitive
     "resolveJsonModule": true,  // JSON files import kora jabe
-    "moduleResolution": "node", // Node.js style module resolution
+    "moduleResolution": "node16", // Node16 style module resolution for ESM
     "types": ["node"],   // Node.js types include
     "typeRoots": ["./types", "./node_modules/@types"], // Types er location
     "sourceMap": true,

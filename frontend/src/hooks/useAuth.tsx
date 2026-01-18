@@ -67,16 +67,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (email: string, password: string) => {
     try {
       const response = await authApi.login({ email, password });
-      
+
       const { user, token } = response.data;
-      
+
       setUser(user);
       setToken(token);
-      
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      
-      router.push('/');
+
+      // Redirect based on role
+      if (user.role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/account');
+      }
     } catch (error) {
       throw error;
     }
@@ -85,16 +90,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const register = async (data: any) => {
     try {
       const response = await authApi.register(data) ;
-      
+
       const { user, token } = response.data;
-      
+
       setUser(user);
       setToken(token);
-      
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      
-      router.push('/');
+
+      // New users are customers, redirect to account
+      router.push('/account');
     } catch (error) {
       throw error;
     }

@@ -36,7 +36,7 @@ const LoginPage = () => {
       setIsLoading(true);
       setError('');
       await login(data.email, data.password);
-      router.push('/');
+      // Redirect is handled in useAuth login function based on role
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');
     } finally {

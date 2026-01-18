@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import { searchApi } from '@/lib/api';
 
+// AbortController instances for cancelling requests
+let searchAbortController: AbortController | null = null;
+let suggestionsAbortController: AbortController | null = null;
+
 interface SearchState {
   query: string;
   results: any[];
@@ -63,9 +67,15 @@ const useSearchStore = create<SearchState>((set, get) => ({
   },
 
   search: async (params = {}) => {
+    // Cancel previous search request
+    if (searchAbortController) {
+      searchAbortController.abort();
+    }
+    searchAbortController = new AbortController();
+
     try {
       set({ isLoading: true, error: null });
-      
+
       const { query, filters } = get();
       const searchParams = {
         q: query,
@@ -75,8 +85,8 @@ const useSearchStore = create<SearchState>((set, get) => ({
         ...params,
       };
 
-      const response = await searchApi.searchProducts(searchParams);
-      
+      const response = await searchApi.searchProducts(searchParams, { signal: searchAbortController.signal });
+
       set({
         results: response.data.products,
         totalResults: response.data.total,
@@ -85,6 +95,10 @@ const useSearchStore = create<SearchState>((set, get) => ({
         isLoading: false,
       });
     } catch (error: any) {
+      if (error.name === 'AbortError') {
+        // Silently ignore aborted requests
+        return;
+      }
       set({
         error: error.message,
         isLoading: false,
@@ -94,15 +108,25 @@ const useSearchStore = create<SearchState>((set, get) => ({
   },
 
   getSuggestions: async (query: string) => {
+    // Cancel previous suggestions request
+    if (suggestionsAbortController) {
+      suggestionsAbortController.abort();
+    }
+    suggestionsAbortController = new AbortController();
+
     try {
       if (query.length < 2) {
         set({ suggestions: { products: [], categories: [], tags: [] } });
         return;
       }
 
-      const response = await searchApi.getSuggestions({ q: query });
+      const response = await searchApi.getSuggestions({ q: query }, { signal: suggestionsAbortController.signal });
       set({ suggestions: response.data });
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        // Silently ignore aborted requests
+        return;
+      }
       console.error('Failed to get suggestions:', error);
     }
   },

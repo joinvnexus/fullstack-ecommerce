@@ -148,16 +148,19 @@ const Navbar = () => {
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
                     </div>
                     <div className="py-1">
-                      <Link href="/account" className="block px-4 py-2.5 text-sm hover:bg-gray-50" onClick={() => setIsUserDropdownOpen(false)}>
-                        My Account
-                      </Link>
-                      <Link href="/orders" className="block px-4 py-2.5 text-sm hover:bg-gray-50" onClick={() => setIsUserDropdownOpen(false)}>
-                        My Orders
-                      </Link>
-                      {user.role === "admin" && (
+                      {user.role === "admin" ? (
                         <Link href="/admin" className="block px-4 py-2.5 text-sm hover:bg-gray-50" onClick={() => setIsUserDropdownOpen(false)}>
                           Admin Dashboard
                         </Link>
+                      ) : (
+                        <>
+                          <Link href="/account" className="block px-4 py-2.5 text-sm hover:bg-gray-50" onClick={() => setIsUserDropdownOpen(false)}>
+                            My Account
+                          </Link>
+                          <Link href="/orders" className="block px-4 py-2.5 text-sm hover:bg-gray-50" onClick={() => setIsUserDropdownOpen(false)}>
+                            My Orders
+                          </Link>
+                        </>
                       )}
                       <hr className="my-1 border-gray-200" />
                       <button
@@ -233,16 +236,19 @@ const Navbar = () => {
 
             {user ? (
               <>
-                <Link href="/account" className="block py-3 px-4 text-gray-800 hover:bg-gray-50" onClick={() => setIsMenuOpen(false)}>
-                  My Account
-                </Link>
-                <Link href="/orders" className="block py-3 px-4 text-gray-800 hover:bg-gray-50" onClick={() => setIsMenuOpen(false)}>
-                  My Orders
-                </Link>
-                {user.role === "admin" && (
+                {user.role === "admin" ? (
                   <Link href="/admin" className="block py-3 px-4 text-gray-800 hover:bg-gray-50" onClick={() => setIsMenuOpen(false)}>
                     Admin Dashboard
                   </Link>
+                ) : (
+                  <>
+                    <Link href="/account" className="block py-3 px-4 text-gray-800 hover:bg-gray-50" onClick={() => setIsMenuOpen(false)}>
+                      My Account
+                    </Link>
+                    <Link href="/orders" className="block py-3 px-4 text-gray-800 hover:bg-gray-50" onClick={() => setIsMenuOpen(false)}>
+                      My Orders
+                    </Link>
+                  </>
                 )}
                 <button
                   onClick={() => { logout(); setIsMenuOpen(false); }}

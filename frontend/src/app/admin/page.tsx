@@ -1,30 +1,33 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  TrendingUp, 
-  ShoppingBag, 
-  Users, 
+import {
+  TrendingUp,
+  ShoppingBag,
+  Users,
   DollarSign,
   Package,
   CreditCard,
   Truck,
   AlertCircle
 } from 'lucide-react';
-import { 
-  LineChart, 
-  Line, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
   Cell
 } from 'recharts';
+
+import { adminApi, DashboardStats } from '@/lib/api/adminApi';
+import { StatusBadge } from './components/StatusBadge';
 
 // Install recharts
 // npm install recharts
@@ -49,32 +52,20 @@ const AdminDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // In real implementation, fetch from API
-      // For now, use mock data
+      const response = await adminApi.dashboard.getStats();
+      const dashboardData: DashboardStats = response.data;
+
       setStats({
-        totalRevenue: 15240.50,
-        totalOrders: 342,
-        totalCustomers: 156,
-        totalProducts: 89,
-        pendingOrders: 12,
-        lowStockProducts: 8,
+        totalRevenue: dashboardData.stats.totalRevenue,
+        totalOrders: dashboardData.stats.totalOrders,
+        totalCustomers: dashboardData.stats.totalCustomers,
+        totalProducts: dashboardData.stats.totalProducts,
+        pendingOrders: 0, // TODO: Calculate from orders data
+        lowStockProducts: 0, // TODO: Calculate from products data
       });
 
-      setRecentOrders([
-        { id: 'ORD001', customer: 'John Doe', amount: 249.99, status: 'processing', date: '2024-01-15' },
-        { id: 'ORD002', customer: 'Jane Smith', amount: 149.50, status: 'shipped', date: '2024-01-14' },
-        { id: 'ORD003', customer: 'Bob Johnson', amount: 89.99, status: 'delivered', date: '2024-01-13' },
-        { id: 'ORD004', customer: 'Alice Brown', amount: 299.99, status: 'pending', date: '2024-01-12' },
-        { id: 'ORD005', customer: 'Charlie Wilson', amount: 179.50, status: 'processing', date: '2024-01-11' },
-      ]);
-
-      setTopProducts([
-        { name: 'Smartphone X', sales: 42, revenue: 41958 },
-        { name: 'Wireless Headphones', sales: 38, revenue: 7562 },
-        { name: 'Laptop Pro', sales: 25, revenue: 37475 },
-        { name: 'Smart Watch', sales: 19, revenue: 5699 },
-        { name: 'Tablet Mini', sales: 15, revenue: 7495 },
-      ]);
+      setRecentOrders(dashboardData.recentOrders || []);
+      setTopProducts(dashboardData.topProducts || []);
 
       setLoading(false);
     } catch (error) {
@@ -295,28 +286,21 @@ const AdminDashboard = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {recentOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50">
+                  <tr key={order._id || order.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                      {order.id}
+                      {order.orderNumber || order.id}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {order.customer}
+                      {order.userId?.name || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${order.amount.toFixed(2)}
+                      ৳{order.totals?.grandTotal?.toLocaleString() || '0'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                        order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                        order.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {order.status}
-                      </span>
+                      <StatusBadge status={order.status} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {order.date}
+                      {new Date(order.createdAt).toLocaleDateString()}
                     </td>
                   </tr>
                 ))}
@@ -338,19 +322,23 @@ const AdminDashboard = () => {
           <div className="p-6">
             <div className="space-y-4">
               {topProducts.map((product, index) => (
-                <div key={product.name} className="flex items-center justify-between">
+                <div key={product._id || product.title || index} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="h-10 w-10 bg-gray-100 rounded-lg flex items-center justify-center">
                       <span className="font-bold text-gray-700">{index + 1}</span>
                     </div>
                     <div>
-                      <div className="font-medium">{product.name}</div>
-                      <div className="text-sm text-gray-500">{product.sales} units sold</div>
+                      <div className="font-medium">{product.title || product.name || 'Unknown Product'}</div>
+                      <div className="text-sm text-gray-500">
+                        {product.stock ? `${product.stock} units in stock` : 'Stock info unavailable'}
+                      </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold">${product.revenue.toLocaleString()}</div>
-                    <div className="text-sm text-green-600">+15%</div>
+                    <div className="font-bold">
+                      ৳{product.price?.amount ? product.price.amount.toLocaleString() : 'N/A'}
+                    </div>
+                    <div className="text-sm text-green-600">Active</div>
                   </div>
                 </div>
               ))}

@@ -17,48 +17,55 @@ import {
   Home
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 
 const menuItems = [
-  { 
-    id: 'dashboard', 
-    label: 'Dashboard', 
-    icon: LayoutDashboard, 
-    href: '/admin' 
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    href: '/admin',
+    permission: null // Everyone can see dashboard
   },
-  { 
-    id: 'products', 
-    label: 'Products', 
-    icon: Package, 
+  {
+    id: 'products',
+    label: 'Products',
+    icon: Package,
     href: '/admin/products',
+    permission: 'products.read',
     subItems: [
-      { label: 'All Products', href: '/admin/products' },
-      { label: 'Add New', href: '/admin/products/new' },
-      { label: 'Categories', href: '/admin/categories' },
+      { label: 'All Products', href: '/admin/products', permission: 'products.read' },
+      { label: 'Add New', href: '/admin/products/new', permission: 'products.create' },
+      { label: 'Categories', href: '/admin/categories', permission: 'products.read' },
     ]
   },
-  { 
-    id: 'orders', 
-    label: 'Orders', 
-    icon: ShoppingBag, 
-    href: '/admin/orders' 
+  {
+    id: 'orders',
+    label: 'Orders',
+    icon: ShoppingBag,
+    href: '/admin/orders',
+    permission: 'orders.read'
   },
-  { 
-    id: 'users', 
-    label: 'Customers', 
-    icon: Users, 
-    href: '/admin/customers' 
+  {
+    id: 'users',
+    label: 'Customers',
+    icon: Users,
+    href: '/admin/customers',
+    permission: 'customers.read'
   },
-  { 
-    id: 'analytics', 
-    label: 'Analytics', 
-    icon: BarChart3, 
-    href: '/admin/analytics' 
+  {
+    id: 'analytics',
+    label: 'Analytics',
+    icon: BarChart3,
+    href: '/admin/analytics',
+    permission: 'analytics.read'
   },
-  { 
-    id: 'settings', 
-    label: 'Settings', 
-    icon: Settings, 
-    href: '/admin/settings' 
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: Settings,
+    href: '/admin/settings',
+    permission: 'settings.update'
   },
 ];
 
@@ -72,6 +79,7 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout, isLoading } = useAuth();
+  const { hasPermission } = usePermissions();
 
   useEffect(() => {
     // Check if user is admin
@@ -153,7 +161,9 @@ export default function AdminLayout({
             {/* Navigation */}
             <nav className="flex-1 p-4 overflow-y-auto">
               <ul className="space-y-1">
-                {menuItems.map((item) => (
+                {menuItems
+                  .filter(item => !item.permission || hasPermission(item.permission.split('.')[0] as any, item.permission.split('.')[1] as any))
+                  .map((item) => (
                   <li key={item.id}>
                     <Link
                       href={item.href}
@@ -175,11 +185,13 @@ export default function AdminLayout({
                         <ChevronRight size={16} />
                       )}
                     </Link>
-                    
+
                     {/* Sub items */}
                     {item.subItems && activeMenu === item.id && (
                       <ul className="ml-8 mt-1 space-y-1">
-                        {item.subItems.map((subItem) => (
+                        {item.subItems
+                          .filter(subItem => !subItem.permission || hasPermission(subItem.permission.split('.')[0] as any, subItem.permission.split('.')[1] as any))
+                          .map((subItem) => (
                           <li key={subItem.href}>
                             <Link
                               href={subItem.href}

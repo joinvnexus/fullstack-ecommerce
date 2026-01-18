@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ShoppingCart, Heart, User, Menu, X, Search, ChevronDown } from "lucide-react";
@@ -84,7 +84,9 @@ const Navbar = () => {
           <div className="flex items-center space-x-3 md:space-x-4">
             {/* Desktop Search */}
             <div className="hidden md:block">
-              <SearchBar variant="compact" className="w-64 lg:w-80" />
+              <Suspense fallback={<div className="w-64 lg:w-80 h-10 bg-gray-200 rounded-full animate-pulse"></div>}>
+                <SearchBar variant="compact" className="w-64 lg:w-80" />
+              </Suspense>
             </div>
 
             {/* Mobile Search Icon */}
@@ -200,12 +202,14 @@ const Navbar = () => {
       {isSearchOpen && (
         <div className="md:hidden fixed inset-0 bg-white z-50 flex flex-col">
           <div className="flex items-center justify-between p-4 border-b">
-            <SearchBar
-              variant="expanded"
-              autoFocus
-              className="flex-1"
-              onSearch={() => setIsSearchOpen(false)}
-            />
+            <Suspense fallback={<div className="flex-1 h-12 bg-gray-200 rounded animate-pulse"></div>}>
+              <SearchBar
+                variant="expanded"
+                autoFocus
+                className="flex-1"
+                onSearch={() => setIsSearchOpen(false)}
+              />
+            </Suspense>
             <button
               onClick={() => setIsSearchOpen(false)}
               className="ml-4 p-2 text-gray-600 hover:text-gray-900"

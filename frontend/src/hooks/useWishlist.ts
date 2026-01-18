@@ -58,7 +58,8 @@ export const useWishlist = () => {
     if (isInWishlist) {
       // Find which wishlist contains the product
       const wishlist = wishlists.find(w =>
-        w.items.some(item => item.productId._id === productId)
+        Array.isArray(w.items) &&
+        w.items.some(item => item?.productId?._id === productId)
       );
       if (wishlist) {
         await removeFromWishlist(wishlist._id, productId);

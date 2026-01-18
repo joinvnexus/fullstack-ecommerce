@@ -164,6 +164,12 @@ router.delete('/:wishlistId/items/:productId', async (req, res, next) => {
     wishlist.removeProduct(productId);
     await wishlist.save();
 
+    	    // Populate product details
+    await wishlist.populate({
+      path: 'items.productId',
+      select: 'title slug price images stock status',
+    });
+
     res.json({
       success: true,
       message: 'Product removed from wishlist',
@@ -223,6 +229,16 @@ router.post('/move-item', async (req, res, next) => {
     toWishlist.addProduct(productId, notes || productItem?.notes);
     await toWishlist.save();
 
+    	    // Populate product details
+    await fromWishlist.populate({
+      path: 'items.productId',
+      select: 'title slug price images stock status',
+    });
+    await toWishlist.populate({
+      path: 'items.productId',
+      select: 'title slug price images stock status',
+    });
+    
     res.json({
       success: true,
       message: 'Product moved successfully',

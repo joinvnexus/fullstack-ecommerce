@@ -8,11 +8,14 @@ export interface IUser extends Document {
   role: 'customer' | 'admin';
   phone?: string;
   addresses: Array<{
+    label: string;
+    fullName: string;
     street: string;
     city: string;
     state: string;
     country: string;
     zipCode: string;
+    phone: string;
     isDefault: boolean;
   }>;
   createdAt: Date;
@@ -29,11 +32,14 @@ const UserSchema: Schema = new Schema(
     phone: { type: String },
     addresses: [
       {
+        label: { type: String, required: true },
+        fullName: { type: String, required: true },
         street: { type: String, required: true },
         city: { type: String, required: true },
         state: { type: String, required: true },
         country: { type: String, required: true },
         zipCode: { type: String, required: true },
+        phone: { type: String, required: true },
         isDefault: { type: Boolean, default: false },
       },
     ],

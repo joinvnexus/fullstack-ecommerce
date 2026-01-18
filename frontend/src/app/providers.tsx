@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { AuthProvider } from '@/hooks/useAuth';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import { Toaster } from 'sonner';
 
 // Initialize Stripe
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -28,6 +29,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <AuthProvider>
         <Elements stripe={stripePromise}>
           {children}
+          <Toaster />
         </Elements>
       </AuthProvider>
       <ReactQueryDevtools initialIsOpen={false} />

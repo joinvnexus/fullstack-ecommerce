@@ -14,6 +14,11 @@ interface AuthContextType {
   register: (data: any) => Promise<void>;
   logout: () => void;
   updateProfile: (data: any) => Promise<void>;
+  changePassword: (data: any) => Promise<void>;
+  getAddresses: () => Promise<any>;
+  addAddress: (data: any) => Promise<any>;
+  updateAddress: (index: number, data: any) => Promise<any>;
+  deleteAddress: (index: number) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -124,6 +129,62 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const changePassword = async (data: any) => {
+    try {
+      await authApi.changePassword(data);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const getAddresses = async () => {
+    try {
+      const response = await authApi.getAddresses();
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const addAddress = async (data: any) => {
+    try {
+      const response = await authApi.addAddress(data);
+      // Update user addresses
+      const updatedUser = { ...user!, addresses: response.data };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const updateAddress = async (index: number, data: any) => {
+    try {
+      const response = await authApi.updateAddress(index, data);
+      // Update user addresses
+      const updatedUser = { ...user!, addresses: response.data };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const deleteAddress = async (index: number) => {
+    try {
+      const response = await authApi.deleteAddress(index);
+      // Update user addresses
+      const updatedUser = { ...user!, addresses: response.data };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const value = {
     user,
     token,
@@ -132,6 +193,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     register,
     logout,
     updateProfile,
+    changePassword,
+    getAddresses,
+    addAddress,
+    updateAddress,
+    deleteAddress,
   };
 
    return (

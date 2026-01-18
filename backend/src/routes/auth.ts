@@ -2,7 +2,7 @@ import express from 'express';
 import User from '../models/User.js';
 import { authenticate } from '../utils/auth.js';
 import { validate } from '../utils/validation.js';
-import { registerSchema, loginSchema, updateProfileSchema, addressSchema } from '../utils/validation.js';
+import { registerSchema, loginSchema, updateProfileSchema, addressSchema, changePasswordSchema } from '../utils/validation.js';
 import AuthUtils from '../utils/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
 
@@ -198,6 +198,100 @@ router.delete('/me/address/:index', authenticate, async (req, res, next) => {
     res.json({
       success: true,
       message: 'Address removed successfully',
+      data: userData.addresses,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Change password
+router.put('/password', authenticate, validate(changePasswordSchema), async (req, res, next) => {
+  try {
+    const user = (req as any).user;
+    const { currentPassword, newPassword } = req.body;
+
+    const userData = await User.findById(user.userId);
+    if (!userData) {
+      throw new AppError('User not found', 404);
+    }
+
+    const isValid = await userData.comparePassword(currentPassword);
+    if (!isValid) {
+      throw new AppError('Current password is incorrect', 400);
+    }
+
+    userData.password = newPassword;
+    await userData.save();
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get user addresses
+router.get('/addresses', authenticate, async (req, res, next) => {
+  try {
+    const user = (req as any).user;
+    const userData = await User.findById(user.userId).select('addresses');
+
+    if (!userData) {
+      throw new AppError('User not found', 404);
+    }
+
+    res.json({
+      success: true,
+      data: userData.addresses,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Update address
+router.put('/addresses/:index', authenticate, validate(addressSchema), async (req, res, next) => {
+  try {
+    const user = (req as any).user;
+    const indexParam = req.params.index;
+    if (!indexParam) {
+      throw new AppError('Address index is required', 400);
+    }
+
+    const index = parseInt(indexParam);
+    if (isNaN(index)) {
+      throw new AppError('Invalid address index', 400);
+    }
+
+    const address = req.body;
+
+    const userData = await User.findById(user.userId);
+    if (!userData) {
+      throw new AppError('User not found', 404);
+    }
+
+    if (index < 0 || index >= userData.addresses.length) {
+      throw new AppError('Invalid address index', 400);
+    }
+
+    // If updating to default, unset other defaults
+    if (address.isDefault) {
+      userData.addresses.forEach((addr, i) => {
+        if (i !== index) {
+          addr.isDefault = false;
+        }
+      });
+    }
+
+    userData.addresses[index] = address;
+    await userData.save();
+
+    res.json({
+      success: true,
+      message: 'Address updated successfully',
       data: userData.addresses,
     });
   } catch (error) {

@@ -51,7 +51,10 @@ export const authApi = {
   login: (data: any) => api.post('/auth/login', data),
   getProfile: () => api.get('/auth/me'),
   updateProfile: (data: any) => api.put('/auth/me', data),
+  changePassword: (data: any) => api.put('/auth/password', data),
+  getAddresses: () => api.get('/auth/addresses'),
   addAddress: (data: any) => api.post('/auth/me/address', data),
+  updateAddress: (index: number, data: any) => api.put(`/auth/addresses/${index}`, data),
   deleteAddress: (index: number) => api.delete(`/auth/me/address/${index}`),
 };
 

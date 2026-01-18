@@ -19,13 +19,21 @@ export const updateProfileSchema = z.object({
   phone: z.string().optional(),
 });
 
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z.string().min(6, 'New password must be at least 6 characters'),
+});
+
 // Address validation schema
 export const addressSchema = z.object({
+  label: z.string().min(1, 'Label is required'),
+  fullName: z.string().min(2, 'Full name is required'),
   street: z.string().min(1, 'Street is required'),
   city: z.string().min(1, 'City is required'),
   state: z.string().min(1, 'State is required'),
   country: z.string().min(1, 'Country is required'),
   zipCode: z.string().min(1, 'Zip code is required'),
+  phone: z.string().min(1, 'Phone is required'),
   isDefault: z.boolean().optional(),
 });
 

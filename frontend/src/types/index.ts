@@ -11,6 +11,18 @@ export interface User {
 }
 
 export interface Address {
+  label: string;
+  fullName: string;
+  street: string;
+  city: string;
+  state: string;
+  country: string;
+  zipCode: string;
+  phone: string;
+  isDefault?: boolean;
+}
+
+export interface OrderAddress {
   street: string;
   city: string;
   state: string;
@@ -18,7 +30,6 @@ export interface Address {
   zipCode: string;
   phone: string;
   email: string;
-  isDefault?: boolean;
 }
 
 // Product types
@@ -123,8 +134,8 @@ export interface Order {
   orderNumber: string;
   userId: string;
   items: OrderItem[];
-  shippingAddress: Address;
-  billingAddress?: Address;
+  shippingAddress: OrderAddress;
+  billingAddress?: OrderAddress;
   contactInfo: {
     email: string;
     phone: string;

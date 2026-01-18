@@ -28,13 +28,18 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
+    // Ignore aborted requests
+    if (error.name === 'AbortError' || error.message === 'canceled') {
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401) {
       // Clear token and redirect to login
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
-    
+
     const message = error.response?.data?.message || error.message || 'An error occurred';
     return Promise.reject(new Error(message));
   }

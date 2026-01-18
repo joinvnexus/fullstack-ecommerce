@@ -95,7 +95,7 @@ const useSearchStore = create<SearchState>((set, get) => ({
         isLoading: false,
       });
     } catch (error: any) {
-      if (error.name === 'AbortError') {
+      if (error.name === 'AbortError' || error.message === 'canceled') {
         // Silently ignore aborted requests
         return;
       }
@@ -123,7 +123,7 @@ const useSearchStore = create<SearchState>((set, get) => ({
       const response = await searchApi.getSuggestions({ q: query }, { signal: suggestionsAbortController.signal });
       set({ suggestions: response.data });
     } catch (error: any) {
-      if (error.name === 'AbortError') {
+      if (error.name === 'AbortError' || error.message === 'canceled') {
         // Silently ignore aborted requests
         return;
       }

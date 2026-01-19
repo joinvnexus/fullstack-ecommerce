@@ -188,7 +188,8 @@ const SettingsPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {section.fields.map((field) => {
                     // Skip dependent fields if dependency is false
-                    if (field.dependsOn && !settings[field.dependsOn as keyof SettingsType]) {
+                    const dependsOn = (field as SettingsField).dependsOn;
+                    if (dependsOn !== undefined && !settings[dependsOn]) {
                       return null;
                     }
 

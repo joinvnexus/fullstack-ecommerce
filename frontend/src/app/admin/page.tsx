@@ -248,7 +248,7 @@ const AdminDashboard = () => {
                         {order.userId?.name || 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        ৳{order.totals?.grandTotal?.toLocaleString() || '0'}
+                        ${order.totals?.grandTotal?.toLocaleString() || '0'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <StatusBadge status={order.status} />
@@ -274,6 +274,7 @@ const AdminDashboard = () => {
               </button>
             </div>
           </CardHeader>
+          {/* <CardContent> */}
           <CardContent>
             <div className="space-y-4">
               {topProducts.map((product, index) => (

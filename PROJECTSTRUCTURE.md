@@ -2,7 +2,7 @@
 
 This document outlines the directory structure of the Fullstack E-Commerce project.
 
-**Note**: The project includes a complete admin dashboard, multiple payment gateways (Bkash, Nagad, Stripe), and an advanced search system with autocomplete functionality.
+**Note**: The project includes a complete admin dashboard with analytics and audit logging, multiple payment gateways (Bkash, Nagad, Stripe), role-based permissions, and an advanced search system with autocomplete functionality.
 
 ## Root Directory
 
@@ -22,12 +22,22 @@ backend/
 ├── tsconfig.json                  # TypeScript configuration
 └── src/
     ├── index.ts                   # Main application entry point
+    ├── controllers/               # Route controllers
+    │   └── admin/                 # Admin controllers
+    │       ├── categoryController.ts
+    │       ├── dashboardController.ts
+    │       ├── ordersController.ts
+    │       ├── productController.ts
+    │       └── usersController.ts
     ├── middleware/
-    │   └── errorHandler.ts        # Global error handling middleware
+    │   ├── errorHandler.ts        # Global error handling middleware
+    │   └── permissions.ts         # Permission middleware
     ├── models/                    # Mongoose data models
+    │   ├── AuditLog.ts            # Audit logging model
     │   ├── Cart.ts                # Shopping cart model with business logic
     │   ├── Category.ts            # Product category model
     │   ├── Order.ts               # Order model
+    │   ├── Permission.ts          # Permission model
     │   ├── Product.ts             # Product model
     │   ├── User.ts                # User authentication model
     │   └── Wishlist.ts            # Wishlist model
@@ -44,6 +54,13 @@ backend/
     ├── scripts/                   # Utility scripts
     │   └── seed.ts                # Database seeding script
     ├── services/                  # Business logic services
+    │   ├── admin/                 # Admin services
+    │   │   ├── auditService.ts
+    │   │   ├── categoryService.ts
+    │   │   ├── dashboardService.ts
+    │   │   ├── orderService.ts
+    │   │   ├── productService.ts
+    │   │   └── userService.ts
     │   ├── bkash.service.ts       # Bkash payment gateway integration
     │   ├── nagad.service.ts       # Nagad payment gateway integration
     │   ├── payment.service.ts     # Payment processing service
@@ -51,6 +68,7 @@ backend/
     │   └── search.service.ts      # Search functionality service
     └── utils/                     # Utility functions
         ├── auth.ts                # Authentication utilities
+        ├── rolePermissions.ts     # Role and permission utilities
         └── validation.ts          # Input validation schemas
 ```
 
@@ -71,6 +89,15 @@ frontend/
 └── src/
     ├── app/                      # Next.js App Router pages and layouts
     │   ├── components/           # App-specific components
+    │   │   ├── account/          # Account management components
+    │   │   │   ├── AccountLayout.tsx
+    │   │   │   ├── AddressCard.tsx
+    │   │   │   ├── AddressesSection.tsx
+    │   │   │   ├── AddressForm.tsx
+    │   │   │   ├── OrdersSection.tsx
+    │   │   │   ├── PaymentSection.tsx
+    │   │   │   ├── ProfileSection.tsx
+    │   │   │   └── SettingsSection.tsx
     │   │   ├── home/             # Home page components
     │   │   │   ├── FeaturedProducts.tsx
     │   │   │   └── HeroSection.tsx
@@ -89,16 +116,43 @@ frontend/
     │   │   └── wishlist/         # Wishlist components
     │   │       ├── QuickAddModal.tsx
     │   │       └── WishlistButton.tsx
-   ├── account/              # Account management pages
+    │   ├── account/              # Account management pages
     │   │   └── page.tsx
     │   ├── admin/                # Admin dashboard pages
+    │   │   ├── analytics/        # Analytics page
+    │   │   │   └── page.tsx
+    │   │   ├── categories/       # Category management pages
+    │   │   │   └── page.tsx
+    │   │   ├── components/       # Admin UI components
+    │   │   │   ├── AdminButton.tsx
+    │   │   │   ├── AdminForm.tsx
+    │   │   │   ├── AdminInput.tsx
+    │   │   │   ├── AdminModal.tsx
+    │   │   │   ├── AdminStatsCard.tsx
+    │   │   │   ├── AdminTable.tsx
+    │   │   │   ├── ChartCard.tsx
+    │   │   │   ├── StatusBadge.tsx
+    │   │   │   └── index.ts
+    │   │   ├── customers/        # Customer management pages
+    │   │   │   └── page.tsx
     │   │   ├── layout.tsx        # Admin layout
-    │   │   └── page.tsx          # Admin dashboard
+    │   │   ├── orders/           # Order management pages
+    │   │   │   └── page.tsx
+    │   │   ├── page.tsx          # Admin dashboard
+    │   │   ├── products/         # Product management pages
+    │   │   │   ├── page.tsx
+    │   │   │   ├── [id]/         # Dynamic product detail pages
+    │   │   │   │   └── page.tsx
+    │   │   │   └── new/          # New product page
+    │   │   │       └── page.tsx
+    │   │   └── settings/         # Settings page
+    │   │       └── page.tsx
     │   ├── cart/                 # Shopping cart pages
     │   │   └── page.tsx
     │   ├── checkout/             # Checkout pages
     │   │   ├── page.tsx
     │   │   └── success/          # Payment success page
+    │   │       └── page.tsx
     │   ├── favicon.ico           # Favicon
     │   ├── globals.css           # Global styles
     │   ├── layout.tsx            # Root layout component
@@ -117,19 +171,42 @@ frontend/
     │   ├── providers.tsx         # React context providers
     │   ├── register/             # User registration pages
     │   │   └── page.tsx
+    │   ├── search/               # Search pages
+    │   │   └── page.tsx
     │   └── wishlist/             # Wishlist pages
     │       └── page.tsx
+    ├── components/               # Shared components
+    │   ├── mode-toggle.tsx
+    │   └── theme-provider.tsx
+    │   └── ui/                   # UI library components
+    │       ├── breadcrumb.tsx
+    │       ├── button.tsx
+    │       ├── card.tsx
+    │       ├── checkbox.tsx
+    │       ├── dropdown-menu.tsx
+    │       ├── input.tsx
+    │       ├── label.tsx
+    │       ├── select.tsx
+    │       ├── table.tsx
+    │       └── textarea.tsx
     ├── hooks/                    # Custom React hooks
     │   ├── useAuth.tsx           # Authentication hook
     │   ├── useDebounce.ts        # Debounce utility hook
+    │   ├── usePermissions.ts     # Permissions hook
     │   ├── useSearch.ts          # Search functionality hook
     │   └── useWishlist.ts        # Wishlist management hook
+    ├── lib/                      # Utility libraries
+    │   ├── api.ts                # Main API client
+    │   ├── api/adminApi.ts       # Admin API client
+    │   └── utils.ts              # Utility functions
     ├── store/                    # State management
     │   ├── cartStore.ts          # Shopping cart state management
     │   ├── searchStore.ts        # Search state management
     │   └── wishlistStore.ts      # Wishlist state management
-    └── types/                    # TypeScript type definitions
-        └── index.ts              # Global type definitions
+    ├── types/                    # TypeScript type definitions
+    │   └── index.ts              # Global type definitions
+    └── utils/                    # Utility functions
+        └── rolePermissions.ts    # Role and permission utilities
 ```
 
 ## Key Architecture Notes
@@ -137,11 +214,13 @@ frontend/
 ### Backend
 - **Framework**: Express.js with TypeScript
 - **Database**: MongoDB with Mongoose ODM
-- **Authentication**: JWT-based authentication
+- **Authentication**: JWT-based authentication with role-based permissions
 - **Validation**: Server-side input validation using schemas
 - **Cart Logic**: Complete server-side cart calculations with professional business rules
 - **Payment Integration**: Multiple payment gateways (Bkash, Nagad, Stripe)
 - **Search Service**: Advanced search functionality with autocomplete and suggestions
+- **Admin Services**: Dedicated services for admin operations with audit logging
+- **Permissions**: Middleware-based role and permission system
 
 ### Frontend
 - **Framework**: Next.js 14 with App Router
@@ -150,13 +229,15 @@ frontend/
 - **Search**: Advanced SearchBar component with autocomplete and suggestions
 - **API Integration**: Custom API client functions for backend communication
 - **Admin Dashboard**: Complete admin interface for managing products, orders, and users
+- **UI Components**: Extensive UI library using shadcn/ui components
+- **Permissions**: Client-side permission checking with hooks
 
 ### Development
 - **Build Tools**: TypeScript compilation for both frontend and backend
 - **Package Management**: npm with lock files for reproducible builds
 - **Environment**: Separate environment configurations for development/production
 
-This structure follows modern fullstack development best practices with clear separation of concerns between frontend and backend applications, comprehensive payment integration, and advanced search functionality.
+This structure follows modern fullstack development best practices with clear separation of concerns between frontend and backend applications, comprehensive payment integration, role-based permissions, and advanced search functionality.
 
 ---
 

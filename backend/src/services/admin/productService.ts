@@ -60,6 +60,20 @@ export const getProducts = async (filters: ProductFilters) => {
   };
 };
 
+export const getProduct = async (id: string) => {
+  const product = await Product.findById(id)
+    .populate('category', 'name');
+
+  if (!product) {
+    throw new AppError('Product not found', 404);
+  }
+
+  return {
+    success: true,
+    data: product,
+  };
+};
+
 export const createProduct = async (productData: any, adminInfo: any) => {
   // Check for duplicate SKU
   const existingSku = await Product.findOne({ sku: productData.sku });

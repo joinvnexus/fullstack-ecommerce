@@ -38,6 +38,20 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
   }
 };
 
+// Get single product
+export const getProduct = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: 'Product ID is required' });
+    }
+    const result = await productService.getProduct(id);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Update product
 export const updateProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {

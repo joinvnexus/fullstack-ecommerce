@@ -2,6 +2,16 @@
 
 import React, { useState } from 'react';
 import { ChevronUp, ChevronDown, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 
 export interface Column<T> {
   key: keyof T | string;
@@ -86,13 +96,13 @@ export function AdminTable<T extends { _id: string }>({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow">
+      <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
         <div className="p-6">
           <div className="animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div className="h-4 bg-muted rounded w-1/4 mb-4"></div>
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-4 bg-gray-200 rounded"></div>
+                <div key={i} className="h-4 bg-muted rounded"></div>
               ))}
             </div>
           </div>
@@ -102,115 +112,108 @@ export function AdminTable<T extends { _id: string }>({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              {selectable && (
-                <th className="px-6 py-3 text-left">
-                  <input
-                    type="checkbox"
-                    checked={selected.size === data.length && data.length > 0}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                </th>
-              )}
-              {columns.map((column) => (
-                <th
-                  key={String(column.key)}
-                  className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
-                  }`}
-                  style={{ width: column.width }}
-                  onClick={() => column.sortable && handleSort(String(column.key))}
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>{column.header}</span>
-                    {column.sortable && sortColumn === String(column.key) && (
-                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                    )}
-                  </div>
-                </th>
-              ))}
-              {(onEdit || onDelete || onView) && (
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {sortedData.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={columns.length + (selectable ? 1 : 0) + ((onEdit || onDelete || onView) ? 1 : 0)}
-                  className="px-6 py-12 text-center text-gray-500"
-                >
-                  {emptyMessage}
-                </td>
-              </tr>
-            ) : (
-              sortedData.map((item) => (
-                <tr key={item._id} className="hover:bg-gray-50">
-                  {selectable && (
-                    <td className="px-6 py-4">
-                      <input
-                        type="checkbox"
-                        checked={selected.has(item._id)}
-                        onChange={(e) => handleSelectItem(item._id, e.target.checked)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </td>
-                  )}
-                  {columns.map((column) => (
-                    <td key={String(column.key)} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {column.render
-                        ? column.render((item as any)[column.key], item)
-                        : String((item as any)[column.key] || '')
-                      }
-                    </td>
-                  ))}
-                  {(onEdit || onDelete || onView) && (
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end space-x-2">
-                        {onView && (
-                          <button
-                            onClick={() => onView(item)}
-                            className="text-blue-600 hover:text-blue-900 p-1"
-                            title="View"
-                          >
-                            <MoreHorizontal size={16} />
-                          </button>
-                        )}
-                        {onEdit && (
-                          <button
-                            onClick={() => onEdit(item)}
-                            className="text-indigo-600 hover:text-indigo-900 p-1"
-                            title="Edit"
-                          >
-                            <Edit size={16} />
-                          </button>
-                        )}
-                        {onDelete && (
-                          <button
-                            onClick={() => onDelete(item)}
-                            className="text-red-600 hover:text-red-900 p-1"
-                            title="Delete"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))
+    <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {selectable && (
+              <TableHead className="w-[50px]">
+                <Checkbox
+                  checked={selected.size === data.length && data.length > 0}
+                  onCheckedChange={handleSelectAll}
+                />
+              </TableHead>
             )}
-          </tbody>
-        </table>
-      </div>
+            {columns.map((column) => (
+              <TableHead
+                key={String(column.key)}
+                className={column.sortable ? 'cursor-pointer hover:bg-muted/50' : ''}
+                style={{ width: column.width }}
+                onClick={() => column.sortable && handleSort(String(column.key))}
+              >
+                <div className="flex items-center space-x-1">
+                  <span>{column.header}</span>
+                  {column.sortable && sortColumn === String(column.key) && (
+                    sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                  )}
+                </div>
+              </TableHead>
+            ))}
+            {(onEdit || onDelete || onView) && (
+              <TableHead className="text-right">Actions</TableHead>
+            )}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {sortedData.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={columns.length + (selectable ? 1 : 0) + ((onEdit || onDelete || onView) ? 1 : 0)}
+                className="text-center text-muted-foreground"
+              >
+                {emptyMessage}
+              </TableCell>
+            </TableRow>
+          ) : (
+            sortedData.map((item) => (
+              <TableRow key={item._id}>
+                {selectable && (
+                  <TableCell>
+                    <Checkbox
+                      checked={selected.has(item._id)}
+                      onCheckedChange={(checked) => handleSelectItem(item._id, checked as boolean)}
+                    />
+                  </TableCell>
+                )}
+                {columns.map((column) => (
+                  <TableCell key={String(column.key)}>
+                    {column.render
+                      ? column.render((item as any)[column.key], item)
+                      : String((item as any)[column.key] || '')
+                    }
+                  </TableCell>
+                ))}
+                {(onEdit || onDelete || onView) && (
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      {onView && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onView(item)}
+                          title="View"
+                        >
+                          <MoreHorizontal size={16} />
+                        </Button>
+                      )}
+                      {onEdit && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onEdit(item)}
+                          title="Edit"
+                        >
+                          <Edit size={16} />
+                        </Button>
+                      )}
+                      {onDelete && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDelete(item)}
+                          title="Delete"
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                )}
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 }

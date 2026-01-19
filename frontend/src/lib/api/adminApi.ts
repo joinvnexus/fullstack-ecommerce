@@ -21,6 +21,8 @@ export const adminApi = {
       order?: 'asc' | 'desc';
     }) => api.get(`${ADMIN_BASE}/products`, { params }),
 
+    getById: (id: string) => api.get(`${ADMIN_BASE}/products/${id}`),
+
     create: (data: any) => api.post(`${ADMIN_BASE}/products`, data),
 
     update: (id: string, data: any) => api.put(`${ADMIN_BASE}/products/${id}`, data),
@@ -31,8 +33,53 @@ export const adminApi = {
       api.post(`${ADMIN_BASE}/products/bulk`, data),
   },
 
-  // Users (for role management)
+  // Orders
+  orders: {
+    getAll: (params?: {
+      page?: number;
+      limit?: number;
+      status?: string;
+      userId?: string;
+      startDate?: string;
+      endDate?: string;
+    }) => api.get(`${ADMIN_BASE}/orders`, { params }),
+
+    getById: (id: string) => api.get(`${ADMIN_BASE}/orders/${id}`),
+
+    updateStatus: (id: string, status: string) =>
+      api.put(`${ADMIN_BASE}/orders/${id}/status`, { status }),
+
+    bulkUpdateStatus: (data: { orderIds: string[]; status: string }) =>
+      api.post(`${ADMIN_BASE}/orders/bulk-status`, data),
+  },
+
+  // Categories
+  categories: {
+    getAll: (params?: {
+      page?: number;
+      limit?: number;
+      parent?: string;
+      search?: string;
+    }) => api.get(`${ADMIN_BASE}/categories`, { params }),
+
+    getById: (id: string) => api.get(`${ADMIN_BASE}/categories/${id}`),
+
+    create: (data: any) => api.post(`${ADMIN_BASE}/categories`, data),
+
+    update: (id: string, data: any) => api.put(`${ADMIN_BASE}/categories/${id}`, data),
+
+    delete: (id: string) => api.delete(`${ADMIN_BASE}/categories/${id}`),
+  },
+
+  // Users (for customer management)
   users: {
+    getAll: (params?: {
+      page?: number;
+      limit?: number;
+      role?: string;
+      search?: string;
+    }) => api.get(`${ADMIN_BASE}/users`, { params }),
+
     updateRole: (id: string, role: string) =>
       api.patch(`${ADMIN_BASE}/users/${id}/role`, { role }),
   },
@@ -106,6 +153,20 @@ export interface Product {
     alt: string;
     isPrimary: boolean;
   }>;
+  tags?: string[];
+  variants?: Array<{
+    name: string;
+    options: Array<{
+      name: string;
+      priceAdjustment: number;
+      skuSuffix: string;
+    }>;
+  }>;
+  seo?: {
+    title?: string;
+    description?: string;
+    keywords?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }

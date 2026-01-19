@@ -25,9 +25,11 @@ import {
   Pie,
   Cell
 } from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 import { adminApi, DashboardStats } from '@/lib/api/adminApi';
-import { StatusBadge } from './components/StatusBadge';
+import { StatusBadge, AdminStatsCard, ChartCard } from './components';
 
 // Install recharts
 // npm install recharts
@@ -105,99 +107,51 @@ const AdminDashboard = () => {
     <div className="space-y-6">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</p>
-              <div className="flex items-center mt-1 text-sm text-green-600">
-                <TrendingUp size={14} className="mr-1" />
-                <span>12.5% from last month</span>
-              </div>
-            </div>
-            <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <DollarSign className="h-6 w-6 text-blue-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Orders</p>
-              <p className="text-2xl font-bold">{stats.totalOrders}</p>
-              <div className="flex items-center mt-1 text-sm text-green-600">
-                <TrendingUp size={14} className="mr-1" />
-                <span>8.2% from last month</span>
-              </div>
-            </div>
-            <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
-              <ShoppingBag className="h-6 w-6 text-green-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Customers</p>
-              <p className="text-2xl font-bold">{stats.totalCustomers}</p>
-              <div className="flex items-center mt-1 text-sm text-green-600">
-                <TrendingUp size={14} className="mr-1" />
-                <span>5.7% from last month</span>
-              </div>
-            </div>
-            <div className="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
-              <Users className="h-6 w-6 text-purple-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Products</p>
-              <p className="text-2xl font-bold">{stats.totalProducts}</p>
-              <div className="text-sm text-gray-600 mt-1">Active items</div>
-            </div>
-            <div className="h-12 w-12 bg-yellow-100 rounded-full flex items-center justify-center">
-              <Package className="h-6 w-6 text-yellow-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Pending Orders</p>
-              <p className="text-2xl font-bold">{stats.pendingOrders}</p>
-              <div className="text-sm text-gray-600 mt-1">Need attention</div>
-            </div>
-            <div className="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center">
-              <CreditCard className="h-6 w-6 text-orange-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Low Stock</p>
-              <p className="text-2xl font-bold">{stats.lowStockProducts}</p>
-              <div className="text-sm text-gray-600 mt-1">Need restock</div>
-            </div>
-            <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center">
-              <AlertCircle className="h-6 w-6 text-red-600" />
-            </div>
-          </div>
-        </div>
+        <AdminStatsCard
+          title="Total Revenue"
+          value={`${stats.totalRevenue.toLocaleString()}`}
+          icon={DollarSign}
+          color="blue"
+          trend={{ value: 12.5, label: "12.5% from last month" }}
+        />
+        <AdminStatsCard
+          title="Total Orders"
+          value={stats.totalOrders}
+          icon={ShoppingBag}
+          color="green"
+          trend={{ value: 8.2, label: "8.2% from last month" }}
+        />
+        <AdminStatsCard
+          title="Total Customers"
+          value={stats.totalCustomers}
+          icon={Users}
+          color="purple"
+          trend={{ value: 5.7, label: "5.7% from last month" }}
+        />
+        <AdminStatsCard
+          title="Total Products"
+          value={stats.totalProducts}
+          icon={Package}
+          color="yellow"
+        />
+        <AdminStatsCard
+          title="Pending Orders"
+          value={stats.pendingOrders}
+          icon={CreditCard}
+          color="orange"
+        />
+        <AdminStatsCard
+          title="Low Stock"
+          value={stats.lowStockProducts}
+          icon={AlertCircle}
+          color="red"
+        />
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Sales Chart */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold mb-4">Revenue & Orders Overview</h3>
+        <ChartCard title="Revenue & Orders Overview">
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={salesData}>
@@ -205,28 +159,27 @@ const AdminDashboard = () => {
                 <XAxis dataKey="month" stroke="#666" />
                 <YAxis stroke="#666" />
                 <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="#3B82F6" 
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#3B82F6"
                   strokeWidth={2}
                   name="Revenue ($)"
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="orders" 
-                  stroke="#10B981" 
+                <Line
+                  type="monotone"
+                  dataKey="orders"
+                  stroke="#10B981"
                   strokeWidth={2}
                   name="Orders"
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </ChartCard>
 
         {/* Order Status Chart */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold mb-4">Order Status Distribution</h3>
+        <ChartCard title="Order Status Distribution">
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -248,88 +201,90 @@ const AdminDashboard = () => {
               </PieChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </ChartCard>
       </div>
 
       {/* Recent Orders & Top Products */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Orders */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
+        <Card>
+          <CardHeader>
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Recent Orders</h3>
-              <button className="text-sm text-blue-600 hover:text-blue-800">
+              <CardTitle>Recent Orders</CardTitle>
+              <button className="text-sm text-primary hover:text-primary/80">
                 View All
               </button>
             </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Order ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {recentOrders.map((order) => (
-                  <tr key={order._id || order.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                      {order.orderNumber || order.id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {order.userId?.name || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ৳{order.totals?.grandTotal?.toLocaleString() || '0'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge status={order.status} />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(order.createdAt).toLocaleDateString()}
-                    </td>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Order ID
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Customer
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Date
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                </thead>
+                <tbody className="bg-background divide-y divide-border">
+                  {recentOrders.map((order) => (
+                    <tr key={order._id || order.id} className="hover:bg-muted/50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
+                        {order.orderNumber || order.id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                        {order.userId?.name || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                        ৳{order.totals?.grandTotal?.toLocaleString() || '0'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <StatusBadge status={order.status} />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Top Products */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
+        <Card>
+          <CardHeader>
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Top Selling Products</h3>
-              <button className="text-sm text-blue-600 hover:text-blue-800">
+              <CardTitle>Top Selling Products</CardTitle>
+              <button className="text-sm text-primary hover:text-primary/80">
                 View All
               </button>
             </div>
-          </div>
-          <div className="p-6">
+          </CardHeader>
+          <CardContent>
             <div className="space-y-4">
               {topProducts.map((product, index) => (
                 <div key={product._id || product.title || index} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="h-10 w-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <span className="font-bold text-gray-700">{index + 1}</span>
+                    <div className="h-10 w-10 bg-muted rounded-lg flex items-center justify-center">
+                      <span className="font-bold text-muted-foreground">{index + 1}</span>
                     </div>
                     <div>
                       <div className="font-medium">{product.title || product.name || 'Unknown Product'}</div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-muted-foreground">
                         {product.stock ? `${product.stock} units in stock` : 'Stock info unavailable'}
                       </div>
                     </div>
@@ -343,32 +298,36 @@ const AdminDashboard = () => {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button className="flex items-center justify-center space-x-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <Package className="h-5 w-5 text-blue-600" />
-            <span>Add New Product</span>
-          </button>
-          <button className="flex items-center justify-center space-x-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <Truck className="h-5 w-5 text-green-600" />
-            <span>Process Orders</span>
-          </button>
-          <button className="flex items-center justify-center space-x-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <CreditCard className="h-5 w-5 text-purple-600" />
-            <span>View Payments</span>
-          </button>
-          <button className="flex items-center justify-center space-x-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <Users className="h-5 w-5 text-orange-600" />
-            <span>Manage Customers</span>
-          </button>
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Button variant="outline" className="flex items-center justify-center space-x-2 p-4">
+              <Package className="h-5 w-5 text-blue-600" />
+              <span>Add New Product</span>
+            </Button>
+            <Button variant="outline" className="flex items-center justify-center space-x-2 p-4">
+              <Truck className="h-5 w-5 text-green-600" />
+              <span>Process Orders</span>
+            </Button>
+            <Button variant="outline" className="flex items-center justify-center space-x-2 p-4">
+              <CreditCard className="h-5 w-5 text-purple-600" />
+              <span>View Payments</span>
+            </Button>
+            <Button variant="outline" className="flex items-center justify-center space-x-2 p-4">
+              <Users className="h-5 w-5 text-orange-600" />
+              <span>Manage Customers</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

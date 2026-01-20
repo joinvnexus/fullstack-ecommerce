@@ -33,7 +33,6 @@ const categories = [
     sortOrder: 5,
   },
 ];
-
 const products = [
   {
     title: "Samsung Galaxy S24 Ultra",
@@ -142,37 +141,83 @@ const products = [
   {
     title: "MacBook Pro 16-inch",
     slug: "macbook-pro-16-inch",
-    description: "Powerful laptop for professionals with M3 chip",
+    description: "Powerful laptop for professionals with M3 chip, featuring stunning Liquid Retina XDR display, up to 22 hours of battery life, and advanced thermal system for sustained performance. Perfect for video editing, 3D rendering, and software development.",
     price: { amount: 280000, currency: 'BDT' },
     sku: "MBP-16-003",
     stock: 15,
+    variants: [
+      {
+        name: "Storage",
+        options: [
+          { name: "512GB", priceAdjustment: 0, skuSuffix: "512" },
+          { name: "1TB", priceAdjustment: 40000, skuSuffix: "1TB" },
+          { name: "2TB", priceAdjustment: 80000, skuSuffix: "2TB" },
+        ]
+      },
+      {
+        name: "Color",
+        options: [
+          { name: "Space Gray", priceAdjustment: 0, skuSuffix: "SGRY" },
+          { name: "Silver", priceAdjustment: 0, skuSuffix: "SLVR" },
+        ]
+      }
+    ],
     images: [
       {
-        url: "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500",
-        alt: "MacBook Pro 16-inch",
+        url: "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w-800",
+        alt: "MacBook Pro 16-inch front view",
         isPrimary: true,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?w-800",
+        alt: "MacBook Pro 16-inch keyboard",
+        isPrimary: false,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w-800",
+        alt: "MacBook Pro 16-inch display",
+        isPrimary: false,
       },
     ],
     category: "Electronics",
-    tags: ["laptop", "apple", "macbook"],
+    tags: ["laptop", "apple", "macbook", "pro", "premium"],
     status: "active",
   },
   {
     title: "Sony WH-1000XM5 Headphones",
     slug: "sony-wh-1000xm5-headphones",
-    description: "Premium noise-cancelling wireless headphones",
+    description: "Premium noise-cancelling wireless headphones with industry-leading noise cancellation, 30-hour battery life, and exceptional sound quality. Features crystal clear hands-free calling and multipoint connection for seamless switching between devices.",
     price: { amount: 35000, currency: 'BDT' },
     sku: "SWH-1000XM5-004",
     stock: 40,
+    variants: [
+      {
+        name: "Color",
+        options: [
+          { name: "Black", priceAdjustment: 0, skuSuffix: "BLK" },
+          { name: "Silver", priceAdjustment: 0, skuSuffix: "SLVR" },
+        ]
+      }
+    ],
     images: [
       {
-        url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500",
-        alt: "Sony WH-1000XM5 Headphones",
+        url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800",
+        alt: "Sony WH-1000XM5 Headphones front view",
         isPrimary: true,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800",
+        alt: "Sony WH-1000XM5 Headphones side view",
+        isPrimary: false,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800",
+        alt: "Sony WH-1000XM5 Headphones in use",
+        isPrimary: false,
       },
     ],
     category: "Electronics",
-    tags: ["headphones", "audio", "wireless"],
+    tags: ["headphones", "audio", "wireless", "noise-cancelling", "sony"],
     status: "active",
   },
   {
@@ -284,91 +329,191 @@ const products = [
   {
     title: "Electric Kettle",
     slug: "electric-kettle",
-    description: "Fast boiling electric kettle with auto shut-off.",
+    description: "Fast boiling electric kettle with auto shut-off and boil-dry protection. Features 1.7L capacity, 360° swivel base, cordless serving, and concealed heating element for easy cleaning. Perfect for making tea, coffee, or instant noodles.",
     price: { amount: 2200, currency: 'BDT' },
     sku: "HK-KETTLE-002",
     stock: 40,
+    variants: [
+      {
+        name: "Capacity",
+        options: [
+          { name: "1.5L", priceAdjustment: 0, skuSuffix: "15L" },
+          { name: "1.7L", priceAdjustment: 200, skuSuffix: "17L" },
+        ]
+      },
+      {
+        name: "Color",
+        options: [
+          { name: "Stainless Steel", priceAdjustment: 0, skuSuffix: "SS" },
+          { name: "White", priceAdjustment: 0, skuSuffix: "WHT" },
+          { name: "Black", priceAdjustment: 0, skuSuffix: "BLK" },
+        ]
+      }
+    ],
     images: [
       {
-        url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500",
-        alt: "Electric Kettle",
+        url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800",
+        alt: "Electric Kettle main view",
         isPrimary: true,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1582167371270-68a4c033c5e6?w=800",
+        alt: "Electric Kettle pouring water",
+        isPrimary: false,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1603471567917-66e19b2e2b89?w=800",
+        alt: "Electric Kettle different colors",
+        isPrimary: false,
       },
     ],
     category: "Home & Kitchen",
-    tags: ["kettle", "appliance", "kitchen"],
+    tags: ["kettle", "appliance", "kitchen", "electric", "boiling"],
     status: "active",
   },
   {
     title: "The Alchemist",
     slug: "the-alchemist",
-    description: "Inspirational novel by Paulo Coelho.",
+    description: "Inspirational novel by Paulo Coelho that tells the mystical story of Santiago, an Andalusian shepherd boy who yearns to travel in search of a worldly treasure. His quest will lead him to riches far different—and far more satisfying—than he ever imagined.",
     price: { amount: 550, currency: 'BDT' },
     sku: "BK-ALCHEMIST-001",
     stock: 80,
+    variants: [
+      {
+        name: "Format",
+        options: [
+          { name: "Paperback", priceAdjustment: 0, skuSuffix: "PB" },
+          { name: "Hardcover", priceAdjustment: 200, skuSuffix: "HC" },
+        ]
+      }
+    ],
     images: [
       {
-        url: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=500",
-        alt: "The Alchemist Book",
+        url: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800",
+        alt: "The Alchemist Book cover",
         isPrimary: true,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800",
+        alt: "The Alchemist reading view",
+        isPrimary: false,
       },
     ],
     category: "Books",
-    tags: ["novel", "inspirational", "book"],
+    tags: ["novel", "inspirational", "book", "fiction", "paulo coelho"],
     status: "active",
   },
   {
     title: "Atomic Habits",
     slug: "atomic-habits",
-    description: "Best-selling self-help book by James Clear.",
+    description: "Best-selling self-help book by James Clear that reveals practical strategies to form good habits, break bad ones, and master the tiny behaviors that lead to remarkable results. Learn how to make time for new habits, overcome lack of motivation, and design your environment for success.",
     price: { amount: 650, currency: 'BDT' },
     sku: "BK-ATOMICHABITS-002",
     stock: 70,
+    variants: [
+      {
+        name: "Format",
+        options: [
+          { name: "Paperback", priceAdjustment: 0, skuSuffix: "PB" },
+          { name: "Hardcover", priceAdjustment: 250, skuSuffix: "HC" },
+        ]
+      }
+    ],
     images: [
       {
-        url: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?w=500",
-        alt: "Atomic Habits Book",
+        url: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?w=800",
+        alt: "Atomic Habits Book cover",
         isPrimary: true,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?w=800",
+        alt: "Atomic Habits open book",
+        isPrimary: false,
       },
     ],
     category: "Books",
-    tags: ["self-help", "book", "habits"],
+    tags: ["self-help", "book", "habits", "productivity", "james clear"],
     status: "active",
   },
   {
     title: "Football (Size 5)",
     slug: "football-size-5",
-    description: "High quality football for outdoor sports.",
+    description: "High quality football for outdoor sports with FIFA approved quality, durable synthetic leather, and butyl bladder for better air retention. Perfect for matches, training, or casual play. Suitable for all weather conditions.",
     price: { amount: 1200, currency: 'BDT' },
     sku: "SP-FOOTBALL-001",
     stock: 90,
+    variants: [
+      {
+        name: "Type",
+        options: [
+          { name: "Training", priceAdjustment: 0, skuSuffix: "TRN" },
+          { name: "Match", priceAdjustment: 500, skuSuffix: "MAT" },
+        ]
+      },
+      {
+        name: "Design",
+        options: [
+          { name: "Classic White/Black", priceAdjustment: 0, skuSuffix: "CB" },
+          { name: "Colorful", priceAdjustment: 100, skuSuffix: "COL" },
+          { name: "Team Pattern", priceAdjustment: 200, skuSuffix: "TP" },
+        ]
+      }
+    ],
     images: [
       {
-        url: "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=500",
-        alt: "Football Size 5",
+        url: "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800",
+        alt: "Football Size 5 main view",
         isPrimary: true,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1575361204480-aadea25e6e68?w=800",
+        alt: "Football in action",
+        isPrimary: false,
       },
     ],
     category: "Sports",
-    tags: ["football", "sports", "outdoor"],
+    tags: ["football", "sports", "outdoor", "soccer", "ball"],
     status: "active",
   },
   {
     title: "Badminton Racket",
     slug: "badminton-racket",
-    description: "Lightweight badminton racket for fast play.",
+    description: "Lightweight badminton racket for fast play with carbon fiber frame, isometric head shape for larger sweet spot, and flexible shaft for better control. Suitable for both beginners and intermediate players.",
     price: { amount: 950, currency: 'BDT' },
     sku: "SP-BADMINTON-002",
     stock: 55,
+    variants: [
+      {
+        name: "Weight",
+        options: [
+          { name: "Light (80-84g)", priceAdjustment: 0, skuSuffix: "L" },
+          { name: "Medium (85-89g)", priceAdjustment: 50, skuSuffix: "M" },
+          { name: "Heavy (90-94g)", priceAdjustment: 100, skuSuffix: "H" },
+        ]
+      },
+      {
+        name: "Grip Size",
+        options: [
+          { name: "G2", priceAdjustment: 0, skuSuffix: "G2" },
+          { name: "G3", priceAdjustment: 0, skuSuffix: "G3" },
+          { name: "G4", priceAdjustment: 0, skuSuffix: "G4" },
+        ]
+      }
+    ],
     images: [
       {
-        url: "https://images.unsplash.com/photo-1708312604109-16c0be9326cd?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=500",
-        alt: "Badminton Racket",
+        url: "https://images.unsplash.com/photo-1708312604109-16c0be9326cd?w=800",
+        alt: "Badminton Racket main view",
         isPrimary: true,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1621844407865-bdc426b43b5b?w=800",
+        alt: "Badminton Racket in action",
+        isPrimary: false,
       },
     ],
     category: "Sports",
-    tags: ["badminton", "sports", "racket"],
+    tags: ["badminton", "sports", "racket", "outdoor", "indoor"],
     status: "active",
   },
 ];

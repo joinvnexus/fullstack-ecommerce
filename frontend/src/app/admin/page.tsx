@@ -62,8 +62,8 @@ const AdminDashboard = () => {
         totalOrders: dashboardData.stats.totalOrders,
         totalCustomers: dashboardData.stats.totalCustomers,
         totalProducts: dashboardData.stats.totalProducts,
-        pendingOrders: 0, // TODO: Calculate from orders data
-        lowStockProducts: 0, // TODO: Calculate from products data
+        pendingOrders: dashboardData.stats.pendingOrders || 0,
+        lowStockProducts: dashboardData.stats.lowStockProducts || 0,
       });
 
       setRecentOrders(dashboardData.recentOrders || []);

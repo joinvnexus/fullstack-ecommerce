@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import mongoose from 'mongoose';
 import type { IOrder } from '../models/Order.js';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
@@ -122,63 +123,101 @@ export class PaymentService {
 
   private async handlePaymentFailure(paymentIntent: Stripe.PaymentIntent) {
     const orderId = paymentIntent.metadata.orderId;
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    const order = await Order.findById(orderId);
-    if (order) {
-      await Order.findByIdAndUpdate(
-        orderId,
-        {
-          status: 'pending',
-          'payment.status': 'failed',
-          updatedAt: new Date(),
-        }
-      );
+    try {
+      const order = await Order.findById(orderId).session(session);
+      if (order) {
+        await Order.findByIdAndUpdate(
+          orderId,
+          {
+            status: 'pending',
+            'payment.status': 'failed',
+            updatedAt: new Date(),
+          },
+          { session }
+        );
 
-      // Restore stock
-      await this.restoreOrderStock(order);
+        // Restore stock
+        await this.restoreOrderStock(order, session);
+      }
+
+      await session.commitTransaction();
+      logger.error(`❌ Order ${orderId} payment failed`);
+    } catch (error) {
+      await session.abortTransaction();
+      logger.error(`Error handling payment failure for order ${orderId}:`, error);
+      throw error;
+    } finally {
+      session.endSession();
     }
-
-    console.log(`❌ Order ${orderId} payment failed`);
   }
 
   private async handlePaymentCancelled(paymentIntent: Stripe.PaymentIntent) {
     const orderId = paymentIntent.metadata.orderId;
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    const order = await Order.findById(orderId);
-    if (order) {
-      await Order.findByIdAndUpdate(
-        orderId,
-        {
-          status: 'cancelled',
-          'payment.status': 'cancelled',
-          updatedAt: new Date(),
-        }
-      );
+    try {
+      const order = await Order.findById(orderId).session(session);
+      if (order) {
+        await Order.findByIdAndUpdate(
+          orderId,
+          {
+            status: 'cancelled',
+            'payment.status': 'cancelled',
+            updatedAt: new Date(),
+          },
+          { session }
+        );
 
-      // Restore stock
-      await this.restoreOrderStock(order);
+        // Restore stock
+        await this.restoreOrderStock(order, session);
+      }
+
+      await session.commitTransaction();
+      logger.error(`❌ Order ${orderId} payment cancelled`);
+    } catch (error) {
+      await session.abortTransaction();
+      logger.error(`Error handling payment cancellation for order ${orderId}:`, error);
+      throw error;
+    } finally {
+      session.endSession();
     }
-
-    logger.error(`❌ Order ${orderId} payment cancelled`);
   }
 
   private async handleRefund(charge: Stripe.Charge) {
-    const order = await Order.findOne({ 'payment.chargeId': charge.id });
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    if (order) {
-      await Order.findByIdAndUpdate(
-        order._id,
-        {
-          status: 'refunded',
-          'payment.status': 'refunded',
-          updatedAt: new Date(),
-        }
-      );
+    try {
+      const order = await Order.findOne({ 'payment.chargeId': charge.id }).session(session);
 
-      // Restore stock
-      await this.restoreOrderStock(order);
+      if (order) {
+        await Order.findByIdAndUpdate(
+          order._id,
+          {
+            status: 'refunded',
+            'payment.status': 'refunded',
+            updatedAt: new Date(),
+          },
+          { session }
+        );
 
-      logger.info(`💰 Order ${order.orderNumber} refunded`);
+        // Restore stock
+        await this.restoreOrderStock(order, session);
+
+        logger.info(`💰 Order ${order.orderNumber} refunded`);
+      }
+
+      await session.commitTransaction();
+    } catch (error) {
+      await session.abortTransaction();
+      logger.error(`Error handling refund for charge ${charge.id}:`, error);
+      throw error;
+    } finally {
+      session.endSession();
     }
   }
 
@@ -244,11 +283,11 @@ export class PaymentService {
   }
 
   // Restore order stock when payment fails or is cancelled
-  private async restoreOrderStock(order: any) {
+  private async restoreOrderStock(order: any, session?: any) {
     for (const item of order.items) {
       await Product.findByIdAndUpdate(item.productId, {
         $inc: { stock: item.quantity },
-      });
+      }, session ? { session } : {});
     }
     logger.info(`🔄 Stock restored for order ${order.orderNumber}`);
   }

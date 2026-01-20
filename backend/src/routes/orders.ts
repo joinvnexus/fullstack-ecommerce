@@ -363,11 +363,14 @@ router.patch('/:id/status', authenticate, authorizeAdmin, async (req, res, next)
 
 // Admin: Process refund
 router.post('/:id/refund', authenticate, authorizeAdmin, async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { id } = req.params;
     const { amount, reason } = req.body;
 
-    const order = await Order.findById(new mongoose.Types.ObjectId(id));
+    const order = await Order.findById(new mongoose.Types.ObjectId(id)).session(session);
     if (!order) {
       throw new AppError('Order not found', 404);
     }
@@ -381,19 +384,21 @@ router.post('/:id/refund', authenticate, authorizeAdmin, async (req, res, next) 
     // Update order status
     order.status = 'refunded';
     order.payment.status = 'refunded';
-    
+
     // Add refund note
-    order.notes = `${order.notes || ''}\nRefund processed: $${refundAmount} - ${reason}`;
-    
-    await order.save();
+    order.notes = `${order.notes || ''}\nRefund processed: ${refundAmount} - ${reason}`;
+
+    await order.save({ session });
 
     // Process refund with payment provider (TODO: integrate with actual provider)
     // Restock products
     for (const item of order.items) {
       await Product.findByIdAndUpdate(item.productId, {
         $inc: { stock: item.quantity },
-      });
+      }, { session });
     }
+
+    await session.commitTransaction();
 
     res.json({
       success: true,
@@ -401,7 +406,10 @@ router.post('/:id/refund', authenticate, authorizeAdmin, async (req, res, next) 
       data: order,
     });
   } catch (error) {
+    await session.abortTransaction();
     next(error);
+  } finally {
+    session.endSession();
   }
 });
 

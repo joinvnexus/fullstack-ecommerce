@@ -1,5 +1,6 @@
 import express from 'express';
 import Category from '../models/Category.js';
+import Product from '../models/Product.js';
 import { authenticate, authorizeAdmin } from '../utils/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
 import mongoose from 'mongoose';
@@ -60,7 +61,6 @@ router.get('/:slug', async (req, res, next) => {
     }
 
     // Get products count in this category
-    const Product = require('../models/Product').default;
     const productCount = await Product.countDocuments({
       category: category._id,
       status: 'active',
@@ -190,7 +190,6 @@ router.delete('/:id', authenticate, authorizeAdmin, async (req, res, next) => {
     }
 
     // Check if category has products
-    const Product = require('../models/Product').default;
     const productCount = await Product.countDocuments({ category: categoryId });
     if (productCount > 0) {
       throw new AppError(

@@ -74,6 +74,7 @@ const ProductSchema: Schema = new Schema(
       enum: ['draft', 'active', 'archived'],
       default: 'draft',
     },
+    isFeatured: { type: Boolean, default: false },
     seo: {
       title: { type: String },
       description: { type: String },

@@ -4,7 +4,9 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import mongoose from "mongoose";
+import logger from "./utils/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import authRoutes from "./routes/auth.js";
 import productRoutes from "./routes/products.js";
@@ -21,6 +23,22 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(helmet());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+});
+app.use(limiter);
+
+// Stricter rate limiting for auth routes
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 auth requests per windowMs
+  message: 'Too many authentication attempts, please try again later.',
+});
+
 app.use(
   cors({
     origin:
@@ -34,6 +52,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
+app.use("/api/auth", authLimiter);
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
@@ -93,13 +112,21 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 // Database connection
+const buildMongoURI = () => {
+  const user = process.env.MONGODB_USER;
+  const pass = process.env.MONGODB_PASS;
+  const host = process.env.MONGODB_HOST;
+  const db = process.env.MONGODB_DB;
+  return `mongodb+srv://${user}:${pass}@${host}/${db}?retryWrites=true&w=majority`;
+};
+
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI as string);
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-    console.log(`📊 Database: ${conn.connection.name}`);
+    const conn = await mongoose.connect(buildMongoURI());
+    logger.info(`✅ MongoDB Connected: ${conn.connection.host}`);
+    logger.info(`📊 Database: ${conn.connection.name}`);
   } catch (error) {
-    console.error("❌ MongoDB connection error:", error);
+    logger.error("❌ MongoDB connection error:", error);
     process.exit(1);
   }
 };
@@ -109,13 +136,13 @@ const startServer = async () => {
   await connectDB();
 
   app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📡 Health check: http://localhost:${PORT}/api/health`);
-    console.log(`🔧 Test endpoint: http://localhost:${PORT}/api/test`);
-    console.log(`🔐 Auth endpoints:`);
-    console.log(`   POST http://localhost:${PORT}/api/auth/register`);
-    console.log(`   POST http://localhost:${PORT}/api/auth/login`);
-    console.log(`   GET  http://localhost:${PORT}/api/auth/me (requires auth)`);
+    logger.info(`🚀 Server running on http://localhost:${PORT}`);
+    logger.info(`📡 Health check: http://localhost:${PORT}/api/health`);
+    logger.info(`🔧 Test endpoint: http://localhost:${PORT}/api/test`);
+    logger.info(`🔐 Auth endpoints:`);
+    logger.info(`   POST http://localhost:${PORT}/api/auth/register`);
+    logger.info(`   POST http://localhost:${PORT}/api/auth/login`);
+    logger.info(`   GET  http://localhost:${PORT}/api/auth/me (requires auth)`);
   });
 };
 

@@ -65,46 +65,19 @@ router.post('/', authenticate, async (req, res, next) => {
       throw new AppError('User not found', 404);
     }
 
-    // Populate product details
-    await cart.populate({
-      path: 'items.productId',
-      select: 'title sku price stock',
-    });
-
-    // Validate stock and prepare order items
-    const orderItems = [];
-    let subtotal = 0;
-
-    for (const cartItem of cart.items) {
-      const product = cartItem.productId as any;
-      
-      if (product.stock < cartItem.quantity) {
-        throw new AppError(`Insufficient stock for ${product.title}`, 400);
-      }
-
-      const itemTotal = cartItem.unitPrice * cartItem.quantity;
-      subtotal += itemTotal;
-
-      orderItems.push({
-        productId: product._id,
-        variantId: cartItem.variantId,
-        name: product.title,
-        sku: product.sku,
-        quantity: cartItem.quantity,
-        unitPrice: cartItem.unitPrice,
-        totalPrice: itemTotal,
-      });
-    }
-
     // Calculate totals (simplified - add tax, shipping, discounts later)
+    // First, get an estimate, but validate inside transaction
+    let subtotal = 0;
+    for (const cartItem of cart.items) {
+      subtotal += cartItem.unitPrice * cartItem.quantity;
+    }
     const shippingCost = shippingMethod?.cost || 0;
     const tax = subtotal * 0.1; // 10% tax
     const grandTotal = subtotal + shippingCost + tax;
 
-    // Create order
-    const order = new Order({
+    // Prepare order data, validation inside transaction
+    const orderData = {
       userId,
-      items: orderItems,
       shippingAddress: shippingAddress || user.addresses.find(addr => addr.isDefault),
       billingAddress: billingAddress || shippingAddress,
       contactInfo: {
@@ -132,31 +105,94 @@ router.post('/', authenticate, async (req, res, next) => {
         estimatedDays: 7,
       },
       notes,
-    });
+    };
 
-    // Generate order number if not set
-    if (!order.orderNumber) {
-      const date = new Date();
-      const year = date.getFullYear().toString().slice(-2);
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const day = date.getDate().toString().padStart(2, '0');
+    // Use MongoDB transaction to ensure atomic stock decrement and validation
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-      const randomNum = Math.floor(1000 + Math.random() * 9000);
-      order.orderNumber = `ORD${year}${month}${day}${randomNum}`;
-    }
+    let order: any;
 
-    await order.save();
-
-    // Reserve stock (decrement product stock)
-    for (const item of orderItems) {
-      await Product.findByIdAndUpdate(item.productId, {
-        $inc: { stock: -item.quantity },
+    try {
+      // Populate product details inside transaction
+      await cart.populate({
+        path: 'items.productId',
+        select: 'title sku price stock',
       });
-    }
 
-    // Clear user cart
-    cart.items = [];
-    await cart.save();
+      // Validate stock and prepare order items inside transaction
+      const orderItems = [];
+      let actualSubtotal = 0;
+
+      for (const cartItem of cart.items) {
+        const product = cartItem.productId as any;
+
+        if (product.stock < cartItem.quantity) {
+          throw new AppError(`Insufficient stock for ${product.title}`, 400);
+        }
+
+        const itemTotal = cartItem.unitPrice * cartItem.quantity;
+        actualSubtotal += itemTotal;
+
+        orderItems.push({
+          productId: product._id,
+          variantId: cartItem.variantId,
+          name: product.title,
+          sku: product.sku,
+          quantity: cartItem.quantity,
+          unitPrice: cartItem.unitPrice,
+          totalPrice: itemTotal,
+        });
+      }
+
+      // Recalculate totals with actual data
+      const actualTax = actualSubtotal * 0.1;
+      const actualGrandTotal = actualSubtotal + shippingCost + actualTax;
+
+      orderData.totals.subtotal = actualSubtotal;
+      orderData.totals.tax = actualTax;
+      orderData.totals.grandTotal = actualGrandTotal;
+      orderData.payment.amount = actualGrandTotal;
+
+      // Create order
+      const order = new Order({
+        ...orderData,
+        items: orderItems,
+      });
+
+      // Generate order number if not set
+      if (!order.orderNumber) {
+        const date = new Date();
+        const year = date.getFullYear().toString().slice(-2);
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        order.orderNumber = `ORD${year}${month}${day}${randomNum}`;
+      }
+
+      await order.save({ session });
+
+      // Reserve stock (decrement product stock)
+      for (const item of orderItems) {
+        await Product.findByIdAndUpdate(item.productId, {
+          $inc: { stock: -item.quantity },
+        }, { session });
+      }
+
+      // Clear user cart
+      cart.items = [];
+      await cart.save({ session });
+
+      // Commit the transaction
+      await session.commitTransaction();
+    } catch (error) {
+      // Abort the transaction on error
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
 
     res.status(201).json({
       success: true,
@@ -351,8 +387,13 @@ router.post('/:id/refund', authenticate, authorizeAdmin, async (req, res, next) 
     
     await order.save();
 
-    // TODO: Process refund with payment provider
-    // TODO: Restock products if needed
+    // Process refund with payment provider (TODO: integrate with actual provider)
+    // Restock products
+    for (const item of order.items) {
+      await Product.findByIdAndUpdate(item.productId, {
+        $inc: { stock: item.quantity },
+      });
+    }
 
     res.json({
       success: true,

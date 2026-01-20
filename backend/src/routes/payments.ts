@@ -3,6 +3,7 @@ import { authenticate, authorizeAdmin } from "../utils/auth.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { paymentService } from "../services/payment.service.js";
 import Order from "../models/Order.js";
+import Product from "../models/Product.js";
 import mongoose from "mongoose";
 import { bkashService } from "../services/bkash.service.js";
 import { nagadService } from "../services/nagad.service.js";
@@ -239,22 +240,38 @@ router.post("/bkash/callback", async (req, res, next) => {
     }
 
     // Process callback
-    if (callbackData.status === "success") {
-      // Update order status
-      await Order.findOneAndUpdate(
-        { "payment.intentId": callbackData.paymentID },
-        {
-          status: "processing",
-          "payment.status": "succeeded",
-          "payment.transactionId": callbackData.trxID,
-          updatedAt: new Date(),
+    const order = await Order.findOne({ "payment.intentId": callbackData.paymentID });
+    if (order) {
+      if (callbackData.status === "success") {
+        // Update order status
+        await Order.findOneAndUpdate(
+          { "payment.intentId": callbackData.paymentID },
+          {
+            status: "processing",
+            "payment.status": "succeeded",
+            "payment.transactionId": callbackData.trxID,
+            updatedAt: new Date(),
+          }
+        );
+        res.redirect(`${process.env.FRONTEND_URL}/checkout/success`);
+      } else {
+        // Payment failed, update status and restore stock
+        await Order.findOneAndUpdate(
+          { "payment.intentId": callbackData.paymentID },
+          {
+            status: "pending",
+            "payment.status": "failed",
+            updatedAt: new Date(),
+          }
+        );
+        // Restore stock
+        for (const item of order.items) {
+          await Product.findByIdAndUpdate(item.productId, {
+            $inc: { stock: item.quantity },
+          });
         }
-      );
-    }
-
-    // Redirect to success/failure page
-    if (callbackData.status === "success") {
-      res.redirect(`${process.env.FRONTEND_URL}/checkout/success`);
+        res.redirect(`${process.env.FRONTEND_URL}/checkout/failed`);
+      }
     } else {
       res.redirect(`${process.env.FRONTEND_URL}/checkout/failed`);
     }
@@ -317,22 +334,40 @@ router.post("/nagad/callback", async (req, res, next) => {
     const callbackData = req.body;
 
     // Update order based on callback
-    if (callbackData.status === "Success") {
-      await Order.findOneAndUpdate(
-        { "payment.intentId": callbackData.paymentReferenceId },
-        {
-          status: "processing",
-          "payment.status": "succeeded",
-          "payment.transactionId": callbackData.trxId,
-          updatedAt: new Date(),
-        }
-      );
+    const order = await Order.findOne({ "payment.intentId": callbackData.paymentReferenceId });
+    if (order) {
+      if (callbackData.status === "Success") {
+        await Order.findOneAndUpdate(
+          { "payment.intentId": callbackData.paymentReferenceId },
+          {
+            status: "processing",
+            "payment.status": "succeeded",
+            "payment.transactionId": callbackData.trxId,
+            updatedAt: new Date(),
+          }
+        );
 
-      res.redirect(`${process.env.FRONTEND_URL}/checkout/success`);
+        res.redirect(`${process.env.FRONTEND_URL}/checkout/success`);
+      } else {
+        // Payment failed, update status and restore stock
+        await Order.findOneAndUpdate(
+          { "payment.intentId": callbackData.paymentReferenceId },
+          {
+            status: "pending",
+            "payment.status": "failed",
+            updatedAt: new Date(),
+          }
+        );
+        // Restore stock
+        for (const item of order.items) {
+          await Product.findByIdAndUpdate(item.productId, {
+            $inc: { stock: item.quantity },
+          });
+        }
+        res.redirect(`${process.env.FRONTEND_URL}/checkout/failed?reason=${callbackData.reason}`);
+      }
     } else {
-      res.redirect(
-        `${process.env.FRONTEND_URL}/checkout/failed?reason=${callbackData.reason}`
-      );
+      res.redirect(`${process.env.FRONTEND_URL}/checkout/failed`);
     }
   } catch (error) {
     next(error);

@@ -1,6 +1,8 @@
 import Stripe from 'stripe';
 import type { IOrder } from '../models/Order.js';
 import Order from '../models/Order.js';
+import Product from '../models/Product.js';
+import logger from '../utils/logger.js';
 
 export class PaymentService {
   private stripe: Stripe;
@@ -51,7 +53,7 @@ export class PaymentService {
         paymentIntentId: paymentIntent.id,
       };
     } catch (error) {
-      console.error('Error creating Stripe payment intent:', error);
+      logger.error('Error creating Stripe payment intent:', error);
       throw error;
     }
   }
@@ -77,7 +79,7 @@ export class PaymentService {
           break;
       }
     } catch (error) {
-      console.error('Error handling Stripe webhook:', error);
+      logger.error('Error handling Stripe webhook:', error);
       throw error;
     }
   }
@@ -99,49 +101,55 @@ export class PaymentService {
     if (order) {
       // Send order confirmation email
       // Update inventory
-      console.log(`✅ Order ${order.orderNumber} payment succeeded`);
+      logger.info(`✅ Order ${order.orderNumber} payment succeeded`);
     }
   }
 
   private async handlePaymentFailure(paymentIntent: Stripe.PaymentIntent) {
     const orderId = paymentIntent.metadata.orderId;
-    
-    await Order.findByIdAndUpdate(
-      orderId,
-      {
-        status: 'pending',
-        'payment.status': 'failed',
-        updatedAt: new Date(),
-      }
-    );
 
-    // Restore stock
-    // await this.restoreOrderStock(orderId);
-    
+    const order = await Order.findById(orderId);
+    if (order) {
+      await Order.findByIdAndUpdate(
+        orderId,
+        {
+          status: 'pending',
+          'payment.status': 'failed',
+          updatedAt: new Date(),
+        }
+      );
+
+      // Restore stock
+      await this.restoreOrderStock(order);
+    }
+
     console.log(`❌ Order ${orderId} payment failed`);
   }
 
   private async handlePaymentCancelled(paymentIntent: Stripe.PaymentIntent) {
     const orderId = paymentIntent.metadata.orderId;
-    
-    await Order.findByIdAndUpdate(
-      orderId,
-      {
-        status: 'cancelled',
-        'payment.status': 'cancelled',
-        updatedAt: new Date(),
-      }
-    );
 
-    // Restore stock
-    // await this.restoreOrderStock(orderId);
-    
-    console.log(`❌ Order ${orderId} payment cancelled`);
+    const order = await Order.findById(orderId);
+    if (order) {
+      await Order.findByIdAndUpdate(
+        orderId,
+        {
+          status: 'cancelled',
+          'payment.status': 'cancelled',
+          updatedAt: new Date(),
+        }
+      );
+
+      // Restore stock
+      await this.restoreOrderStock(order);
+    }
+
+    logger.error(`❌ Order ${orderId} payment cancelled`);
   }
 
   private async handleRefund(charge: Stripe.Charge) {
     const order = await Order.findOne({ 'payment.chargeId': charge.id });
-    
+
     if (order) {
       await Order.findByIdAndUpdate(
         order._id,
@@ -152,10 +160,10 @@ export class PaymentService {
         }
       );
 
-      // Restore stock if needed
-      // await this.restoreOrderStock(order._id);
-      
-      console.log(`💰 Order ${order.orderNumber} refunded`);
+      // Restore stock
+      await this.restoreOrderStock(order);
+
+      logger.info(`💰 Order ${order.orderNumber} refunded`);
     }
   }
 
@@ -178,7 +186,7 @@ export class PaymentService {
       );
 
       // Send notification to admin
-      console.log(`⚠️ Order ${order.orderNumber} disputed`);
+      logger.warn(`⚠️ Order ${order.orderNumber} disputed`);
     }
   }
 
@@ -215,9 +223,19 @@ export class PaymentService {
       });
 
     } catch (error) {
-      console.error('Error creating refund:', error);
+      logger.error('Error creating refund:', error);
       throw error;
     }
+  }
+
+  // Restore order stock when payment fails or is cancelled
+  private async restoreOrderStock(order: any) {
+    for (const item of order.items) {
+      await Product.findByIdAndUpdate(item.productId, {
+        $inc: { stock: item.quantity },
+      });
+    }
+    logger.info(`🔄 Stock restored for order ${order.orderNumber}`);
   }
 
   // Verify Stripe signature
@@ -229,7 +247,7 @@ export class PaymentService {
         process.env.STRIPE_WEBHOOK_SECRET! || ''
       );
     } catch (error) {
-      console.error('Error verifying Stripe signature:', error);
+      logger.error('Error verifying Stripe signature:', error);
       throw error;
     }
   }

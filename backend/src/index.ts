@@ -4,7 +4,7 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import logger from "./utils/logger.js";
@@ -18,7 +18,7 @@ import paymentRoutes from "./routes/payments.js";
 import adminRoutes from './routes/admin.js';
 import wishlistRoutes from './routes/wishlist.js';
 import searchRoutes from './routes/search.js';
-import { swaggerUi, specs } from './utils/swagger.js';
+// import { swaggerUi, specs } from './utils/swagger.js'; // TODO: Add swagger when needed
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -68,7 +68,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Swagger Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs)); // TODO: Add swagger when needed
 
 // Routes
 app.use("/api/auth", authLimiter);

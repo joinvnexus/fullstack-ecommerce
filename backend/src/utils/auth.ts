@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import type { SignOptions } from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
 
@@ -45,10 +46,12 @@ class AuthUtils {
   }
 
   // Generate refresh token
-  static generateRefreshToken(payload: JwtPayload): string {
+  static generateRefreshToken(payload: Omit<JwtPayload, 'tokenId'>): { token: string; tokenId: string } {
+    const tokenId = crypto.randomUUID();
     const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET as string;
     const options: SignOptions = { expiresIn: "30d" };
-    return jwt.sign(payload, JWT_REFRESH_SECRET, options);
+    const token = jwt.sign({ ...payload, tokenId }, JWT_REFRESH_SECRET, options);
+    return { token, tokenId };
   }
 
   // Verify refresh token
@@ -62,7 +65,7 @@ class AuthUtils {
   }
 
   // Set authentication cookies
-  static setAuthCookies(res: Response, accessToken: string, refreshToken: string): void {
+  static setAuthCookies(res: Response, accessToken: string, refreshTokenResult: { token: string; tokenId: string }): void {
     const isProduction = process.env.NODE_ENV === 'production';
     const cookieOptions = {
       httpOnly: true,
@@ -76,7 +79,7 @@ class AuthUtils {
       maxAge: (Number(process.env.JWT_EXPIRE) || 7 * 24 * 60 * 60) * 1000,
     });
 
-    res.cookie('refreshToken', refreshToken, cookieOptions);
+    res.cookie('refreshToken', refreshTokenResult.token, cookieOptions);
   }
 
   // Clear authentication cookies

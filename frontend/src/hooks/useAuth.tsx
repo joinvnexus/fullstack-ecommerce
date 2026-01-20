@@ -107,7 +107,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const response = await authApi.updateProfile(data);
       setUser(response.data);
-      localStorage.setItem('user', JSON.stringify(response.data));
     } catch (error) {
       throw error;
     }
@@ -136,7 +135,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Update user addresses
       const updatedUser = { ...user!, addresses: response.data };
       setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
       return response.data;
     } catch (error) {
       throw error;
@@ -149,7 +147,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Update user addresses
       const updatedUser = { ...user!, addresses: response.data };
       setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
       return response.data;
     } catch (error) {
       throw error;
@@ -162,7 +159,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Update user addresses
       const updatedUser = { ...user!, addresses: response.data };
       setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
       return response.data;
     } catch (error) {
       throw error;

@@ -1,5 +1,6 @@
 import express from 'express';
 import User from '../models/User.js';
+import RefreshToken from '../models/RefreshToken.js';
 import { authenticate } from '../utils/auth.js';
 import { validate } from '../utils/validation.js';
 import { registerSchema, loginSchema, updateProfileSchema, addressSchema, changePasswordSchema } from '../utils/validation.js';
@@ -108,14 +109,22 @@ router.post('/register', validate(registerSchema), async (req, res, next) => {
       role: user.role,
     });
 
-    const refreshToken = AuthUtils.generateRefreshToken({
+    const refreshTokenResult = AuthUtils.generateRefreshToken({
       userId: user._id.toString(),
       email: user.email,
       role: user.role,
     });
 
+    // Save refresh token to DB
+    await RefreshToken.create({
+      userId: user._id,
+      tokenId: refreshTokenResult.tokenId,
+      token: refreshTokenResult.token,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+    });
+
     // Set cookies
-    AuthUtils.setAuthCookies(res, accessToken, refreshToken);
+    AuthUtils.setAuthCookies(res, accessToken, refreshTokenResult);
 
     // Remove password safely using destructuring
     const { password: pwd, ...userResponse } = user.toObject();
@@ -156,14 +165,22 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
       role: user.role,
     });
 
-    const refreshToken = AuthUtils.generateRefreshToken({
+    const refreshTokenResult = AuthUtils.generateRefreshToken({
       userId: user._id.toString(),
       email: user.email,
       role: user.role,
     });
 
+    // Save refresh token to DB
+    await RefreshToken.create({
+      userId: user._id,
+      tokenId: refreshTokenResult.tokenId,
+      token: refreshTokenResult.token,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+    });
+
     // Set cookies
-    AuthUtils.setAuthCookies(res, accessToken, refreshToken);
+    AuthUtils.setAuthCookies(res, accessToken, refreshTokenResult);
 
     // Remove password safely
     const { password: pwd, ...userResponse } = user.toObject();
@@ -191,25 +208,42 @@ router.post('/refresh', async (req, res, next) => {
 
     const decoded = AuthUtils.verifyRefreshToken(refreshToken);
 
-    if (!decoded) {
+    if (!decoded || !decoded.tokenId) {
       return res.status(401).json({ message: 'Invalid refresh token' });
     }
 
-    // Generate new tokens (rotation)
+    // Check if refresh token exists in DB
+    const tokenDoc = await RefreshToken.findOne({ tokenId: decoded.tokenId });
+    if (!tokenDoc) {
+      return res.status(401).json({ message: 'Refresh token not found' });
+    }
+
+    // Delete the old refresh token (rotation)
+    await RefreshToken.deleteOne({ tokenId: decoded.tokenId });
+
+    // Generate new tokens
     const newAccessToken = AuthUtils.generateToken({
       userId: decoded.userId,
       email: decoded.email,
       role: decoded.role,
     });
 
-    const newRefreshToken = AuthUtils.generateRefreshToken({
+    const newRefreshTokenResult = AuthUtils.generateRefreshToken({
       userId: decoded.userId,
       email: decoded.email,
       role: decoded.role,
     });
 
+    // Save new refresh token to DB
+    await RefreshToken.create({
+      userId: tokenDoc.userId,
+      tokenId: newRefreshTokenResult.tokenId,
+      token: newRefreshTokenResult.token,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+    });
+
     // Set new cookies
-    AuthUtils.setAuthCookies(res, newAccessToken, newRefreshToken);
+    AuthUtils.setAuthCookies(res, newAccessToken, newRefreshTokenResult);
 
     res.json({
       success: true,
@@ -382,6 +416,11 @@ router.get('/addresses', authenticate, async (req, res, next) => {
 // Logout
 router.post('/logout', authenticate, async (req, res, next) => {
   try {
+    const user = (req as any).user;
+
+    // Delete all refresh tokens for the user
+    await RefreshToken.deleteMany({ userId: user.userId });
+
     // Clear authentication cookies
     AuthUtils.clearAuthCookies(res);
 

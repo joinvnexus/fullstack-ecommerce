@@ -9,6 +9,7 @@ import WishlistButton from "@/app/components/wishlist/WishlistButton";
 interface ProductCardProps {
   product: Product;
   viewMode?: "grid" | "list";
+  showQuickView?: boolean;
 }
 
 const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {

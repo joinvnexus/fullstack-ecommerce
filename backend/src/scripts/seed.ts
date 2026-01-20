@@ -35,40 +35,108 @@ const categories = [
 ];
 
 const products = [
-  {    
+  {
     title: "Samsung Galaxy S24 Ultra",
     slug: "samsung-galaxy-s24-ultra",
-    description: "Latest flagship smartphone with advanced camera and AI features",
+    description: "Experience the pinnacle of smartphone innovation with the Samsung Galaxy S24 Ultra. Featuring a stunning 6.8-inch Dynamic AMOLED display, professional-grade camera system with 200MP main sensor, and powered by the latest Snapdragon processor. Built for productivity and creativity with S Pen support, all-day battery life, and premium titanium build quality.",
     price: { amount: 125000, currency: 'BDT' },
     sku: "SG-S24U-001",
     stock: 50,
+    variants: [
+      {
+        name: "Storage",
+        options: [
+          { name: "256GB", priceAdjustment: 0, skuSuffix: "256" },
+          { name: "512GB", priceAdjustment: 15000, skuSuffix: "512" },
+          { name: "1TB", priceAdjustment: 35000, skuSuffix: "1TB" },
+        ]
+      },
+      {
+        name: "Color",
+        options: [
+          { name: "Titanium Black", priceAdjustment: 0, skuSuffix: "BLK" },
+          { name: "Titanium Gray", priceAdjustment: 0, skuSuffix: "GRY" },
+          { name: "Titanium Violet", priceAdjustment: 0, skuSuffix: "VLT" },
+          { name: "Titanium Yellow", priceAdjustment: 0, skuSuffix: "YLW" },
+        ]
+      }
+    ],
     images: [
       {
-        url: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=500",
-        alt: "Samsung Galaxy S24 Ultra",
+        url: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=800",
+        alt: "Samsung Galaxy S24 Ultra front view",
         isPrimary: true,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800",
+        alt: "Samsung Galaxy S24 Ultra side view",
+        isPrimary: false,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800",
+        alt: "Samsung Galaxy S24 Ultra with S Pen",
+        isPrimary: false,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=800",
+        alt: "Samsung Galaxy S24 Ultra camera",
+        isPrimary: false,
       },
     ],
     category: "Electronics",
-    tags: ["smartphone", "samsung", "flagship"],
+    tags: ["smartphone", "samsung", "flagship", "android", "camera"],
     status: "active",
   },
   {
     title: "iPhone 15 Pro Max",
     slug: "iphone-15-pro-max",
-    description: "Apple's latest premium smartphone with titanium design",
+    description: "Experience the future of smartphone technology with the iPhone 15 Pro Max. Featuring the powerful A17 Pro chip, titanium design that's lighter yet more durable, and the most advanced camera system ever in an iPhone. Capture stunning Pro video in 4K at 120 fps, enjoy all-day battery life, and take advantage of the new Action Button for quick access to your favorite features.",
     price: { amount: 145000, currency: 'BDT' },
     sku: "IP-15PM-002",
     stock: 30,
+    variants: [
+      {
+        name: "Storage",
+        options: [
+          { name: "256GB", priceAdjustment: 0, skuSuffix: "256" },
+          { name: "512GB", priceAdjustment: 20000, skuSuffix: "512" },
+          { name: "1TB", priceAdjustment: 40000, skuSuffix: "1TB" },
+        ]
+      },
+      {
+        name: "Color",
+        options: [
+          { name: "Natural Titanium", priceAdjustment: 0, skuSuffix: "NAT" },
+          { name: "Blue Titanium", priceAdjustment: 0, skuSuffix: "BLU" },
+          { name: "White Titanium", priceAdjustment: 0, skuSuffix: "WHT" },
+          { name: "Black Titanium", priceAdjustment: 0, skuSuffix: "BLK" },
+        ]
+      }
+    ],
     images: [
       {
-        url: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500",
-        alt: "iPhone 15 Pro Max",
+        url: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800",
+        alt: "iPhone 15 Pro Max front view",
         isPrimary: true,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=800",
+        alt: "iPhone 15 Pro Max side profile",
+        isPrimary: false,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800",
+        alt: "iPhone 15 Pro Max camera system",
+        isPrimary: false,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=800",
+        alt: "iPhone 15 Pro Max titanium design",
+        isPrimary: false,
       },
     ],
     category: "Electronics",
-    tags: ["smartphone", "apple", "iphone"],
+    tags: ["smartphone", "apple", "iphone", "ios", "premium"],
     status: "active",
   },
   {
@@ -108,39 +176,109 @@ const products = [
     status: "active",
   },
   {
-    title: "Men's Cotton T-Shirt",
+    title: "Men's Premium Cotton T-Shirt",
     slug: "mens-cotton-t-shirt",
-    description: "Comfortable cotton t-shirt for everyday wear",
+    description: "Elevate your everyday wardrobe with our premium cotton t-shirt. Made from 100% organic cotton that's incredibly soft, breathable, and sustainable. Features a comfortable regular fit, reinforced stitching for durability, and a tagless design for all-day comfort. Perfect for casual wear, layering, or as a base for your favorite outfit.",
     price: { amount: 899, currency: 'BDT' },
     sku: "MCT-005",
     stock: 100,
+    variants: [
+      {
+        name: "Size",
+        options: [
+          { name: "S", priceAdjustment: 0, skuSuffix: "S" },
+          { name: "M", priceAdjustment: 0, skuSuffix: "M" },
+          { name: "L", priceAdjustment: 0, skuSuffix: "L" },
+          { name: "XL", priceAdjustment: 100, skuSuffix: "XL" },
+          { name: "XXL", priceAdjustment: 200, skuSuffix: "XXL" },
+        ]
+      },
+      {
+        name: "Color",
+        options: [
+          { name: "White", priceAdjustment: 0, skuSuffix: "WHT" },
+          { name: "Black", priceAdjustment: 0, skuSuffix: "BLK" },
+          { name: "Navy Blue", priceAdjustment: 0, skuSuffix: "NVY" },
+          { name: "Gray", priceAdjustment: 0, skuSuffix: "GRY" },
+          { name: "Red", priceAdjustment: 0, skuSuffix: "RED" },
+        ]
+      }
+    ],
     images: [
       {
-        url: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500",
-        alt: "Men's Cotton T-Shirt",
+        url: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800",
+        alt: "Men's Premium Cotton T-Shirt front view",
         isPrimary: true,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=800",
+        alt: "Men's Premium Cotton T-Shirt back view",
+        isPrimary: false,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1554568218-0f1715e72254?w=800",
+        alt: "Men's Premium Cotton T-Shirt detail view",
+        isPrimary: false,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800",
+        alt: "Men's Premium Cotton T-Shirt texture closeup",
+        isPrimary: false,
       },
     ],
     category: "Clothing",
-    tags: ["tshirt", "men", "cotton"],
+    tags: ["tshirt", "men", "cotton", "organic", "casual"],
     status: "active",
   },
   {
-    title: "Non-Stick Frying Pan",
+    title: "Professional Non-Stick Frying Pan",
     slug: "non-stick-frying-pan",
-    description: "Durable non-stick frying pan for healthy cooking.",
+    description: "Elevate your cooking experience with our professional-grade non-stick frying pan. Crafted from high-quality aluminum with a revolutionary ceramic non-stick coating that's PFOA-free and safe for healthy cooking. Features an ergonomic stay-cool handle, even heat distribution, and is compatible with all cooktops including induction. Perfect for sautéing, frying, and stir-frying with minimal oil.",
     price: { amount: 1800, currency: 'BDT' },
     sku: "HK-FRYPAN-001",
     stock: 60,
+    variants: [
+      {
+        name: "Size",
+        options: [
+          { name: "8 inch", priceAdjustment: 0, skuSuffix: "8IN" },
+          { name: "10 inch", priceAdjustment: 500, skuSuffix: "10IN" },
+          { name: "12 inch", priceAdjustment: 800, skuSuffix: "12IN" },
+        ]
+      },
+      {
+        name: "Color",
+        options: [
+          { name: "Black", priceAdjustment: 0, skuSuffix: "BLK" },
+          { name: "Red", priceAdjustment: 0, skuSuffix: "RED" },
+          { name: "Blue", priceAdjustment: 0, skuSuffix: "BLU" },
+        ]
+      }
+    ],
     images: [
       {
-        url: "https://images.unsplash.com/photo-1566843971842-237cdbeaa75f?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=500",
-        alt: "Non-Stick Frying Pan",
+        url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800",
+        alt: "Professional Non-Stick Frying Pan main view",
         isPrimary: true,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1566843971842-237cdbeaa75f?w=800",
+        alt: "Non-Stick Frying Pan cooking demonstration",
+        isPrimary: false,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
+        alt: "Non-Stick Frying Pan handle detail",
+        isPrimary: false,
+      },
+      {
+        url: "https://images.unsplash.com/photo-1556909020-f6e7ad7d3136?w=800",
+        alt: "Non-Stick Frying Pan size comparison",
+        isPrimary: false,
       },
     ],
     category: "Home & Kitchen",
-    tags: ["cookware", "kitchen", "frying pan"],
+    tags: ["cookware", "kitchen", "frying pan", "non-stick", "ceramic"],
     status: "active",
   },
   {

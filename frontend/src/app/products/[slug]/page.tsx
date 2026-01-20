@@ -7,13 +7,17 @@ import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw } from 'lucide-reac
 import { productsApi } from '@/lib/api';
 import { Product } from '@/types';
 import WishlistButton from '@/app/components/wishlist/WishlistButton';
+import ProductGallery from '@/app/components/products/ProductGallery';
+import ProductVariants from '@/app/components/products/ProductVariants';
+import ProductReviews from '@/app/components/products/ProductReviews';
+// import ProductRecommendations from '@/app/components/products/ProductRecommendations';
+import BreadcrumbNavigation from '@/app/components/layout/BreadcrumbNavigation';
 
 const ProductDetailPage = () => {
   const params = useParams();
   const slug = params.slug as string;
   
   const [product, setProduct] = useState<Product | null>(null);
-  const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariant, setSelectedVariant] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -85,58 +89,20 @@ const ProductDetailPage = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <nav className="mb-8">
-          <ol className="flex items-center space-x-2 text-sm text-gray-600">
-            <li>
-              <a href="/" className="hover:text-blue-600">Home</a>
-            </li>
-            <li>/</li>
-            <li>
-              <a href="/products" className="hover:text-blue-600">Products</a>
-            </li>
-            <li>/</li>
-            <li className="text-gray-900">{product.title}</li>
-          </ol>
-        </nav>
+        <div className="mb-8">
+          <BreadcrumbNavigation
+            items={[
+              { label: 'Home', href: '/' },
+              { label: 'Products', href: '/products' },
+              { label: product.title, isActive: true }
+            ]}
+          />
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Product images */}
           <div>
-            {/* Main image */}
-            <div className="relative h-96 md:h-[500px] rounded-lg overflow-hidden bg-white shadow-lg mb-4">
-              <Image
-                src={product.images[selectedImage]?.url || '/placeholder.jpg'}
-                alt={product.images[selectedImage]?.alt || product.title}
-                fill
-                className="object-contain p-4"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
-            </div>
-
-            {/* Thumbnail images */}
-            {product.images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto py-2">
-                {product.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={`flex-shrink-0 relative w-20 h-20 rounded overflow-hidden border-2 ${
-                      selectedImage === index
-                        ? 'border-blue-600'
-                        : 'border-transparent'
-                    }`}
-                  >
-                    <Image
-                      src={image.url}
-                      alt={image.alt}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
+            <ProductGallery images={product.images} title={product.title} />
           </div>
 
           {/* Product info */}
@@ -177,35 +143,16 @@ const ProductDetailPage = () => {
             </div>
 
             {/* Variants */}
-            {product.variants.map((variant) => (
-              <div key={variant.name} className="mb-6">
-                <h4 className="font-medium mb-2">{variant.name}</h4>
-                <div className="flex flex-wrap gap-2">
-                  {variant.options.map((option) => (
-                    <button
-                      key={option.name}
-                      onClick={() => setSelectedVariant(prev => ({
-                        ...prev,
-                        [variant.name]: option.name
-                      }))}
-                      className={`px-4 py-2 border rounded-md ${
-                        selectedVariant[variant.name] === option.name
-                          ? 'border-blue-600 bg-blue-50 text-blue-700'
-                          : 'border-gray-300 hover:border-gray-400'
-                      }`}
-                    >
-                      {option.name}
-                      {option.priceAdjustment !== 0 && (
-                        <span className="ml-1 text-sm">
-                          {option.priceAdjustment > 0 ? '+' : ''}
-                          ${option.priceAdjustment}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
+            <ProductVariants
+              variants={product.variants}
+              selectedVariants={selectedVariant}
+              onVariantChange={(variantName, optionName) =>
+                setSelectedVariant(prev => ({
+                  ...prev,
+                  [variantName]: optionName
+                }))
+              }
+            />
 
             {/* Quantity and actions */}
             <div className="mb-8">
@@ -298,6 +245,26 @@ const ProductDetailPage = () => {
               <div>Tags: {product.tags.join(', ')}</div>
             </div>
           </div>
+        </div>
+
+        {/* Product Reviews */}
+        <div className="mt-16">
+          <ProductReviews
+            productId={product._id}
+            reviews={[]} // Would come from API
+            averageRating={4.0}
+            totalReviews={0}
+            onReviewSubmit={(review) => console.log('New review:', review)}
+          />
+        </div>
+
+        {/* Product Recommendations */}
+        <div className="mt-16">
+          {/* <ProductRecommendations
+            productId={product._id}
+            currentProduct={product}
+            onProductClick={(product) => console.log('Product clicked:', product)}
+          /> */}
         </div>
 
         {/* Related Products */}

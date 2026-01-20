@@ -246,7 +246,14 @@ const adminUser = {
 const seedDatabase = async () => {
   try {
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI as string);
+    const buildMongoURI = () => {
+      const user = process.env.MONGODB_USER;
+      const pass = process.env.MONGODB_PASS;
+      const host = process.env.MONGODB_HOST;
+      const db = process.env.MONGODB_DB;
+      return `mongodb+srv://${user}:${pass}@${host}/${db}?retryWrites=true&w=majority`;
+    };
+    await mongoose.connect(buildMongoURI());
     console.log('✅ Connected to MongoDB');
 
     // Clear existing data

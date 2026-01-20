@@ -1,30 +1,26 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Filter, Grid, List, ChevronDown, X } from 'lucide-react';
-import ProductCard from '../components/ui/ProductCard';
-import ProductListSkeleton from '../components/ui/ProductListSkeleton';
-import ProductFilters from '../components/products/ProductFilters';
+import { useParams } from 'next/navigation';
+import { Filter, Grid, List, ChevronDown } from 'lucide-react';
+import ProductCard from '@/app/components/ui/ProductCard';
+import ProductListSkeleton from '@/app/components/ui/ProductListSkeleton';
+import ProductFilters from '@/app/components/products/ProductFilters';
+import BreadcrumbNavigation from '@/app/components/layout/BreadcrumbNavigation';
 import { productsApi, categoriesApi } from '@/lib/api';
 import { Product, Category } from '@/types';
 
-const ProductsContent = () => {
-  const searchParams = useSearchParams();
-  const categorySlug = searchParams.get('category');
-  
+const CategoryPageContent = () => {
+  const params = useParams();
+  const slug = params.slug as string;
+
+  const [category, setCategory] = useState<Category | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [selectedRating, setSelectedRating] = useState(0);
-  const [inStockOnly, setInStockOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -35,16 +31,40 @@ const ProductsContent = () => {
     hasPrevPage: false,
   });
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  // Filter states
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [inStockOnly, setInStockOnly] = useState(false);
 
   useEffect(() => {
-    if (categorySlug) {
-      setSelectedCategory(categorySlug);
-    }
+    fetchCategoryAndProducts();
+    fetchCategories();
+  }, [slug]);
+
+  useEffect(() => {
     fetchProducts();
-  }, [categorySlug, pagination.page, sortBy, sortOrder, minPrice, maxPrice, selectedBrands, selectedRating, inStockOnly]);
+  }, [pagination.page, sortBy, sortOrder, selectedSubCategory, minPrice, maxPrice, selectedBrands, selectedRating, inStockOnly]);
+
+  const fetchCategoryAndProducts = async () => {
+    try {
+      setIsLoading(true);
+      const [categoryResponse, productsResponse] = await Promise.all([
+        categoriesApi.getBySlug(slug),
+        productsApi.getAll({ category: slug, page: 1, limit: pagination.limit })
+      ]);
+
+      setCategory(categoryResponse.data);
+      setProducts(productsResponse.data);
+      setPagination(productsResponse.pagination);
+    } catch (error) {
+      console.error('Error fetching category and products:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -63,9 +83,10 @@ const ProductsContent = () => {
         limit: pagination.limit,
         sort: sortBy,
         order: sortOrder,
+        category: slug,
       };
 
-      if (selectedCategory) params.category = selectedCategory;
+      if (selectedSubCategory) params.subcategory = selectedSubCategory;
       if (minPrice) params.minPrice = minPrice;
       if (maxPrice) params.maxPrice = maxPrice;
       if (selectedBrands.length > 0) params.brands = selectedBrands.join(',');
@@ -87,7 +108,7 @@ const ProductsContent = () => {
   };
 
   const handleFilterReset = () => {
-    setSelectedCategory('');
+    setSelectedSubCategory('');
     setMinPrice('');
     setMaxPrice('');
     setSelectedBrands([]);
@@ -97,62 +118,89 @@ const ProductsContent = () => {
     setSortOrder('desc');
   };
 
-  const handlePriceFilter = () => {
-    if ((minPrice && parseFloat(minPrice) < 0) || (maxPrice && parseFloat(maxPrice) < 0)) {
-      alert('Price cannot be negative');
-      return;
-    }
-    if (minPrice && maxPrice && parseFloat(minPrice) > parseFloat(maxPrice)) {
-      alert('Minimum price cannot be greater than maximum price');
-      return;
-    }
+  const handlePriceFilter = (min: string, max: string) => {
+    setMinPrice(min);
+    setMaxPrice(max);
     setPagination(prev => ({ ...prev, page: 1 }));
-    fetchProducts();
   };
+
+  const handleBrandsChange = (brands: string[]) => {
+    setSelectedBrands(brands);
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handleRatingChange = (rating: number) => {
+    setSelectedRating(rating);
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handleInStockChange = (inStock: boolean) => {
+    setInStockOnly(inStock);
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  if (!category && !isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-gray-900">Category Not Found</h2>
+            <p className="mt-2 text-gray-600">
+              The category you're looking for doesn't exist.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page header */}
+        {/* Breadcrumb */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Products</h1>
-          <p className="mt-2 text-gray-600">
-            Discover our amazing collection of products
-          </p>
+          <BreadcrumbNavigation
+            categoryPath={category ? [category] : []}
+          />
         </div>
+
+        {/* Category Header */}
+        {category && (
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              {category.name}
+            </h1>
+            <div className="mt-4 text-sm text-gray-500">
+              {category.productCount ? (
+                <span>{category.productCount} products available</span>
+              ) : (
+                <span>Showing {products.length} products</span>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters sidebar */}
           <aside className={`lg:w-64 ${showFilters ? 'block' : 'hidden lg:block'}`}>
             <ProductFilters
-              categories={categories}
-              selectedCategory={selectedCategory}
+              categories={categories.filter(cat =>
+                cat.parent === category?._id || cat._id === category?._id
+              )}
+              selectedCategory={selectedSubCategory}
               onCategoryChange={(slug) => {
-                setSelectedCategory(slug);
+                setSelectedSubCategory(slug);
                 setPagination(prev => ({ ...prev, page: 1 }));
               }}
               minPrice={minPrice}
               maxPrice={maxPrice}
-              onPriceChange={(min, max) => {
-                setMinPrice(min);
-                setMaxPrice(max);
-                setPagination(prev => ({ ...prev, page: 1 }));
-              }}
+              onPriceChange={handlePriceFilter}
               selectedBrands={selectedBrands}
-              onBrandsChange={(brands) => {
-                setSelectedBrands(brands);
-                setPagination(prev => ({ ...prev, page: 1 }));
-              }}
+              onBrandsChange={handleBrandsChange}
               selectedRating={selectedRating}
-              onRatingChange={(rating) => {
-                setSelectedRating(rating);
-                setPagination(prev => ({ ...prev, page: 1 }));
-              }}
+              onRatingChange={handleRatingChange}
               inStockOnly={inStockOnly}
-              onInStockChange={(inStock) => {
-                setInStockOnly(inStock);
-                setPagination(prev => ({ ...prev, page: 1 }));
-              }}
+              onInStockChange={handleInStockChange}
               onReset={handleFilterReset}
               onClose={() => setShowFilters(false)}
               isMobile={showFilters}
@@ -224,7 +272,9 @@ const ProductsContent = () => {
             ) : products.length === 0 ? (
               <div className="bg-white rounded-lg shadow-md p-12 text-center">
                 <div className="text-gray-400 mb-4">No products found</div>
-                <p className="text-gray-600 mb-6">Try adjusting your filters or search terms</p>
+                <p className="text-gray-600 mb-6">
+                  Try adjusting your filters or browse other categories
+                </p>
                 <button
                   onClick={handleFilterReset}
                   className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
@@ -234,7 +284,7 @@ const ProductsContent = () => {
               </div>
             ) : (
               <>
-                <div className={viewMode === 'grid' 
+                <div className={viewMode === 'grid'
                   ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
                   : 'space-y-6'
                 }>
@@ -254,21 +304,24 @@ const ProductsContent = () => {
                       >
                         Previous
                       </button>
-                      
-                      {[...Array(pagination.totalPages)].map((_, i) => (
-                        <button
-                          key={i + 1}
-                          onClick={() => handlePageChange(i + 1)}
-                          className={`px-4 py-2 border rounded-md ${
-                            pagination.page === i + 1
-                              ? 'bg-blue-600 text-white border-blue-600'
-                              : 'border-gray-300 hover:bg-gray-50'
-                          }`}
-                        >
-                          {i + 1}
-                        </button>
-                      ))}
-                      
+
+                      {[...Array(Math.min(pagination.totalPages, 5))].map((_, i) => {
+                        const pageNum = i + 1;
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum)}
+                            className={`px-4 py-2 border rounded-md ${
+                              pagination.page === pageNum
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+
                       <button
                         onClick={() => handlePageChange(pagination.page + 1)}
                         disabled={!pagination.hasNextPage}
@@ -288,10 +341,10 @@ const ProductsContent = () => {
   );
 };
 
-const ProductsPage = () => (
-  <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div><p className="mt-4 text-gray-600">Loading products...</p></div></div>}>
-    <ProductsContent />
+const CategoryPage = () => (
+  <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div><p className="mt-4 text-gray-600">Loading category...</p></div></div>}>
+    <CategoryPageContent />
   </Suspense>
 );
 
-export default ProductsPage;
+export default CategoryPage;

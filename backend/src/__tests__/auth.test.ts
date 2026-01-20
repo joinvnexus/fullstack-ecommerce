@@ -1,0 +1,62 @@
+import AuthUtils from '../utils/auth';
+
+describe('AuthUtils', () => {
+  describe('generateToken and verifyToken', () => {
+    it('should generate and verify a token correctly', () => {
+      const payload = {
+        userId: '123',
+        email: 'test@example.com',
+        role: 'customer' as const,
+      };
+
+      const token = AuthUtils.generateToken(payload);
+      expect(token).toBeDefined();
+      expect(typeof token).toBe('string');
+
+      const verified = AuthUtils.verifyToken(token);
+      expect(verified).toEqual(payload);
+    });
+
+    it('should return null for invalid token', () => {
+      const verified = AuthUtils.verifyToken('invalid-token');
+      expect(verified).toBeNull();
+    });
+  });
+
+  describe('generateRefreshToken and verifyRefreshToken', () => {
+    it('should generate and verify a refresh token correctly', () => {
+      const payload = {
+        userId: '123',
+        email: 'test@example.com',
+        role: 'customer' as const,
+      };
+
+      const token = AuthUtils.generateRefreshToken(payload);
+      expect(token).toBeDefined();
+      expect(typeof token).toBe('string');
+
+      const verified = AuthUtils.verifyRefreshToken(token);
+      expect(verified).toEqual(payload);
+    });
+
+    it('should return null for invalid refresh token', () => {
+      const verified = AuthUtils.verifyRefreshToken('invalid-token');
+      expect(verified).toBeNull();
+    });
+  });
+
+  describe('hashPassword and comparePassword', () => {
+    it('should hash and compare password correctly', async () => {
+      const password = 'password123';
+      const hashed = await AuthUtils.hashPassword(password);
+      expect(hashed).toBeDefined();
+      expect(typeof hashed).toBe('string');
+
+      const isMatch = await AuthUtils.comparePassword(password, hashed);
+      expect(isMatch).toBe(true);
+
+      const isNotMatch = await AuthUtils.comparePassword('wrongpassword', hashed);
+      expect(isNotMatch).toBe(false);
+    });
+  });
+});

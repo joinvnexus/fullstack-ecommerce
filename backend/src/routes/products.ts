@@ -6,6 +6,8 @@ import { validate } from '../utils/validation.js';
 import { createProductSchema } from '../utils/validation.js';
 import { AppError } from '../middleware/errorHandler.js';
 import mongoose from 'mongoose';
+import { cacheService } from '../services/cache.service.js';
+import { logAdminAction } from '../services/admin/auditService.js';
 
 const router = express.Router();
 
@@ -23,6 +25,30 @@ router.get('/', async (req, res, next) => {
       sort = 'createdAt',
       order = 'desc',
     } = req.query;
+
+    // Create cache key from query parameters
+    const cacheKey = `products:${JSON.stringify({
+      page,
+      limit,
+      category,
+      minPrice,
+      maxPrice,
+      status,
+      search,
+      sort,
+      order,
+    })}`;
+
+    // Check cache first
+    const cachedResult = await cacheService.getCachedProductsList(cacheKey);
+    if (cachedResult) {
+      return res.json({
+        success: true,
+        data: cachedResult.products,
+        pagination: cachedResult.pagination,
+        cached: true,
+      });
+    }
 
     // Build query
     const query: any = {};
@@ -71,10 +97,8 @@ router.get('/', async (req, res, next) => {
 
     // Calculate pagination info
     const totalPages = Math.ceil(total / Number(limit));
-
-    res.json({
-      success: true,
-      data: products,
+    const result = {
+      products,
       pagination: {
         page: Number(page),
         limit: Number(limit),
@@ -83,6 +107,15 @@ router.get('/', async (req, res, next) => {
         hasNextPage: Number(page) < totalPages,
         hasPrevPage: Number(page) > 1,
       },
+    };
+
+    // Cache the result for 30 minutes
+    await cacheService.cacheProductsList(cacheKey, result, 1800);
+
+    res.json({
+      success: true,
+      data: products,
+      pagination: result.pagination,
     });
   } catch (error) {
     next(error);
@@ -155,6 +188,20 @@ router.post(
       const product = new Product(productData);
       await product.save();
 
+      // Log audit action
+      await logAdminAction({
+        adminId: (req as any).user.userId,
+        action: 'create',
+        resource: 'product',
+        resourceId: product._id.toString(),
+        newValues: productData,
+        ip: req.ip || req.connection.remoteAddress || '',
+        userAgent: req.get('User-Agent') || '',
+      });
+
+      // Invalidate cache
+      await cacheService.invalidateProductsCache();
+
       res.status(201).json({
         success: true,
         message: 'Product created successfully',
@@ -201,15 +248,32 @@ router.put(
         }
       }
 
+      const oldProduct = await Product.findById(productId);
+      if (!oldProduct) {
+        throw new AppError('Product not found', 404);
+      }
+
       const product = await Product.findByIdAndUpdate(
         productId,
         { $set: updates },
         { new: true, runValidators: true }
       );
 
-      if (!product) {
-        throw new AppError('Product not found', 404);
-      }
+      // Log audit action
+      await logAdminAction({
+        adminId: (req as any).user.userId,
+        action: 'update',
+        resource: 'product',
+        resourceId: productId.toString(),
+        oldValues: oldProduct.toObject(),
+        newValues: updates,
+        ip: req.ip || req.connection.remoteAddress || '',
+        userAgent: req.get('User-Agent') || '',
+      });
+
+      // Invalidate cache
+      await cacheService.invalidateProductsCache();
+      await cacheService.invalidateProductCache(productId.toString());
 
       res.json({
         success: true,
@@ -230,6 +294,11 @@ router.delete('/:id', authenticate, authorizeAdmin, async (req, res, next) => {
     // Convert id to ObjectId
     const productId = new mongoose.Types.ObjectId(id);
 
+    const oldProduct = await Product.findById(productId);
+    if (!oldProduct) {
+      throw new AppError('Product not found', 404);
+    }
+
     // Soft delete: change status to archived
     const product = await Product.findByIdAndUpdate(
       productId,
@@ -237,9 +306,20 @@ router.delete('/:id', authenticate, authorizeAdmin, async (req, res, next) => {
       { new: true }
     );
 
-    if (!product) {
-      throw new AppError('Product not found', 404);
-    }
+    // Log audit action
+    await logAdminAction({
+      adminId: (req as any).user.userId,
+      action: 'delete',
+      resource: 'product',
+      resourceId: productId.toString(),
+      oldValues: oldProduct.toObject(),
+      ip: req.ip || req.connection.remoteAddress || '',
+      userAgent: req.get('User-Agent') || '',
+    });
+
+    // Invalidate cache
+    await cacheService.invalidateProductsCache();
+    await cacheService.invalidateProductCache(productId.toString());
 
     res.json({
       success: true,

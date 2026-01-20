@@ -8,21 +8,8 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Include cookies
 });
-
-// Request interceptor to add auth token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
 // Response interceptor for error handling
 api.interceptors.response.use(
@@ -34,9 +21,7 @@ api.interceptors.response.use(
     }
 
     if (error.response?.status === 401) {
-      // Clear token and redirect to login
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      // Redirect to login
       window.location.href = '/login';
     }
 
@@ -49,6 +34,8 @@ api.interceptors.response.use(
 export const authApi = {
   register: (data: any) => api.post('/auth/register', data),
   login: (data: any) => api.post('/auth/login', data),
+  logout: () => api.post('/auth/logout'),
+  refresh: () => api.post('/auth/refresh'),
   getProfile: () => api.get('/auth/me'),
   updateProfile: (data: any) => api.put('/auth/me', data),
   changePassword: (data: any) => api.put('/auth/password', data),

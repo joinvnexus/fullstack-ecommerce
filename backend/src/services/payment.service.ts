@@ -2,7 +2,9 @@ import Stripe from 'stripe';
 import type { IOrder } from '../models/Order.js';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import User from '../models/User.js';
 import logger from '../utils/logger.js';
+import { emailService } from './email.service.js';
 
 export class PaymentService {
   private stripe: Stripe;
@@ -86,7 +88,7 @@ export class PaymentService {
 
   private async handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     const orderId = paymentIntent.metadata.orderId;
-    
+
     const order = await Order.findByIdAndUpdate(
       orderId,
       {
@@ -96,10 +98,23 @@ export class PaymentService {
         updatedAt: new Date(),
       },
       { new: true }
-    );
+    ).populate('items.productId');
 
     if (order) {
       // Send order confirmation email
+      try {
+        const user = await User.findById(order.userId);
+        if (user) {
+          await emailService.sendOrderConfirmation({
+            user,
+            order,
+            items: order.items
+          });
+        }
+      } catch (emailError) {
+        logger.error('Failed to send order confirmation email:', emailError);
+      }
+
       // Update inventory
       logger.info(`✅ Order ${order.orderNumber} payment succeeded`);
     }

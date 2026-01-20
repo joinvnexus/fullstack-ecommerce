@@ -38,32 +38,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    // Check for stored auth data
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-      
-      // Verify token by fetching profile
-      fetchProfile(storedToken).finally(() => {
-        setIsLoading(false);
-      });
-    } else {
+    // Check authentication status by fetching profile
+    fetchProfile().finally(() => {
       setIsLoading(false);
-    }
+    });
   }, []);
 
-  const fetchProfile = async (authToken: string) => {
+  const fetchProfile = async () => {
     try {
       const response = await authApi.getProfile();
       setUser(response.data);
-      localStorage.setItem('user', JSON.stringify(response.data));
     } catch (error) {
       // Token expired or invalid
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
       setToken(null);
       setUser(null);
     }
@@ -73,13 +59,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const response = await authApi.login({ email, password });
 
-      const { user, token } = response.data;
+      const { user } = response.data;
 
       setUser(user);
-      setToken(token);
-
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      setToken('authenticated'); // Indicate authenticated state
 
       // Redirect based on role
       if (user.role === 'admin') {
@@ -94,15 +77,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const register = async (data: any) => {
     try {
-      const response = await authApi.register(data) ;
+      const response = await authApi.register(data);
 
-      const { user, token } = response.data;
+      const { user } = response.data;
 
       setUser(user);
-      setToken(token);
-
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      setToken('authenticated');
 
       // New users are customers, redirect to account
       router.push('/account');
@@ -111,12 +91,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/login');
+  const logout = async () => {
+    try {
+      await authApi.logout();
+    } catch (error) {
+      // Ignore logout errors
+    } finally {
+      setUser(null);
+      setToken(null);
+      router.push('/login');
+    }
   };
 
   const updateProfile = async (data: any) => {

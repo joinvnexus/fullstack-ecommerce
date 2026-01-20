@@ -5,6 +5,7 @@ import Product from '../models/Product.js';
 import User from '../models/User.js';
 import { authenticate, authorizeAdmin } from '../utils/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { paymentService } from '../services/payment.service.js';
 import mongoose from 'mongoose';
 
 const router = express.Router();
@@ -390,7 +391,9 @@ router.post('/:id/refund', authenticate, authorizeAdmin, async (req, res, next) 
 
     await order.save({ session });
 
-    // Process refund with payment provider (TODO: integrate with actual provider)
+    // Process refund with payment provider
+    await paymentService.createRefund(order._id.toString(), refundAmount);
+
     // Restock products
     for (const item of order.items) {
       await Product.findByIdAndUpdate(item.productId, {

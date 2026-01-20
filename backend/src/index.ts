@@ -6,6 +6,7 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import mongoose from "mongoose";
+import cookieParser from "cookie-parser";
 import logger from "./utils/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import authRoutes from "./routes/auth.js";
@@ -17,6 +18,7 @@ import paymentRoutes from "./routes/payments.js";
 import adminRoutes from './routes/admin.js';
 import wishlistRoutes from './routes/wishlist.js';
 import searchRoutes from './routes/search.js';
+import { swaggerUi, specs } from './utils/swagger.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -29,6 +31,17 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
   message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req, res) => {
+    // Use user ID if authenticated, otherwise IP
+    const user = (req as any).user;
+    return user ? `user_${user.userId}` : (req.ip || req.connection.remoteAddress || 'unknown');
+  },
+  skip: (req, res) => {
+    // Skip rate limiting for health check and test endpoints
+    return req.path === '/api/health' || req.path === '/api/test';
+  }
 });
 app.use(limiter);
 
@@ -37,6 +50,8 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // limit each IP to 5 auth requests per windowMs
   message: 'Too many authentication attempts, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 app.use(
@@ -48,8 +63,12 @@ app.use(
     credentials: true,
   })
 );
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Swagger Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 // Routes
 app.use("/api/auth", authLimiter);
@@ -147,3 +166,6 @@ const startServer = async () => {
 };
 
 startServer();
+
+// Export for testing
+export default app;

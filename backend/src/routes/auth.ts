@@ -5,8 +5,71 @@ import { validate } from '../utils/validation.js';
 import { registerSchema, loginSchema, updateProfileSchema, addressSchema, changePasswordSchema } from '../utils/validation.js';
 import AuthUtils from '../utils/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { emailService } from '../services/email.service.js';
+import logger from '../utils/logger.js';
 
 const router = express.Router();
+
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: John Doe
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: john@example.com
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: password123
+ *               phone:
+ *                 type: string
+ *                 example: +1234567890
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: User registered successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/User'
+ *                     token:
+ *                       type: string
+ *                       example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *       400:
+ *         description: Validation error or user already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 
 // Register new user
 router.post('/register', validate(registerSchema), async (req, res, next) => {
@@ -30,12 +93,29 @@ router.post('/register', validate(registerSchema), async (req, res, next) => {
 
     await user.save();
 
-    // Generate JWT token
-    const token = AuthUtils.generateToken({
+    // Send welcome email
+    try {
+      await emailService.sendWelcomeEmail(user);
+    } catch (emailError) {
+      logger.error('Failed to send welcome email:', emailError);
+      // Don't fail registration if email fails
+    }
+
+    // Generate JWT tokens
+    const accessToken = AuthUtils.generateToken({
       userId: user._id.toString(),
       email: user.email,
       role: user.role,
     });
+
+    const refreshToken = AuthUtils.generateRefreshToken({
+      userId: user._id.toString(),
+      email: user.email,
+      role: user.role,
+    });
+
+    // Set cookies
+    AuthUtils.setAuthCookies(res, accessToken, refreshToken);
 
     // Remove password safely using destructuring
     const { password: pwd, ...userResponse } = user.toObject();
@@ -45,7 +125,6 @@ router.post('/register', validate(registerSchema), async (req, res, next) => {
       message: 'User registered successfully',
       data: {
         user: userResponse,
-        token,
       },
     });
   } catch (error) {
@@ -70,12 +149,21 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
       throw new AppError('Invalid credentials', 401);
     }
 
-    // Generate JWT token
-    const token = AuthUtils.generateToken({
+    // Generate JWT tokens
+    const accessToken = AuthUtils.generateToken({
       userId: user._id.toString(),
       email: user.email,
       role: user.role,
     });
+
+    const refreshToken = AuthUtils.generateRefreshToken({
+      userId: user._id.toString(),
+      email: user.email,
+      role: user.role,
+    });
+
+    // Set cookies
+    AuthUtils.setAuthCookies(res, accessToken, refreshToken);
 
     // Remove password safely
     const { password: pwd, ...userResponse } = user.toObject();
@@ -85,8 +173,47 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
       message: 'Login successful',
       data: {
         user: userResponse,
-        token,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Refresh access token
+router.post('/refresh', async (req, res, next) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(401).json({ message: 'Refresh token required' });
+    }
+
+    const decoded = AuthUtils.verifyRefreshToken(refreshToken);
+
+    if (!decoded) {
+      return res.status(401).json({ message: 'Invalid refresh token' });
+    }
+
+    // Generate new tokens (rotation)
+    const newAccessToken = AuthUtils.generateToken({
+      userId: decoded.userId,
+      email: decoded.email,
+      role: decoded.role,
+    });
+
+    const newRefreshToken = AuthUtils.generateRefreshToken({
+      userId: decoded.userId,
+      email: decoded.email,
+      role: decoded.role,
+    });
+
+    // Set new cookies
+    AuthUtils.setAuthCookies(res, newAccessToken, newRefreshToken);
+
+    res.json({
+      success: true,
+      message: 'Token refreshed successfully',
     });
   } catch (error) {
     next(error);
@@ -246,6 +373,21 @@ router.get('/addresses', authenticate, async (req, res, next) => {
     res.json({
       success: true,
       data: userData.addresses,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Logout
+router.post('/logout', authenticate, async (req, res, next) => {
+  try {
+    // Clear authentication cookies
+    AuthUtils.clearAuthCookies(res);
+
+    res.json({
+      success: true,
+      message: 'Logged out successfully',
     });
   } catch (error) {
     next(error);

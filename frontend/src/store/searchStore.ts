@@ -25,6 +25,10 @@ interface SearchState {
     sortOrder: 'asc' | 'desc';
   };
 
+  // Cache flags
+  popularSearchesLoaded: boolean;
+  trendingProductsLoaded: boolean;
+
   // Actions
   setQuery: (query: string) => void;
   setFilters: (filters: Partial<SearchState['filters']>) => void;
@@ -55,6 +59,8 @@ const useSearchStore = create<SearchState>((set, get) => ({
     sortBy: 'relevance',
     sortOrder: 'desc',
   },
+  popularSearchesLoaded: false,
+  trendingProductsLoaded: false,
 
   setQuery: (query: string) => {
     set({ query });
@@ -132,18 +138,24 @@ const useSearchStore = create<SearchState>((set, get) => ({
   },
 
   getPopularSearches: async () => {
+    const { popularSearchesLoaded } = get();
+    if (popularSearchesLoaded) return;
+
     try {
       const response = await searchApi.getPopularSearches();
-      set({ popularSearches: response.data });
+      set({ popularSearches: response.data, popularSearchesLoaded: true });
     } catch (error) {
       console.error('Failed to get popular searches:', error);
     }
   },
 
   getTrendingProducts: async () => {
+    const { trendingProductsLoaded } = get();
+    if (trendingProductsLoaded) return;
+
     try {
       const response = await searchApi.getTrendingProducts();
-      set({ trendingProducts: response.data });
+      set({ trendingProducts: response.data, trendingProductsLoaded: true });
     } catch (error) {
       console.error('Failed to get trending products:', error);
     }

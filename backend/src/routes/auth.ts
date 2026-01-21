@@ -1,4 +1,5 @@
 import express from 'express';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import User from '../models/User.js';
 import RefreshToken from '../models/RefreshToken.js';
 import { authenticate } from '../utils/auth.js';
@@ -10,6 +11,31 @@ import { emailService } from '../services/email.service.js';
 import logger from '../utils/logger.js';
 
 const router = express.Router();
+
+// Rate limiters
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: process.env.NODE_ENV === 'development' ? 50 : 5,
+  message: 'Too many authentication attempts, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    logger.warn(`Rate limit exceeded for auth route: ${req.method} ${req.path} from IP: ${req.ip}`);
+    res.status(429).json({ success: false, message: 'Too many authentication attempts, please try again later.' });
+  },
+});
+
+const profileLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // Higher limit for profile
+  message: 'Too many profile requests, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req, res) => {
+    const user = (req as any).user;
+    return user ? `user_${user.userId}` : ipKeyGenerator(req as any);
+  },
+});
 
 /**
  * @swagger
@@ -73,7 +99,7 @@ const router = express.Router();
  */
 
 // Register new user
-router.post('/register', validate(registerSchema), async (req, res, next) => {
+router.post('/register', authLimiter, validate(registerSchema), async (req, res, next) => {
   try {
     const { name, email, password, phone } = req.body;
 
@@ -142,7 +168,7 @@ router.post('/register', validate(registerSchema), async (req, res, next) => {
 });
 
 // Login user
-router.post('/login', validate(loginSchema), async (req, res, next) => {
+router.post('/login', authLimiter, validate(loginSchema), async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -255,7 +281,7 @@ router.post('/refresh', async (req, res, next) => {
 });
 
 // Get current user profile
-router.get('/me', authenticate, async (req, res, next) => {
+router.get('/me', profileLimiter, authenticate, async (req, res, next) => {
   try {
     const user = (req as any).user;
     const userData = await User.findById(user.userId).select('-password');

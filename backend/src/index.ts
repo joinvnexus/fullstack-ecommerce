@@ -26,6 +26,17 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(helmet());
 
+// CORS configuration (must be before rate limiting)
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? process.env.NEXT_PUBLIC_APP_URL
+        : true, // Allow all origins in development
+    credentials: true,
+  })
+);
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -36,7 +47,7 @@ const limiter = rateLimit({
   keyGenerator: (req, res) => {
     // Use user ID if authenticated, otherwise IP
     const user = (req as any).user;
-    return user ? `user_${user.userId}` : (req.ip || req.connection.remoteAddress || 'unknown');
+    return user ? `user_${user.userId}` : ipKeyGenerator(req as any);
   },
   skip: (req, res) => {
     // Skip rate limiting for health check and test endpoints
@@ -45,28 +56,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Stricter rate limiting for auth routes
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'development' ? 50 : 5, // Higher limit in development
-  message: 'Too many authentication attempts, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (req, res) => {
-    logger.warn(`Rate limit exceeded for auth route: ${req.method} ${req.path} from IP: ${req.ip}`);
-    res.status(429).json({ success: false, message: 'Too many authentication attempts, please try again later.' });
-  },
-});
-
-app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? process.env.NEXT_PUBLIC_APP_URL
-        : ["http://localhost:3000", "http://localhost:3001"],
-    credentials: true,
-  })
-);
+// Looser rate limiting for profile/me endpoint (defined in auth.ts now)
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -75,7 +65,6 @@ app.use(express.urlencoded({ extended: true }));
 // app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs)); // TODO: Add swagger when needed
 
 // Routes
-app.use("/api/auth", authLimiter);
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
@@ -158,8 +147,8 @@ const connectDB = async () => {
 const startServer = async () => {
   await connectDB();
 
-  app.listen(PORT, () => {
-    logger.info(`🚀 Server running on http://localhost:${PORT}`);
+  app.listen(Number(PORT), '0.0.0.0', () => {
+    logger.info(`🚀 Server running on http://localhost:${PORT} and http://0.0.0.0:${PORT}`);
     logger.info(`📡 Health check: http://localhost:${PORT}/api/health`);
     logger.info(`🔧 Test endpoint: http://localhost:${PORT}/api/test`);
     logger.info(`🔐 Auth endpoints:`);

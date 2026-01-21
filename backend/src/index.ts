@@ -48,10 +48,14 @@ app.use(limiter);
 // Stricter rate limiting for auth routes
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 auth requests per windowMs
+  max: process.env.NODE_ENV === 'development' ? 50 : 5, // Higher limit in development
   message: 'Too many authentication attempts, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  handler: (req, res) => {
+    logger.warn(`Rate limit exceeded for auth route: ${req.method} ${req.path} from IP: ${req.ip}`);
+    res.status(429).json({ success: false, message: 'Too many authentication attempts, please try again later.' });
+  },
 });
 
 app.use(

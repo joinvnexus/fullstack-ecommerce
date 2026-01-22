@@ -15,8 +15,10 @@ const FeaturedProducts = () => {
   }, []);
 
   const fetchFeaturedProducts = async () => {
+    console.log('Fetching featured products...');
     try {
       const response = await productsApi.getAll({ limit: 8 });
+      console.log('Products fetched successfully, count:', response.data.length);
       setProducts(response.data);
     } catch (error) {
       console.error('Error fetching products:', error);

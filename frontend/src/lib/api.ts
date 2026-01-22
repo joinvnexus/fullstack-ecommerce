@@ -21,6 +21,12 @@ api.interceptors.response.use(
     }
 
     if (error.response?.status === 401) {
+      // Don't redirect for auth/me since it's expected when not logged in
+      if (error.config?.url?.includes('/auth/me')) {
+        console.log('401 for /auth/me, not redirecting');
+        return Promise.reject(error);
+      }
+      console.log('401 Unauthorized, redirecting to login');
       // Redirect to login
       window.location.href = '/login';
     }

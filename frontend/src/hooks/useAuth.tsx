@@ -45,10 +45,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const fetchProfile = async () => {
+    console.log('Fetching user profile...');
     try {
       const response = await authApi.getProfile();
+      console.log('Profile fetched successfully:', response.data);
       setUser(response.data);
     } catch (error) {
+      console.log('Profile fetch failed:', error);
       // Token expired or invalid
       setToken(null);
       setUser(null);

@@ -9,6 +9,7 @@ interface BkashConfig {
   username: string;
   password: string;
   baseURL: string;
+  
 }
 
 export class BkashService {

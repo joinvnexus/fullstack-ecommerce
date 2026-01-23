@@ -1,4 +1,4 @@
-import AuthUtils from '../utils/auth';
+import AuthUtils from '../utils/auth.js';
 
 describe('AuthUtils', () => {
   describe('generateToken and verifyToken', () => {
@@ -31,12 +31,15 @@ describe('AuthUtils', () => {
         role: 'customer' as const,
       };
 
-      const token = AuthUtils.generateRefreshToken(payload);
-      expect(token).toBeDefined();
-      expect(typeof token).toBe('string');
+      const tokenResult = AuthUtils.generateRefreshToken(payload);
+      expect(tokenResult).toBeDefined();
+      expect(tokenResult.token).toBeDefined();
+      expect(typeof tokenResult.token).toBe('string');
+      expect(tokenResult.tokenId).toBeDefined();
+      expect(typeof tokenResult.tokenId).toBe('string');
 
-      const verified = AuthUtils.verifyRefreshToken(token);
-      expect(verified).toEqual(payload);
+      const verified = AuthUtils.verifyRefreshToken(tokenResult.token);
+      expect(verified).toEqual({ ...payload, tokenId: tokenResult.tokenId });
     });
 
     it('should return null for invalid refresh token', () => {

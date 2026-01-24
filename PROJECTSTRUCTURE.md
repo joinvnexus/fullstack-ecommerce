@@ -70,6 +70,8 @@ backend/
         ├── auth.ts                # Authentication utilities
         ├── rolePermissions.ts     # Role and permission utilities
         └── validation.ts          # Input validation schemas
+        ├── logger.ts             # Logger configuration
+        └── authUtils.ts          # Authentication utilities
 ```
 
 ## Frontend Structure

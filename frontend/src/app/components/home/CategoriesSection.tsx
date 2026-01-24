@@ -3,15 +3,8 @@
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { categoriesApi } from '@/lib/api';
+import { Category } from '@/types';
 import LoadingSpinner from '@/app/components/ui/LoadingSpinner';
-
-interface Category {
-  _id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  image?: string;
-}
 
 export default function CategoriesSection() {
   const { data: categories, isLoading, error } = useQuery({

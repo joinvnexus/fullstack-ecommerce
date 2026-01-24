@@ -1,11 +1,11 @@
 import express from 'express';
 import Product from '../models/Product.js';
 import Category from '../models/Category.js';
+import mongoose from 'mongoose';
 import { authenticate, authorizeAdmin } from '../utils/auth.js';
 import { validate } from '../utils/validation.js';
 import { createProductSchema } from '../utils/validation.js';
 import { AppError } from '../middleware/errorHandler.js';
-import mongoose from 'mongoose';
 import { cacheService } from '../services/cache.service.js';
 import { logAdminAction } from '../services/admin/auditService.js';
 

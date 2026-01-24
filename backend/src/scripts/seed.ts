@@ -30,7 +30,6 @@ const seedCategories = async (mode: 'reset' | 'update') => {
       { upsert: true }
     );
   }
-
   const categories = await Category.find();
   const map = new Map(categories.map(c => [c.slug, c._id]));
 

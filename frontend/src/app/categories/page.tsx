@@ -71,27 +71,27 @@ function CategoryItem({ category, level = 0 }: CategoryItemProps) {
       >
         <Card className="overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 bg-white">
           <div className={`h-32 bg-gradient-to-r ${gradientColors} relative overflow-hidden`}>
-            <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-10 transition-all duration-300"></div>
+            <div className="absolute inset-0 bg-black bg-opacity-10 group-hover:bg-opacity-5 transition-all duration-300"></div>
             <div className="absolute top-4 left-4">
-              <div className="bg-white bg-opacity-20 backdrop-blur-sm p-3 rounded-full group-hover:scale-110 transition-transform duration-300">
-                <IconComponent className="h-6 w-6 text-white" />
+              <div className="bg-white bg-opacity-30 backdrop-blur-sm p-3 rounded-full group-hover:scale-110 transition-transform duration-300 border border-white border-opacity-20">
+                <IconComponent className="h-6 w-6 text-gray-800" />
               </div>
             </div>
             <div className="absolute top-4 right-4">
-              <ArrowRight className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <ArrowRight className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg" />
             </div>
             <div className="absolute bottom-4 left-4 right-4">
-              <h3 className="font-bold text-xl text-white mb-1 group-hover:scale-105 transition-transform duration-300">
+              <h3 className="font-bold text-xl text-white mb-2 group-hover:scale-105 transition-transform duration-300 drop-shadow-lg">
                 {category.name}
               </h3>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 {category.productCount !== undefined && (
-                  <Badge variant="secondary" className="bg-white bg-opacity-20 text-white border-0 text-xs">
+                  <Badge variant="secondary" className="bg-white bg-opacity-25 text-gray-800 border-0 text-xs font-medium px-2 py-1">
                     {category.productCount} products
                   </Badge>
                 )}
                 {level === 0 && hasChildren && (
-                  <Badge variant="secondary" className="bg-white bg-opacity-20 text-white border-0 text-xs">
+                  <Badge variant="secondary" className="bg-white bg-opacity-25 text-gray-800 border-0 text-xs font-medium px-2 py-1">
                     {category.children.length} sub-categories
                   </Badge>
                 )}

@@ -43,12 +43,22 @@ export interface Product {
     amount: number;
     currency: string;
   };
+  originalPrice?: {
+    amount: number;
+    currency: string;
+  };
   sku: string;
   stock: number;
   variants: ProductVariant[];
   category: Category | string;
   tags: string[];
   status: 'draft' | 'active' | 'archived';
+  brand?: string;
+  rating?: number;
+  reviewCount?: number;
+  isNew?: boolean;
+  freeShipping?: boolean;
+  warranty?: boolean;
   seo?: {
     title: string;
     description: string;

@@ -27,12 +27,12 @@ function CategoryItem({ category, level = 0 }: CategoryItemProps) {
             <h3 className="font-semibold text-lg mb-2">{category.name}</h3>
             {category.productCount !== undefined && (
               <Badge variant="secondary" className="text-xs">
-                {category.productCount} পণ্য
+                {category.productCount} products
               </Badge>
             )}
             {level === 0 && hasChildren && (
               <p className="text-sm text-muted-foreground mt-2">
-                {category.children.length} সাব-ক্যাটেগরি
+                {category.children.length} sub-categories
               </p>
             )}
           </div>
@@ -62,7 +62,7 @@ export default function CategoriesPage() {
         const response = await categoriesApi.getAll();
         setCategories(response.data);
       } catch (err) {
-        setError('ক্যাটেগরি লোড করতে সমস্যা হয়েছে');
+        setError('Failed to load categories');
         console.error('Error fetching categories:', err);
       } finally {
         setLoading(false);
@@ -93,7 +93,7 @@ export default function CategoriesPage() {
               onClick={() => window.location.reload()}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
             >
-              আবার চেষ্টা করুন
+              Try Again
             </button>
           </CardContent>
         </Card>
@@ -105,9 +105,9 @@ export default function CategoriesPage() {
     <div className="min-h-screen py-12 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-center mb-4">পণ্য ক্যাটেগরি</h1>
+          <h1 className="text-4xl font-bold text-center mb-4">Product Categories</h1>
           <p className="text-muted-foreground text-center max-w-2xl mx-auto">
-            আমাদের বিভিন্ন পণ্য ক্যাটেগরি ব্রাউজ করুন এবং আপনার পছন্দের পণ্য খুঁজে নিন।
+            Browse our various product categories and find your favorite products.
           </p>
         </div>
 
@@ -115,7 +115,7 @@ export default function CategoriesPage() {
           <Card>
             <CardContent className="text-center p-12">
               <p className="text-muted-foreground text-lg">
-                কোনো ক্যাটেগরি পাওয়া যায়নি।
+                No categories found.
               </p>
             </CardContent>
           </Card>

@@ -24,7 +24,7 @@ const heroSlides = [
     description: 'Elevate your wardrobe with our curated collection of premium fashion',
     image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8',
     ctaText: 'Explore Fashion',
-    ctaLink: '/categories/fashion',
+    ctaLink: '/categories/clothing',
     stats: { products: '8,000+', customers: '45,000+' }
   },
   {
@@ -35,7 +35,7 @@ const heroSlides = [
     description: 'Transform your space with our premium home and lifestyle products',
     image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d',
     ctaText: 'Shop Home',
-    ctaLink: '/categories/home',
+    ctaLink: '/categories/home-kitchen',
     stats: { products: '6,000+', customers: '40,000+' }
   }
 ];

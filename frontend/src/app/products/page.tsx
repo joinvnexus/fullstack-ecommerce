@@ -44,7 +44,7 @@ const ProductsContent = () => {
       setSelectedCategory(categorySlug);
     }
     fetchProducts();
-  }, [categorySlug, pagination.page, sortBy, sortOrder, minPrice, maxPrice, selectedBrands, selectedRating, inStockOnly]);
+  }, [categorySlug, selectedCategory, pagination.page, sortBy, sortOrder, minPrice, maxPrice, selectedBrands, selectedRating, inStockOnly]);
 
   const fetchCategories = async () => {
     try {

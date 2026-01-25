@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { categoriesApi } from '@/lib/api';
 import { Category } from '@/types';
 import {
@@ -20,7 +21,10 @@ import {
   Star,
   ArrowRight,
   Grid3X3,
-  List
+  List,
+  Search,
+  Eye,
+  X
 } from 'lucide-react';
 
 interface CategoryItemProps {
@@ -137,6 +141,21 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Filter and search categories - must be called before any early returns
+  const filteredCategories = useMemo(() => {
+    return categories.filter(category =>
+      category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (category.children && category.children.some(child =>
+        child.name.toLowerCase().includes(searchQuery.toLowerCase())
+      ))
+    );
+  }, [categories, searchQuery]);
+
+  const totalProducts = categories.reduce((sum, cat) => sum + (cat.productCount || 0), 0);
+  const filteredProducts = filteredCategories.reduce((sum, cat) => sum + (cat.productCount || 0), 0);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -190,8 +209,6 @@ export default function CategoriesPage() {
     );
   }
 
-  const totalProducts = categories.reduce((sum, cat) => sum + (cat.productCount || 0), 0);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Hero Section */}
@@ -225,47 +242,120 @@ export default function CategoriesPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        {/* View Toggle */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Browse Categories</h2>
-            <p className="text-gray-600">Explore our product categories to find what you need</p>
-          </div>
-          <div className="flex items-center gap-2 bg-white p-1 rounded-lg shadow-sm border">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-md transition-colors ${
-                viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <Grid3X3 className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-md transition-colors ${
-                viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <List className="h-5 w-5" />
-            </button>
+        {/* Search and Controls */}
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
+            <div className="flex-1 max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Input
+                  type="text"
+                  placeholder="Search categories..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-10 h-12 border-2 border-gray-200 focus:border-blue-500 transition-colors"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-gray-600">
+                {searchQuery ? (
+                  <span>Found {filteredCategories.length} categories ({filteredProducts} products)</span>
+                ) : (
+                  <span>Showing all {categories.length} categories</span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 bg-white p-1 rounded-lg shadow-sm border">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                  title="Grid View"
+                >
+                  <Grid3X3 className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                  title="List View"
+                >
+                  <List className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {categories.length === 0 ? (
+        {/* Quick Category Filter */}
+        <div className="mb-8">
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                selectedCategory === null
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              All Categories
+            </button>
+            {categories.slice(0, 8).map((category) => (
+              <button
+                key={category._id}
+                onClick={() => setSelectedCategory(selectedCategory === category._id ? null : category._id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  selectedCategory === category._id
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {filteredCategories.length === 0 ? (
           <Card className="shadow-xl border-0">
             <CardContent className="text-center p-16">
               <div className="bg-gray-100 p-6 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-                <ShoppingBag className="h-12 w-12 text-gray-400" />
+                <Search className="h-12 w-12 text-gray-400" />
               </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-2">No Categories Found</h3>
-              <p className="text-gray-600 text-lg">
-                We're working on adding new categories. Check back soon!
+              <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+                {searchQuery ? 'No categories found' : 'No Categories Available'}
+              </h3>
+              <p className="text-gray-600 text-lg mb-6">
+                {searchQuery
+                  ? `No categories match your search for "${searchQuery}". Try a different search term.`
+                  : "We're working on adding new categories. Check back soon!"
+                }
               </p>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Clear Search
+                </button>
+              )}
             </CardContent>
           </Card>
         ) : (
           <div className={`grid gap-8 ${viewMode === 'grid' ? 'md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
-            {categories.map((category, index) => (
+            {filteredCategories.map((category, index) => (
               <CategoryItem key={category._id} category={category} />
             ))}
           </div>

@@ -55,15 +55,15 @@ export default function ContactPage() {
               Have questions or need assistance? We're here to help you every step of the way.
             </p>
             <div className="mt-8 flex justify-center space-x-4">
-              <div className="flex items-center bg-white bg-opacity-20 rounded-full px-4 py-2">
+              <div className="flex items-center bg-blue-500 bg-opacity-20 rounded-full px-4 py-2">
                 <CheckCircle className="h-5 w-5 mr-2" />
                 <span className="text-sm">24/7 Support</span>
               </div>
-              <div className="flex items-center bg-white bg-opacity-20 rounded-full px-4 py-2">
+              <div className="flex items-center bg-blue-500 bg-opacity-20 rounded-full px-4 py-2">
                 <CheckCircle className="h-5 w-5 mr-2" />
                 <span className="text-sm">Quick Response</span>
               </div>
-              <div className="flex items-center bg-white bg-opacity-20 rounded-full px-4 py-2">
+              <div className="flex items-center bg-blue-500 bg-opacity-20 rounded-full px-4 py-2">
                 <CheckCircle className="h-5 w-5 mr-2" />
                 <span className="text-sm">Expert Help</span>
               </div>
@@ -92,7 +92,7 @@ export default function ContactPage() {
               <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white">
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-4">
-                    <div className="bg-white bg-opacity-20 p-3 rounded-full group-hover:scale-110 transition-transform duration-300">
+                    <div className="bg-blue-500 bg-opacity-20 p-3 rounded-full group-hover:scale-110 transition-transform duration-300">
                       <MapPin className="h-6 w-6" />
                     </div>
                     <div>
@@ -110,7 +110,7 @@ export default function ContactPage() {
               <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-r from-green-500 to-green-600 text-white">
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-4">
-                    <div className="bg-white bg-opacity-20 p-3 rounded-full group-hover:scale-110 transition-transform duration-300">
+                    <div className="bg-green-500 bg-opacity-20 p-3 rounded-full group-hover:scale-110 transition-transform duration-300">
                       <Phone className="h-6 w-6" />
                     </div>
                     <div>
@@ -127,10 +127,10 @@ export default function ContactPage() {
               <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white">
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-4">
-                    <div className="bg-white bg-opacity-20 p-3 rounded-full group-hover:scale-110 transition-transform duration-300">
+                    <div className="bg-purple-500 bg-opacity-20 p-3 rounded-full group-hover:scale-110 transition-transform duration-300">
                       <Mail className="h-6 w-6" />
                     </div>
-                    <div>
+                    <div> 
                       <h3 className="font-semibold text-lg">Email</h3>
                       <p className="text-purple-100 mt-1">
                         info@ecommerce.com<br />
@@ -144,8 +144,8 @@ export default function ContactPage() {
               <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white">
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-4">
-                    <div className="bg-white bg-opacity-20 p-3 rounded-full group-hover:scale-110 transition-transform duration-300">
-                      <Clock className="h-6 w-6" />
+                    <div className="bg-orange bg-opacity-20 p-3 rounded-full group-hover:scale-110 transition-transform duration-300">
+                      <Clock className="h-6 w-6 " />
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg">Business Hours</h3>

@@ -198,20 +198,6 @@ export interface PaginatedResponse<T> {
   };
 }
 
-// Auth types
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
+// Re-export API types
+export * from './api';
 
-export interface RegisterData {
-  name: string;
-  email: string;
-  password: string;
-  phone?: string;
-}
-
-export interface AuthResponse {
-  user: User;
-  token: string;
-}

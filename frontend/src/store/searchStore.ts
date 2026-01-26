@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { searchApi } from '@/lib/api';
+import { AutocompleteParams } from '@/types';
 
 // AbortController instances for cancelling requests
 let searchAbortController: AbortController | null = null;
@@ -7,10 +8,14 @@ let suggestionsAbortController: AbortController | null = null;
 
 interface SearchState {
   query: string;
-  results: any[];
-  suggestions: any;
+  results: unknown[];
+  suggestions: {
+    products: unknown[];
+    categories: string[];
+    tags: string[];
+  };
   popularSearches: string[];
-  trendingProducts: any[];
+  trendingProducts: unknown[];
   isLoading: boolean;
   error: string | null;
   totalResults: number;
@@ -32,7 +37,7 @@ interface SearchState {
   // Actions
   setQuery: (query: string) => void;
   setFilters: (filters: Partial<SearchState['filters']>) => void;
-  search: (params?: any) => Promise<void>;
+  search: (params?: Record<string, unknown>) => Promise<void>;
   getSuggestions: (query: string) => Promise<void>;
   getPopularSearches: () => Promise<void>;
   getTrendingProducts: () => Promise<void>;
@@ -91,7 +96,7 @@ const useSearchStore = create<SearchState>((set, get) => ({
         ...params,
       };
 
-      const response = await searchApi.searchProducts(searchParams, { signal: searchAbortController.signal });
+      const response = await searchApi.searchProducts(searchParams as Record<string, unknown>, { signal: searchAbortController.signal });
 
       set({
         results: response.data.products,
@@ -100,13 +105,14 @@ const useSearchStore = create<SearchState>((set, get) => ({
         totalPages: response.data.totalPages,
         isLoading: false,
       });
-    } catch (error: any) {
-      if (error.name === 'AbortError' || error.message === 'canceled') {
+    } catch (error: unknown) {
+      if (error instanceof Error && (error.name === 'AbortError' || error.message === 'canceled')) {
         // Silently ignore aborted requests
         return;
       }
+      const errorMessage = error instanceof Error ? error.message : 'Search failed';
       set({
-        error: error.message,
+        error: errorMessage,
         isLoading: false,
       });
       throw error;
@@ -126,10 +132,10 @@ const useSearchStore = create<SearchState>((set, get) => ({
         return;
       }
 
-      const response = await searchApi.getSuggestions({ q: query }, { signal: suggestionsAbortController.signal });
+      const response = await searchApi.getSuggestions({ q: query } as AutocompleteParams, { signal: suggestionsAbortController.signal });
       set({ suggestions: response.data });
-    } catch (error: any) {
-      if (error.name === 'AbortError' || error.message === 'canceled') {
+    } catch (error: unknown) {
+      if (error instanceof Error && (error.name === 'AbortError' || error.message === 'canceled')) {
         // Silently ignore aborted requests
         return;
       }

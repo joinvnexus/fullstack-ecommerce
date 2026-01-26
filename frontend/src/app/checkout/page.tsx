@@ -153,15 +153,17 @@ const CheckoutPage = () => {
 
       const res = await ordersApi.create({
         shippingAddress: data.shippingAddress,
+        paymentMethod: data.paymentMethod,
         shippingMethod: data.shippingMethod,
         notes: data.notes,
       });
 
       setCreatedOrder(res.data);
       setPaymentStep("payment");
-    } catch (err: any) {
+    } catch (err) {
       console.error("Order creation error:", err);
-      alert(`Order creation failed: ${err.message || err}`);
+      const errorMessage = err instanceof Error ? err.message : 'Order creation failed';
+      alert(`Order creation failed: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }

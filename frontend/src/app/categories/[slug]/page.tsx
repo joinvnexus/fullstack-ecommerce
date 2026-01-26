@@ -210,35 +210,45 @@ const CategoryPageContent = () => {
           {/* Products section */}
           <div className="flex-1">
             {/* Toolbar */}
-            <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setShowFilters(true)}
-                    className="lg:hidden flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                    className="lg:hidden flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
                   >
                     <Filter size={18} />
-                    Filters
+                    <span className="font-medium">Filters</span>
                   </button>
-                  <div className="text-sm text-gray-600">
-                    Showing {products.length} of {pagination.total} products
+                  <div className="text-sm text-gray-600 bg-gray-50 px-3 py-1 rounded-full">
+                    <span className="font-medium text-gray-900">{products.length}</span> of <span className="font-medium text-gray-900">{pagination.total}</span> products
                   </div>
                 </div>
 
                 <div className="flex items-center gap-4">
                   {/* View mode toggle */}
-                  <div className="flex border border-gray-300 rounded-md overflow-hidden">
+                  <div className="flex bg-gray-100 rounded-lg p-1">
                     <button
                       onClick={() => setViewMode('grid')}
-                      className={`p-2 ${viewMode === 'grid' ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+                      className={`p-2 rounded-md transition-all duration-200 ${
+                        viewMode === 'grid'
+                          ? 'bg-white text-blue-600 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                      title="Grid view"
                     >
-                      <Grid size={20} />
+                      <Grid size={18} />
                     </button>
                     <button
                       onClick={() => setViewMode('list')}
-                      className={`p-2 ${viewMode === 'list' ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+                      className={`p-2 rounded-md transition-all duration-200 ${
+                        viewMode === 'list'
+                          ? 'bg-white text-blue-600 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                      title="List view"
                     >
-                      <List size={20} />
+                      <List size={18} />
                     </button>
                   </div>
 
@@ -251,7 +261,7 @@ const CategoryPageContent = () => {
                         setSortBy(newSortBy);
                         setSortOrder(newSortOrder);
                       }}
-                      className="appearance-none pl-4 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="appearance-none pl-4 pr-10 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium"
                     >
                       <option value="createdAt-desc">Newest First</option>
                       <option value="createdAt-asc">Oldest First</option>
@@ -260,7 +270,7 @@ const CategoryPageContent = () => {
                       <option value="title-asc">Name: A to Z</option>
                       <option value="title-desc">Name: Z to A</option>
                     </select>
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" size={18} />
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" size={16} />
                   </div>
                 </div>
               </div>

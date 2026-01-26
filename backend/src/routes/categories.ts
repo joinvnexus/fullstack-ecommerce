@@ -10,9 +10,9 @@ const router = express.Router();
 // Get all categories (public)
 router.get('/', async (req, res, next) => {
   try {
-    const categories = await Category.find()
+    const categories = await Category.find({}, 'name slug description image parent children treePath sortOrder seoMeta createdAt updatedAt')
       .sort({ sortOrder: 1, name: 1 })
-      .populate('children', 'name slug');
+      .populate('children', 'name slug image');
 
     // Convert to hierarchical structure
     const categoryMap = new Map();
@@ -53,8 +53,8 @@ router.get('/', async (req, res, next) => {
 router.get('/:slug', async (req, res, next) => {
   try {
     const category = await Category.findOne({ slug: req.params.slug })
-      .populate('parent', 'name slug')
-      .populate('children', 'name slug sortOrder');
+      .populate('parent', 'name slug image')
+      .populate('children', 'name slug image sortOrder');
 
     if (!category) {
       throw new AppError('Category not found', 404);

@@ -95,7 +95,7 @@ const TestimonialsSection = () => {
           {/* Main Testimonial Card */}
           <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 md:p-12 shadow-xl border border-gray-100 relative overflow-hidden">
             {/* Background Quote */}
-            <div className="absolute top-4 right-4 text-6xl text-gray-200 font-serif leading-none select-none">
+            <div className="absolute top-4 right-4 text-6xl text-gray-200 font-serif leading-none select-none" suppressHydrationWarning={true}>
               &ldquo;
             </div>
 

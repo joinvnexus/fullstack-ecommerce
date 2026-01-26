@@ -41,7 +41,7 @@ const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
 
   if (viewMode === "list") {
     return (
-      <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100">
         <div className="flex flex-col md:flex-row">
           <Link href={`/products/${product.slug}`} className="md:w-48 lg:w-64">
             <div className="relative h-48 md:h-full w-full">
@@ -162,7 +162,7 @@ const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
 
   // Grid view (default)
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+    <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100">
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative h-48 w-full">
           {primaryImage ? (
@@ -257,7 +257,7 @@ const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
           </div>
 
           <button
-            className="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-2 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg transform hover:scale-105"
             onClick={handleAddToCart}
             disabled={product.stock === 0 || isAddingToCart}
             title={product.stock === 0 ? "Out of stock" : "Add to cart"}

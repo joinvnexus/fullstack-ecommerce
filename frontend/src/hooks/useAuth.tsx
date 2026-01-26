@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { authApi } from '@/lib/api';
-import { User, AuthResponse } from '@/types';
+import { User, LoginCredentials, RegisterData, UpdateProfileData, ChangePasswordData, AddressData } from '@/types';
 import React from 'react';
 
 interface AuthContextType {
@@ -11,14 +11,14 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (data: any) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => void;
-  updateProfile: (data: any) => Promise<void>;
-  changePassword: (data: any) => Promise<void>;
-  getAddresses: () => Promise<any>;
-  addAddress: (data: any) => Promise<any>;
-  updateAddress: (index: number, data: any) => Promise<any>;
-  deleteAddress: (index: number) => Promise<any>;
+  updateProfile: (data: UpdateProfileData) => Promise<void>;
+  changePassword: (data: ChangePasswordData) => Promise<void>;
+  getAddresses: () => Promise<AddressData[]>;
+  addAddress: (data: AddressData) => Promise<AddressData[]>;
+  updateAddress: (index: number, data: AddressData) => Promise<AddressData[]>;
+  deleteAddress: (index: number) => Promise<AddressData[]>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const register = async (data: any) => {
+  const register = async (data: RegisterData) => {
     try {
       const response = await authApi.register(data);
 
@@ -106,7 +106,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const updateProfile = async (data: any) => {
+  const updateProfile = async (data: UpdateProfileData) => {
     try {
       const response = await authApi.updateProfile(data);
       setUser(response.data);
@@ -115,7 +115,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const changePassword = async (data: any) => {
+  const changePassword = async (data: ChangePasswordData) => {
     try {
       await authApi.changePassword(data);
     } catch (error) {
@@ -132,7 +132,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const addAddress = async (data: any) => {
+  const addAddress = async (data: AddressData) => {
     try {
       const response = await authApi.addAddress(data);
       // Update user addresses
@@ -144,7 +144,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const updateAddress = async (index: number, data: any) => {
+  const updateAddress = async (index: number, data: AddressData) => {
     try {
       const response = await authApi.updateAddress(index, data);
       // Update user addresses

@@ -7,20 +7,24 @@ import { authenticate, authorizeAdmin } from '../utils/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { paymentService } from '../services/payment.service.js';
 import mongoose from 'mongoose';
+import { validate, createOrderSchema } from '../utils/validation.js';
 
 const router = express.Router();
 
 // Create order from cart
-router.post('/', authenticate, async (req, res, next) => {
+router.post('/', authenticate, validate(createOrderSchema), async (req, res, next) => {
   try {
     const userId = (req as any).user.userId;
-    const { 
-      shippingAddress, 
-      billingAddress, 
-      shippingMethod, 
+    const {
+      shippingAddress,
+      billingAddress,
+      shippingMethod,
+      paymentMethod,
       notes,
-      guestId 
+      guestId
     } = req.body;
+
+    console.log('Order creation request:', { userId, shippingAddress, shippingMethod });
 
     // Get user cart (or merge guest cart first)
     let cart;
@@ -66,17 +70,16 @@ router.post('/', authenticate, async (req, res, next) => {
       throw new AppError('User not found', 404);
     }
 
-    // Calculate totals (simplified - add tax, shipping, discounts later)
-    // First, get an estimate, but validate inside transaction
+    // Calculate totals
     let subtotal = 0;
     for (const cartItem of cart.items) {
       subtotal += cartItem.unitPrice * cartItem.quantity;
     }
     const shippingCost = shippingMethod?.cost || 0;
-    const tax = subtotal * 0.1; // 10% tax
+    const tax = subtotal * 0.1;
     const grandTotal = subtotal + shippingCost + tax;
 
-    // Prepare order data, validation inside transaction
+    // Prepare order data
     const orderData = {
       userId,
       shippingAddress: shippingAddress || user.addresses.find(addr => addr.isDefault),
@@ -93,10 +96,10 @@ router.post('/', authenticate, async (req, res, next) => {
         grandTotal,
       },
       currency: 'USD',
-      status: 'pending',
+      status: 'pending' as const,
       payment: {
-        provider: 'pending',
-        status: 'pending',
+        provider: paymentMethod || 'pending',
+        status: 'pending' as const,
         amount: grandTotal,
         currency: 'USD',
       },
@@ -108,20 +111,22 @@ router.post('/', authenticate, async (req, res, next) => {
       notes,
     };
 
-    // Use MongoDB transaction to ensure atomic stock decrement and validation
+    console.log('Order data prepared:', orderData);
+
+    // Use MongoDB transaction
     const session = await mongoose.startSession();
     session.startTransaction();
 
-    let order: any;
+    let order;
 
     try {
-      // Populate product details inside transaction
+      // Populate product details
       await cart.populate({
         path: 'items.productId',
         select: 'title sku price stock',
       });
 
-      // Validate stock and prepare order items inside transaction
+      // Validate stock and prepare order items
       const orderItems = [];
       let actualSubtotal = 0;
 
@@ -146,7 +151,7 @@ router.post('/', authenticate, async (req, res, next) => {
         });
       }
 
-      // Recalculate totals with actual data
+      // Recalculate totals
       const actualTax = actualSubtotal * 0.1;
       const actualGrandTotal = actualSubtotal + shippingCost + actualTax;
 
@@ -156,25 +161,24 @@ router.post('/', authenticate, async (req, res, next) => {
       orderData.payment.amount = actualGrandTotal;
 
       // Create order
-      const order = new Order({
+      order = new Order({
         ...orderData,
         items: orderItems,
       });
 
-      // Generate order number if not set
+      // Generate order number
       if (!order.orderNumber) {
         const date = new Date();
         const year = date.getFullYear().toString().slice(-2);
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const day = date.getDate().toString().padStart(2, '0');
-
         const randomNum = Math.floor(1000 + Math.random() * 9000);
         order.orderNumber = `ORD${year}${month}${day}${randomNum}`;
       }
 
       await order.save({ session });
 
-      // Reserve stock (decrement product stock)
+      // Reserve stock
       for (const item of orderItems) {
         await Product.findByIdAndUpdate(item.productId, {
           $inc: { stock: -item.quantity },
@@ -185,10 +189,10 @@ router.post('/', authenticate, async (req, res, next) => {
       cart.items = [];
       await cart.save({ session });
 
-      // Commit the transaction
+      // Commit transaction
       await session.commitTransaction();
+      console.log('Order created successfully:', order.orderNumber);
     } catch (error) {
-      // Abort the transaction on error
       await session.abortTransaction();
       throw error;
     } finally {

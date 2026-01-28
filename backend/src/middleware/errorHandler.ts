@@ -13,8 +13,19 @@ export class AppError extends Error {
   }
 }
 
+// Custom ValidationError class for Zod validation
+export class ValidationError extends Error {
+  errors: Array<{ path: string; message: string }>;
+
+  constructor(errors: Array<{ path: string; message: string }>) {
+    super('Validation failed');
+    this.name = 'ValidationError';
+    this.errors = errors;
+  }
+}
+
 export const errorHandler = (
-  err: Error | AppError,
+  err: Error | AppError | ValidationError,
   req: Request,
   res: Response,
   next: NextFunction
@@ -22,6 +33,7 @@ export const errorHandler = (
   // Log error
   console.error('Error:', {
     message: err.message,
+    name: err.name,
     stack: err.stack,
     path: req.path,
     method: req.method,
@@ -37,8 +49,20 @@ export const errorHandler = (
     return;
   }
 
+  // Handle Zod validation errors
+  if (err.name === 'ValidationError' && (err as any).errors) {
+    console.error('Zod Validation Error:', (err as any).errors);
+    res.status(400).json({
+      success: false,
+      message: 'Validation failed',
+      errors: (err as any).errors,
+    });
+    return;
+  }
+
   // Handle Mongoose validation errors
   if ((err as any).name === 'ValidationError') {
+    console.error('Mongoose Validation Error:', (err as any).errors);
     res.status(400).json({
       success: false,
       message: 'Validation Error',

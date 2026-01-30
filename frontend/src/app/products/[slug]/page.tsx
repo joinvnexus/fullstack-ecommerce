@@ -10,7 +10,8 @@ import WishlistButton from '@/app/components/wishlist/WishlistButton';
 import ProductGallery from '@/app/components/products/ProductGallery';
 import ProductVariants from '@/app/components/products/ProductVariants';
 import ProductReviews from '@/app/components/products/ProductReviews';
-// import ProductRecommendations from '@/app/components/products/ProductRecommendations';
+import ProductRecommendations from '@/app/components/products/ProductRecommendations';
+import RelatedProducts from '@/app/components/products/RelatedProducts';
 import BreadcrumbNavigation from '@/app/components/layout/BreadcrumbNavigation';
 
 const ProductDetailPage = () => {
@@ -260,42 +261,20 @@ const ProductDetailPage = () => {
 
         {/* Product Recommendations */}
         <div className="mt-16">
-          {/* <ProductRecommendations
+          <ProductRecommendations
             productId={product._id}
             currentProduct={product}
             onProductClick={(product) => console.log('Product clicked:', product)}
-          /> */}
+          />
         </div>
 
         {/* Related Products */}
-        {relatedProducts.length > 0 && (
-          <div className="mt-16">
-            <h2 className="text-2xl font-bold mb-8">Related Products</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {relatedProducts.map((relatedProduct) => (
-                <div key={relatedProduct._id} className="bg-white rounded-lg shadow-md p-4">
-                  <div className="relative h-40 mb-3">
-                    <Image
-                      src={relatedProduct.images[0]?.url || '/placeholder.jpg'}
-                      alt={relatedProduct.images[0]?.alt || relatedProduct.title}
-                      fill
-                      className="object-cover rounded"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                    />
-                  </div>
-                  <h3 className="font-medium hover:text-blue-600 mb-2">
-                    <a href={`/products/${relatedProduct.slug}`}>
-                      {relatedProduct.title}
-                    </a>
-                  </h3>
-                  <div className="font-bold">
-                    ${relatedProduct.price.amount.toFixed(2)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="mt-16">
+          <RelatedProducts
+            products={relatedProducts}
+            title="Related Products"
+          />
+        </div>
       </div>
     </div>
   );

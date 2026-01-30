@@ -55,8 +55,9 @@ export const authApi = {
 // Products API
 export const productsApi = {
   getAll: (params?: Record<string, unknown>): Promise<PaginatedResponse<Product>> => api.get('/products', { params }),
-  getBySlug: (slug: string) => api.get<Product>(`/products/${slug}`),
+  getBySlug: (slug: string) => api.get<{ product: Product; relatedProducts: Product[] }>(`/products/${slug}`),
   getByCategory: (categorySlug: string, params?: Record<string, unknown>) => api.get<PaginatedResponse<Product>>(`/products/category/${categorySlug}`, { params }),
+  getRecommendations: (productId: string) => api.get(`/products/${productId}/recommendations`),
 };
 
 // Categories API

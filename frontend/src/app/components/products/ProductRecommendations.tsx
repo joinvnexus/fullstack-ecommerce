@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import ProductCard from './ProductCard';
 import { Product } from '@/types';
 import { cn } from '@/lib/utils';
+import { productsApi } from '@/lib/api';
 
 interface ProductRecommendationsProps {
   productId: string;
@@ -38,65 +39,49 @@ const ProductRecommendations = ({
   const fetchRecommendations = async () => {
     try {
       setLoading(true);
-      // Mock data - in real app, this would come from API
-      const mockRecommendations: RecommendationSection[] = [
+      const response = await productsApi.getRecommendations(productId);
+      const data = response.data;
+
+      const recommendations: RecommendationSection[] = [
         {
           title: 'Customers Also Viewed',
           icon: <Eye size={20} />,
           type: 'viewed',
-          products: generateMockProducts(4)
+          products: data.viewed || []
         },
         {
           title: 'Frequently Bought Together',
           icon: <ShoppingBag size={20} />,
           type: 'bought',
-          products: generateMockProducts(3)
+          products: data.bought || []
         },
         {
           title: 'Similar Products',
           icon: <TrendingUp size={20} />,
           type: 'similar',
-          products: generateMockProducts(4)
+          products: data.similar || []
         },
         {
           title: 'Recently Viewed',
           icon: <Clock size={20} />,
           type: 'recent',
-          products: generateMockProducts(6)
+          products: data.recent || []
         }
       ];
 
-      setRecommendations(mockRecommendations);
+      setRecommendations(recommendations);
     } catch (error) {
       console.error('Error fetching recommendations:', error);
+      // Fallback to empty recommendations if API fails
+      setRecommendations([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const generateMockProducts = (count: number): Product[] => {
-    return Array.from({ length: count }, (_, i) => ({
-      _id: `rec-${i}`,
-      title: `Recommended Product ${i + 1}`,
-      slug: `recommended-product-${i + 1}`,
-      description: `This is a recommended product description ${i + 1}`,
-      images: [{ url: `https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop&crop=center`, alt: `Product ${i + 1}`, isPrimary: true }],
-      price: { amount: 99.99 + i * 10, currency: 'USD' },
-      sku: `REC-${i + 1}`,
-      stock: 10 + i,
-      variants: [],
-      category: 'Electronics',
-      tags: ['recommended', 'popular'],
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }));
-  };
 
-  const handleProductClick = (product: Product) => {
-    onProductClick?.(product);
-    // Could also track analytics here
-  };
+
+
 
   if (loading) {
     return (
@@ -146,16 +131,11 @@ const ProductRecommendations = ({
           {/* Products Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {section.products.map((product) => (
-              <div
+              <ProductCard
                 key={product._id}
-                onClick={() => handleProductClick(product)}
-                className="cursor-pointer"
-              >
-                <ProductCard
-                  product={product}
-                  viewMode="grid"
-                />
-              </div>
+                product={product}
+                viewMode="grid"
+              />
             ))}
           </div>
 

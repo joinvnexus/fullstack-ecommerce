@@ -1,23 +1,20 @@
-# Checkout Page Redesign TODO
+ckend
+# Product Recommendations Dynamic Implementation
 
-## Current Status
-- [x] Analyze existing checkout page structure and logic
-- [x] Create comprehensive redesign plan
-- [x] Get user approval for plan
+## Backend Changes
+- [ ] Add `/products/:id/recommendations` endpoint to backend/src/routes/products.ts
+- [ ] Implement recommendation logic (similar products, viewed, bought together, recent)
 
-## Implementation Tasks
-- [ ] Create multi-step wizard structure (Shipping → Payment → Review)
-- [ ] Add progress indicator component
-- [ ] Implement persistent order summary sidebar
-- [ ] Enhance form styling with better validation feedback
-- [ ] Add trust indicators and security badges
-- [ ] Improve responsive design for mobile/tablet
-- [ ] Redesign payment step with better UX
-- [ ] Test complete checkout flow
-- [ ] Verify all original logic remains intact
+## Frontend API Changes
+- [ ] Add recommendations API call to frontend/src/lib/api.ts
 
-## Key Requirements
-- Preserve all original logic (form validation, API calls, payment flow)
-- Use existing UI components (Card, Button, etc.)
-- Maintain multi-step flow: order creation → payment processing
-- Keep all payment methods (Stripe, bKash, Nagad) functional
+## Component Updates
+- [ ] Update ProductRecommendations.tsx to use real API data instead of mock data
+
+## Page Updates
+- [ ] Uncomment ProductRecommendations in single product page
+- [ ] Remove hardcoded related products section from single product page
+
+## Testing
+- [ ] Test the new recommendations endpoint
+- [ ] Verify component works with real data

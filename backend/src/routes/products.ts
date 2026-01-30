@@ -331,6 +331,80 @@ router.delete('/:id', authenticate, authorizeAdmin, async (req, res, next) => {
   }
 });
 
+// Get product recommendations
+router.get('/:id/recommendations', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Find the current product
+    const product = await Product.findById(id);
+    if (!product) {
+      throw new AppError('Product not found', 404);
+    }
+
+    const recommendations: any = {};
+
+    // 1. Similar Products (same category, different tags, similar price)
+    const similarProducts = await Product.find({
+      category: product.category,
+      _id: { $ne: product._id },
+      status: 'active',
+      'price.amount': {
+        $gte: product.price.amount * 0.8,
+        $lte: product.price.amount * 1.2
+      }
+    })
+      .limit(4)
+      .select('title slug price images _id');
+
+    recommendations.similar = similarProducts;
+
+    // 2. Customers Also Viewed (same category, different products)
+    const viewedProducts = await Product.find({
+      category: product.category,
+      _id: { $ne: product._id },
+      status: 'active',
+    })
+      .sort({ createdAt: -1 })
+      .limit(4)
+      .select('title slug price images _id');
+
+    recommendations.viewed = viewedProducts;
+
+    // 3. Frequently Bought Together (for now, same category products)
+    // TODO: Implement based on order data when available
+    const boughtTogether = await Product.find({
+      category: product.category,
+      _id: { $ne: product._id },
+      status: 'active',
+      tags: { $in: product.tags }
+    })
+      .limit(3)
+      .select('title slug price images _id');
+
+    recommendations.bought = boughtTogether;
+
+    // 4. Recently Viewed (for now, random recent products)
+    // TODO: Implement based on user session/localStorage
+    const recentProducts = await Product.find({
+      _id: { $ne: product._id },
+      status: 'active',
+    })
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .select('title slug price images _id');
+
+    recommendations.recent = recentProducts;
+
+    res.json({
+      success: true,
+      data: recommendations,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Get products by category
 router.get('/category/:categorySlug', async (req, res, next) => {
   try {

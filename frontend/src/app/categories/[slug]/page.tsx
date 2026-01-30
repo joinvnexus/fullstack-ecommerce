@@ -3,8 +3,8 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useParams } from 'next/navigation';
 import { Filter, Grid, List, ChevronDown } from 'lucide-react';
-import ProductCard from '@/app/components/ui/ProductCard';
-import ProductListSkeleton from '@/app/components/ui/ProductListSkeleton';
+import ProductCard from '@/app/components/products/ProductCard';
+import ProductListSkeleton from '@/app/components/products/ProductListSkeleton';
 import ProductFilters from '@/app/components/products/ProductFilters';
 import BreadcrumbNavigation from '@/app/components/layout/BreadcrumbNavigation';
 import { productsApi, categoriesApi } from '@/lib/api';

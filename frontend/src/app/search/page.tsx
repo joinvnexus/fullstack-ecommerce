@@ -4,17 +4,17 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSearch } from "@/hooks/useSearch";
 import { categoriesApi } from "@/lib/api";
-import ProductCard from "@/app/components/ui/ProductCard"; // তোমার স্ট্রাকচার অনুসারে path
-import Pagination from "@/app/components/ui/Pagination";
- import { Checkbox } from "@/app/components/ui/Checkbox"; // shadcn/ui বা custom
- import { Slider } from "@/app/components/ui/Slider";
+import ProductCard from "@/app/components/products/ProductCard"; // তোমার স্ট্রাকচার অনুসারে path
+import Pagination from "@/app/components/products/Pagination";
+ import { Checkbox } from "@/app/components/search/Checkbox"; // shadcn/ui বা custom
+ import { Slider } from "@/app/components/search/Slider";
  import {
    Select,
    SelectContent,
    SelectItem,
    SelectTrigger,
    SelectValue,
- } from "@/app/components/ui/Select";
+ } from "@/app/components/search/Select";
 import { Loader2, SlidersHorizontal, X,  } from "lucide-react";
 import SearchBar from "@/app/components/search/SearchBar";
 

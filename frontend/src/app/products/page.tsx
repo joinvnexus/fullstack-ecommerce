@@ -6,6 +6,7 @@ import { Filter, Grid, List, ChevronDown, X } from 'lucide-react';
 import ProductCard from '../components/ui/ProductCard';
 import ProductListSkeleton from '../components/ui/ProductListSkeleton';
 import ProductFilters from '../components/products/ProductFilters';
+import Pagination from '../components/ui/Pagination';
 import { productsApi, categoriesApi } from '@/lib/api';
 import { Product, Category } from '@/types';
 
@@ -245,38 +246,16 @@ const ProductsContent = () => {
 
                 {/* Pagination */}
                 {pagination.totalPages > 1 && (
-                  <div className="mt-12 flex justify-center">
-                    <nav className="flex items-center gap-2">
-                      <button
-                        onClick={() => handlePageChange(pagination.page - 1)}
-                        disabled={!pagination.hasPrevPage}
-                        className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                      >
-                        Previous
-                      </button>
-                      
-                      {[...Array(pagination.totalPages)].map((_, i) => (
-                        <button
-                          key={i + 1}
-                          onClick={() => handlePageChange(i + 1)}
-                          className={`px-4 py-2 border rounded-md ${
-                            pagination.page === i + 1
-                              ? 'bg-blue-600 text-white border-blue-600'
-                              : 'border-gray-300 hover:bg-gray-50'
-                          }`}
-                        >
-                          {i + 1}
-                        </button>
-                      ))}
-                      
-                      <button
-                        onClick={() => handlePageChange(pagination.page + 1)}
-                        disabled={!pagination.hasNextPage}
-                        className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                      >
-                        Next
-                      </button>
-                    </nav>
+                  <div className="mt-12">
+                    <Pagination
+                      currentPage={pagination.page}
+                      totalPages={pagination.totalPages}
+                      totalItems={pagination.total}
+                      itemsPerPage={pagination.limit}
+                      onPageChange={handlePageChange}
+                      showInfo={true}
+                      className="justify-center"
+                    />
                   </div>
                 )}
               </>

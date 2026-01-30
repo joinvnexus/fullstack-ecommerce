@@ -91,7 +91,7 @@ const useSearchStore = create<SearchState>((set, get) => ({
       const searchParams = {
         q: query,
         page: params.page || 1,
-        limit: params.limit || 20,
+        limit: params.limit || 12,
         ...filters,
         ...params,
       };

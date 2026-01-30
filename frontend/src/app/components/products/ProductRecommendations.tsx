@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { TrendingUp, Eye, ShoppingBag, Clock, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import ProductCard from '@/app/components/ui/ProductCard';
+import ProductCard from './ProductCard';
 import { Product } from '@/types';
 import { cn } from '@/lib/utils';
 

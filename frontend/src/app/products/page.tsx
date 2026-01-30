@@ -3,10 +3,10 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Filter, Grid, List, ChevronDown, X } from 'lucide-react';
-import ProductCard from '../components/ui/ProductCard';
-import ProductListSkeleton from '../components/ui/ProductListSkeleton';
+import ProductCard from '../components/products/ProductCard';
+import ProductListSkeleton from '../components/products/ProductListSkeleton';
 import ProductFilters from '../components/products/ProductFilters';
-import Pagination from '../components/ui/Pagination';
+import Pagination from '../components/products/Pagination';
 import { productsApi, categoriesApi } from '@/lib/api';
 import { Product, Category } from '@/types';
 

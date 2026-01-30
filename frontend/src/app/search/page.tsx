@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useSearch } from "@/hooks/useSearch";
 import { categoriesApi } from "@/lib/api";
 import ProductCard from "@/app/components/ui/ProductCard"; // তোমার স্ট্রাকচার অনুসারে path
-import Pagination from "@/app/components/ui/Pagination"; // যদি না থাকে, নিচে দিবো
+import Pagination from "@/app/components/ui/Pagination";
  import { Checkbox } from "@/app/components/ui/Checkbox"; // shadcn/ui বা custom
  import { Slider } from "@/app/components/ui/Slider";
  import {
@@ -279,11 +279,15 @@ function SearchPage() {
                 </div>
 
                 {totalPages > 1 && (
-                  <div className="mt-12 flex justify-center">
+                  <div className="mt-12">
                     <Pagination
                       currentPage={currentPage}
                       totalPages={totalPages}
+                      totalItems={totalResults}
+                      itemsPerPage={12}
                       onPageChange={(page) => performSearch(page)}
+                      showInfo={true}
+                      className="justify-center"
                     />
                   </div>
                 )}

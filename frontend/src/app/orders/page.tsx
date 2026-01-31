@@ -32,7 +32,7 @@ const OrdersPage = () => {
     try {
       setIsLoading(true);
       const response = await ordersApi.getMyOrders();
-      setOrders(response.data);
+      setOrders(response.data.data);
     } catch (error) {
       console.error('Failed to fetch orders:', error);
     } finally {

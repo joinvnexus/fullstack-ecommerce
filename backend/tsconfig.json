@@ -11,7 +11,7 @@
     "forceConsistentCasingInFileNames": true, // File name case sensitive
     "resolveJsonModule": true,  // JSON files import kora jabe
     "moduleResolution": "node16", // Node16 style module resolution for ESM
-    "types": ["node"],   // Node.js types include
+    "types": ["node", "jest"],   // Node.js and Jest types include
     "typeRoots": ["./types", "./node_modules/@types"], // Types er location
     "sourceMap": true,
     "declaration": true,

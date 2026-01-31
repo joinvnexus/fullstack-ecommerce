@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { authApi } from '@/lib/api';
-import { User, AuthResponse } from '@/types';
+import { User, LoginCredentials, RegisterData, UpdateProfileData, ChangePasswordData, AddressData } from '@/types';
 import React from 'react';
 
 interface AuthContextType {
@@ -11,14 +11,14 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (data: any) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => void;
-  updateProfile: (data: any) => Promise<void>;
-  changePassword: (data: any) => Promise<void>;
-  getAddresses: () => Promise<any>;
-  addAddress: (data: any) => Promise<any>;
-  updateAddress: (index: number, data: any) => Promise<any>;
-  deleteAddress: (index: number) => Promise<any>;
+  updateProfile: (data: UpdateProfileData) => Promise<void>;
+  changePassword: (data: ChangePasswordData) => Promise<void>;
+  getAddresses: () => Promise<AddressData[]>;
+  addAddress: (data: AddressData) => Promise<AddressData[]>;
+  updateAddress: (index: number, data: AddressData) => Promise<AddressData[]>;
+  deleteAddress: (index: number) => Promise<AddressData[]>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,32 +38,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    // Check for stored auth data
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-      
-      // Verify token by fetching profile
-      fetchProfile(storedToken).finally(() => {
-        setIsLoading(false);
-      });
-    } else {
+    // Check authentication status by fetching profile
+    fetchProfile().finally(() => {
       setIsLoading(false);
-    }
+    });
   }, []);
 
-  const fetchProfile = async (authToken: string) => {
+  const fetchProfile = async () => {
+    console.log('Fetching user profile...');
     try {
       const response = await authApi.getProfile();
+      console.log('Profile fetched successfully:', response.data);
       setUser(response.data);
-      localStorage.setItem('user', JSON.stringify(response.data));
     } catch (error) {
+      console.log('Profile fetch failed:', error);
       // Token expired or invalid
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
       setToken(null);
       setUser(null);
     }
@@ -73,13 +62,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const response = await authApi.login({ email, password });
 
-      const { user, token } = response.data;
+      const { user } = response.data;
 
       setUser(user);
-      setToken(token);
-
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      setToken('authenticated'); // Indicate authenticated state
 
       // Redirect based on role
       if (user.role === 'admin') {
@@ -92,17 +78,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const register = async (data: any) => {
+  const register = async (data: RegisterData) => {
     try {
-      const response = await authApi.register(data) ;
+      const response = await authApi.register(data);
 
-      const { user, token } = response.data;
+      const { user } = response.data;
 
       setUser(user);
-      setToken(token);
-
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      setToken('authenticated');
 
       // New users are customers, redirect to account
       router.push('/account');
@@ -111,25 +94,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/login');
+  const logout = async () => {
+    try {
+      await authApi.logout();
+    } catch (error) {
+      // Ignore logout errors
+    } finally {
+      setUser(null);
+      setToken(null);
+      router.push('/login');
+    }
   };
 
-  const updateProfile = async (data: any) => {
+  const updateProfile = async (data: UpdateProfileData) => {
     try {
       const response = await authApi.updateProfile(data);
       setUser(response.data);
-      localStorage.setItem('user', JSON.stringify(response.data));
     } catch (error) {
       throw error;
     }
   };
 
-  const changePassword = async (data: any) => {
+  const changePassword = async (data: ChangePasswordData) => {
     try {
       await authApi.changePassword(data);
     } catch (error) {
@@ -146,26 +132,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const addAddress = async (data: any) => {
+  const addAddress = async (data: AddressData) => {
     try {
       const response = await authApi.addAddress(data);
       // Update user addresses
       const updatedUser = { ...user!, addresses: response.data };
       setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
       return response.data;
     } catch (error) {
       throw error;
     }
   };
 
-  const updateAddress = async (index: number, data: any) => {
+  const updateAddress = async (index: number, data: AddressData) => {
     try {
       const response = await authApi.updateAddress(index, data);
       // Update user addresses
       const updatedUser = { ...user!, addresses: response.data };
       setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
       return response.data;
     } catch (error) {
       throw error;
@@ -178,7 +162,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Update user addresses
       const updatedUser = { ...user!, addresses: response.data };
       setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
       return response.data;
     } catch (error) {
       throw error;

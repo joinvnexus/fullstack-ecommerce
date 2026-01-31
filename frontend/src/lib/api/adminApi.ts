@@ -127,6 +127,8 @@ export interface DashboardStats {
     totalOrders: number;
     totalCustomers: number;
     totalProducts: number;
+    pendingOrders: number;
+    lowStockProducts: number;
   };
   recentOrders: any[];
   topProducts: any[];

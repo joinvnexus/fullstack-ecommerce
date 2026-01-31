@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { productsApi } from '@/lib/api';
 import { Product } from '@/types';
-import ProductCard from '../ui/ProductCard';
+import ProductCard from '../products/ProductCard';
 
 const FeaturedProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -15,8 +15,10 @@ const FeaturedProducts = () => {
   }, []);
 
   const fetchFeaturedProducts = async () => {
+    console.log('Fetching featured products...');
     try {
       const response = await productsApi.getAll({ limit: 8 });
+      console.log('Products fetched successfully, count:', response.data.length);
       setProducts(response.data);
     } catch (error) {
       console.error('Error fetching products:', error);

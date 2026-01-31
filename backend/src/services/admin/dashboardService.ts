@@ -3,7 +3,7 @@ import User from '../../models/User.js';
 import Product from '../../models/Product.js';
 
 export const getDashboardStats = async () => {
-  const [totalRevenue, totalOrders, totalCustomers, totalProducts] = await Promise.all([
+  const [totalRevenue, totalOrders, totalCustomers, totalProducts, pendingOrders, lowStockProducts] = await Promise.all([
     Order.aggregate([
       { $match: { status: { $in: ['processing', 'shipped', 'delivered'] } } },
       { $group: { _id: null, total: { $sum: '$totals.grandTotal' } } }
@@ -11,6 +11,8 @@ export const getDashboardStats = async () => {
     Order.countDocuments(),
     User.countDocuments({ role: 'customer' }),
     Product.countDocuments({ status: 'active' }),
+    Order.countDocuments({ status: 'pending' }),
+    Product.countDocuments({ stock: { $lt: 10 }, status: 'active' }),
   ]);
 
   // Recent orders
@@ -35,6 +37,8 @@ export const getDashboardStats = async () => {
         totalOrders,
         totalCustomers,
         totalProducts,
+        pendingOrders,
+        lowStockProducts,
       },
       recentOrders,
       topProducts,

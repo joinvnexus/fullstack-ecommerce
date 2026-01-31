@@ -43,12 +43,22 @@ export interface Product {
     amount: number;
     currency: string;
   };
+  originalPrice?: {
+    amount: number;
+    currency: string;
+  };
   sku: string;
   stock: number;
   variants: ProductVariant[];
   category: Category | string;
   tags: string[];
   status: 'draft' | 'active' | 'archived';
+  brand?: string;
+  rating?: number;
+  reviewCount?: number;
+  isNew?: boolean;
+  freeShipping?: boolean;
+  warranty?: boolean;
   seo?: {
     title: string;
     description: string;
@@ -82,6 +92,8 @@ export interface Category {
   _id: string;
   name: string;
   slug: string;
+  description?: string;
+  image?: string;
   parent?: string;
   children: Category[];
   treePath: string[];
@@ -186,20 +198,6 @@ export interface PaginatedResponse<T> {
   };
 }
 
-// Auth types
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
+// Re-export API types
+export * from './api';
 
-export interface RegisterData {
-  name: string;
-  email: string;
-  password: string;
-  phone?: string;
-}
-
-export interface AuthResponse {
-  user: User;
-  token: string;
-}

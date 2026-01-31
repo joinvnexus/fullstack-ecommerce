@@ -1,24 +1,80 @@
 import Stripe from 'stripe';
+import mongoose from 'mongoose';
 import type { IOrder } from '../models/Order.js';
 import Order from '../models/Order.js';
+import Product from '../models/Product.js';
+import User from '../models/User.js';
+import logger from '../utils/logger.js';
+import { emailService } from './email.service.js';
 
 export class PaymentService {
-  private stripe: Stripe;
+  private stripe: Stripe | null = null;
+  private initialized = false;
+  private webhookSecret: string = '';
 
   constructor() {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY || " ", {
-      apiVersion: '2023-10-16' as any,
-    });
+    this.initialize();
+  }
+
+  private initialize(): void {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    // Validate required environment variables
+    if (!stripeSecretKey) {
+      logger.error('❌ STRIPE_SECRET_KEY environment variable is required');
+      this.initialized = false;
+      return;
+    }
+
+    if (!stripeWebhookSecret) {
+      logger.error('❌ STRIPE_WEBHOOK_SECRET environment variable is required');
+      this.initialized = false;
+      return;
+    }
+
+    // Validate key format (basic check)
+    if (!stripeSecretKey.startsWith('sk_')) {
+      logger.error('❌ Invalid STRIPE_SECRET_KEY format. Expected sk_test_ or sk_live_');
+      this.initialized = false;
+      return;
+    }
+
+    if (!stripeWebhookSecret.startsWith('whsec_')) {
+      logger.error('❌ Invalid STRIPE_WEBHOOK_SECRET format. Expected whsec_ prefix');
+      this.initialized = false;
+      return;
+    }
+
+    try {
+      this.stripe = new Stripe(stripeSecretKey, {
+        apiVersion: '2023-10-16' as any,
+      });
+      this.webhookSecret = stripeWebhookSecret;
+      this.initialized = true;
+      logger.info('✅ Stripe payment service initialized successfully');
+    } catch (error) {
+      logger.error('❌ Failed to initialize Stripe:', error);
+      this.initialized = false;
+    }
+  }
+
+  private ensureInitialized(): void {
+    if (!this.initialized || !this.stripe) {
+      throw new Error('Stripe payment service is not properly configured. Please check your environment variables.');
+    }
   }
 
   // Create Stripe payment intent
   async createStripePaymentIntent(order: IOrder) {
+    this.ensureInitialized();
+    
     try {
       // Convert amount to cents (Stripe uses smallest currency unit)
       const amount = Math.round(order.totals.grandTotal * 100);
 
       // Create payment intent
-      const paymentIntent = await this.stripe.paymentIntents.create({
+      const paymentIntent = await this.stripe!.paymentIntents.create({
         amount,
         currency: order.currency.toLowerCase(),
         metadata: {
@@ -51,7 +107,7 @@ export class PaymentService {
         paymentIntentId: paymentIntent.id,
       };
     } catch (error) {
-      console.error('Error creating Stripe payment intent:', error);
+      logger.error('Error creating Stripe payment intent:', error);
       throw error;
     }
   }
@@ -77,14 +133,14 @@ export class PaymentService {
           break;
       }
     } catch (error) {
-      console.error('Error handling Stripe webhook:', error);
+      logger.error('Error handling Stripe webhook:', error);
       throw error;
     }
   }
 
   private async handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     const orderId = paymentIntent.metadata.orderId;
-    
+
     const order = await Order.findByIdAndUpdate(
       orderId,
       {
@@ -94,68 +150,125 @@ export class PaymentService {
         updatedAt: new Date(),
       },
       { new: true }
-    );
+    ).populate('items.productId');
 
     if (order) {
       // Send order confirmation email
+      try {
+        const user = await User.findById(order.userId);
+        if (user) {
+          await emailService.sendOrderConfirmation({
+            user,
+            order,
+            items: order.items
+          });
+        }
+      } catch (emailError) {
+        logger.error('Failed to send order confirmation email:', emailError);
+      }
+
       // Update inventory
-      console.log(`✅ Order ${order.orderNumber} payment succeeded`);
+      logger.info(`✅ Order ${order.orderNumber} payment succeeded`);
     }
   }
 
   private async handlePaymentFailure(paymentIntent: Stripe.PaymentIntent) {
     const orderId = paymentIntent.metadata.orderId;
-    
-    await Order.findByIdAndUpdate(
-      orderId,
-      {
-        status: 'pending',
-        'payment.status': 'failed',
-        updatedAt: new Date(),
-      }
-    );
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    // Restore stock
-    // await this.restoreOrderStock(orderId);
-    
-    console.log(`❌ Order ${orderId} payment failed`);
+    try {
+      const order = await Order.findById(orderId).session(session);
+      if (order) {
+        await Order.findByIdAndUpdate(
+          orderId,
+          {
+            status: 'pending',
+            'payment.status': 'failed',
+            updatedAt: new Date(),
+          },
+          { session }
+        );
+
+        // Restore stock
+        await this.restoreOrderStock(order, session);
+      }
+
+      await session.commitTransaction();
+      logger.error(`❌ Order ${orderId} payment failed`);
+    } catch (error) {
+      await session.abortTransaction();
+      logger.error(`Error handling payment failure for order ${orderId}:`, error);
+      throw error;
+    } finally {
+      session.endSession();
+    }
   }
 
   private async handlePaymentCancelled(paymentIntent: Stripe.PaymentIntent) {
     const orderId = paymentIntent.metadata.orderId;
-    
-    await Order.findByIdAndUpdate(
-      orderId,
-      {
-        status: 'cancelled',
-        'payment.status': 'cancelled',
-        updatedAt: new Date(),
-      }
-    );
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    // Restore stock
-    // await this.restoreOrderStock(orderId);
-    
-    console.log(`❌ Order ${orderId} payment cancelled`);
+    try {
+      const order = await Order.findById(orderId).session(session);
+      if (order) {
+        await Order.findByIdAndUpdate(
+          orderId,
+          {
+            status: 'cancelled',
+            'payment.status': 'cancelled',
+            updatedAt: new Date(),
+          },
+          { session }
+        );
+
+        // Restore stock
+        await this.restoreOrderStock(order, session);
+      }
+
+      await session.commitTransaction();
+      logger.error(`❌ Order ${orderId} payment cancelled`);
+    } catch (error) {
+      await session.abortTransaction();
+      logger.error(`Error handling payment cancellation for order ${orderId}:`, error);
+      throw error;
+    } finally {
+      session.endSession();
+    }
   }
 
   private async handleRefund(charge: Stripe.Charge) {
-    const order = await Order.findOne({ 'payment.chargeId': charge.id });
-    
-    if (order) {
-      await Order.findByIdAndUpdate(
-        order._id,
-        {
-          status: 'refunded',
-          'payment.status': 'refunded',
-          updatedAt: new Date(),
-        }
-      );
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-      // Restore stock if needed
-      // await this.restoreOrderStock(order._id);
-      
-      console.log(`💰 Order ${order.orderNumber} refunded`);
+    try {
+      const order = await Order.findOne({ 'payment.chargeId': charge.id }).session(session);
+
+      if (order) {
+        await Order.findByIdAndUpdate(
+          order._id,
+          {
+            status: 'refunded',
+            'payment.status': 'refunded',
+            updatedAt: new Date(),
+          },
+          { session }
+        );
+
+        // Restore stock
+        await this.restoreOrderStock(order, session);
+
+        logger.info(`💰 Order ${order.orderNumber} refunded`);
+      }
+
+      await session.commitTransaction();
+    } catch (error) {
+      await session.abortTransaction();
+      logger.error(`Error handling refund for charge ${charge.id}:`, error);
+      throw error;
+    } finally {
+      session.endSession();
     }
   }
 
@@ -178,12 +291,14 @@ export class PaymentService {
       );
 
       // Send notification to admin
-      console.log(`⚠️ Order ${order.orderNumber} disputed`);
+      logger.warn(`⚠️ Order ${order.orderNumber} disputed`);
     }
   }
 
   // Create refund
   async createRefund(orderId: string, amount?: number) {
+    this.ensureInitialized();
+    
     try {
       const order = await Order.findById(orderId);
       
@@ -191,7 +306,7 @@ export class PaymentService {
         throw new Error('Order or charge ID not found');
       }
 
-          const refundParams: Stripe.RefundCreateParams = {
+      const refundParams: Stripe.RefundCreateParams = {
         charge: order.payment.chargeId,
         metadata: {
           orderId: order._id.toString(),
@@ -203,9 +318,7 @@ export class PaymentService {
         refundParams.amount = Math.round(amount * 100);
       }
 
-
-
-      const refund = await this.stripe.refunds.create(refundParams);
+      const refund = await this.stripe!.refunds.create(refundParams);
 
       // Update order status after successful refund
       await Order.findByIdAndUpdate(orderId, {
@@ -215,26 +328,36 @@ export class PaymentService {
       });
 
     } catch (error) {
-      console.error('Error creating refund:', error);
+      logger.error('Error creating refund:', error);
       throw error;
     }
   }
 
+  // Restore order stock when payment fails or is cancelled
+  private async restoreOrderStock(order: any, session?: any) {
+    for (const item of order.items) {
+      await Product.findByIdAndUpdate(item.productId, {
+        $inc: { stock: item.quantity },
+      }, session ? { session } : {});
+    }
+    logger.info(`🔄 Stock restored for order ${order.orderNumber}`);
+  }
+
   // Verify Stripe signature
   verifyStripeSignature(payload: string, signature: string) {
+    this.ensureInitialized();
+    
     try {
-      return this.stripe.webhooks.constructEvent(
+      return this.stripe!.webhooks.constructEvent(
         payload,
         signature,
-        process.env.STRIPE_WEBHOOK_SECRET! || ''
+        this.webhookSecret
       );
     } catch (error) {
-      console.error('Error verifying Stripe signature:', error);
+      logger.error('Error verifying Stripe signature:', error);
       throw error;
     }
   }
 }
 
 export const paymentService = new PaymentService();
-// cd backend
-// npm install stripe @types/stripe

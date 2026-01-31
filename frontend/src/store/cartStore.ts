@@ -40,8 +40,9 @@ const useCartStore = create<CartStore>()(
           // Fetch cart from API
           const response = await cartApi.getCart(guestId);
           set({ cart: response.data, isLoading: false });
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to initialize cart';
+          set({ error: errorMessage, isLoading: false });
         }
       },
 
@@ -73,8 +74,9 @@ const useCartStore = create<CartStore>()(
           });
           
           set({ cart: response.data, isLoading: false });
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to add item';
+          set({ error: errorMessage, isLoading: false });
           throw error;
         }
       },
@@ -90,8 +92,9 @@ const useCartStore = create<CartStore>()(
           });
           
           set({ cart: response.data, isLoading: false });
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to update quantity';
+          set({ error: errorMessage, isLoading: false });
           throw error;
         }
       },
@@ -104,8 +107,9 @@ const useCartStore = create<CartStore>()(
           const response = await cartApi.removeItem(itemId, guestId);
           
           set({ cart: response.data, isLoading: false });
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to remove item';
+          set({ error: errorMessage, isLoading: false });
           throw error;
         }
       },
@@ -118,8 +122,9 @@ const useCartStore = create<CartStore>()(
           const response = await cartApi.clearCart(guestId);
           
           set({ cart: response.data, isLoading: false });
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to clear cart';
+          set({ error: errorMessage, isLoading: false });
           throw error;
         }
       },
@@ -129,8 +134,9 @@ const useCartStore = create<CartStore>()(
           set({ isLoading: true });
           await get().initializeCart();
           set({ isLoading: false });
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to sync cart';
+          set({ error: errorMessage, isLoading: false });
         }
       },
 
@@ -149,8 +155,9 @@ const useCartStore = create<CartStore>()(
           // Refresh cart
           await get().initializeCart();
           set({ isLoading: false });
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to merge cart';
+          set({ error: errorMessage, isLoading: false });
           throw error;
         }
       },

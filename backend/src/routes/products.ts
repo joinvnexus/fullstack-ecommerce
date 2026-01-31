@@ -1,11 +1,13 @@
 import express from 'express';
 import Product from '../models/Product.js';
 import Category from '../models/Category.js';
+import mongoose from 'mongoose';
 import { authenticate, authorizeAdmin } from '../utils/auth.js';
 import { validate } from '../utils/validation.js';
 import { createProductSchema } from '../utils/validation.js';
 import { AppError } from '../middleware/errorHandler.js';
-import mongoose from 'mongoose';
+import { cacheService } from '../services/cache.service.js';
+import { logAdminAction } from '../services/admin/auditService.js';
 
 const router = express.Router();
 
@@ -23,6 +25,30 @@ router.get('/', async (req, res, next) => {
       sort = 'createdAt',
       order = 'desc',
     } = req.query;
+
+    // Create cache key from query parameters
+    const cacheKey = `products:${JSON.stringify({
+      page,
+      limit,
+      category,
+      minPrice,
+      maxPrice,
+      status,
+      search,
+      sort,
+      order,
+    })}`;
+
+    // Check cache first
+    const cachedResult = await cacheService.getCachedProductsList(cacheKey);
+    if (cachedResult) {
+      return res.json({
+        success: true,
+        data: cachedResult.products,
+        pagination: cachedResult.pagination,
+        cached: true,
+      });
+    }
 
     // Build query
     const query: any = {};
@@ -71,10 +97,8 @@ router.get('/', async (req, res, next) => {
 
     // Calculate pagination info
     const totalPages = Math.ceil(total / Number(limit));
-
-    res.json({
-      success: true,
-      data: products,
+    const result = {
+      products,
       pagination: {
         page: Number(page),
         limit: Number(limit),
@@ -83,6 +107,15 @@ router.get('/', async (req, res, next) => {
         hasNextPage: Number(page) < totalPages,
         hasPrevPage: Number(page) > 1,
       },
+    };
+
+    // Cache the result for 30 minutes
+    await cacheService.cacheProductsList(cacheKey, result, 1800);
+
+    res.json({
+      success: true,
+      data: products,
+      pagination: result.pagination,
     });
   } catch (error) {
     next(error);
@@ -155,6 +188,20 @@ router.post(
       const product = new Product(productData);
       await product.save();
 
+      // Log audit action
+      await logAdminAction({
+        adminId: (req as any).user.userId,
+        action: 'create',
+        resource: 'product',
+        resourceId: product._id.toString(),
+        newValues: productData,
+        ip: req.ip || req.connection.remoteAddress || '',
+        userAgent: req.get('User-Agent') || '',
+      });
+
+      // Invalidate cache
+      await cacheService.invalidateProductsCache();
+
       res.status(201).json({
         success: true,
         message: 'Product created successfully',
@@ -201,15 +248,32 @@ router.put(
         }
       }
 
+      const oldProduct = await Product.findById(productId);
+      if (!oldProduct) {
+        throw new AppError('Product not found', 404);
+      }
+
       const product = await Product.findByIdAndUpdate(
         productId,
         { $set: updates },
         { new: true, runValidators: true }
       );
 
-      if (!product) {
-        throw new AppError('Product not found', 404);
-      }
+      // Log audit action
+      await logAdminAction({
+        adminId: (req as any).user.userId,
+        action: 'update',
+        resource: 'product',
+        resourceId: productId.toString(),
+        oldValues: oldProduct.toObject(),
+        newValues: updates,
+        ip: req.ip || req.connection.remoteAddress || '',
+        userAgent: req.get('User-Agent') || '',
+      });
+
+      // Invalidate cache
+      await cacheService.invalidateProductsCache();
+      await cacheService.invalidateProductCache(productId.toString());
 
       res.json({
         success: true,
@@ -230,6 +294,11 @@ router.delete('/:id', authenticate, authorizeAdmin, async (req, res, next) => {
     // Convert id to ObjectId
     const productId = new mongoose.Types.ObjectId(id);
 
+    const oldProduct = await Product.findById(productId);
+    if (!oldProduct) {
+      throw new AppError('Product not found', 404);
+    }
+
     // Soft delete: change status to archived
     const product = await Product.findByIdAndUpdate(
       productId,
@@ -237,14 +306,99 @@ router.delete('/:id', authenticate, authorizeAdmin, async (req, res, next) => {
       { new: true }
     );
 
-    if (!product) {
-      throw new AppError('Product not found', 404);
-    }
+    // Log audit action
+    await logAdminAction({
+      adminId: (req as any).user.userId,
+      action: 'delete',
+      resource: 'product',
+      resourceId: productId.toString(),
+      oldValues: oldProduct.toObject(),
+      ip: req.ip || req.connection.remoteAddress || '',
+      userAgent: req.get('User-Agent') || '',
+    });
+
+    // Invalidate cache
+    await cacheService.invalidateProductsCache();
+    await cacheService.invalidateProductCache(productId.toString());
 
     res.json({
       success: true,
       message: 'Product archived successfully',
       data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get product recommendations
+router.get('/:id/recommendations', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Find the current product
+    const product = await Product.findById(id);
+    if (!product) {
+      throw new AppError('Product not found', 404);
+    }
+
+    const recommendations: any = {};
+
+    // 1. Similar Products (same category, different tags, similar price)
+    const similarProducts = await Product.find({
+      category: product.category,
+      _id: { $ne: product._id },
+      status: 'active',
+      'price.amount': {
+        $gte: product.price.amount * 0.8,
+        $lte: product.price.amount * 1.2
+      }
+    })
+      .limit(4)
+      .select('title slug price images _id');
+
+    recommendations.similar = similarProducts;
+
+    // 2. Customers Also Viewed (same category, different products)
+    const viewedProducts = await Product.find({
+      category: product.category,
+      _id: { $ne: product._id },
+      status: 'active',
+    })
+      .sort({ createdAt: -1 })
+      .limit(4)
+      .select('title slug price images _id');
+
+    recommendations.viewed = viewedProducts;
+
+    // 3. Frequently Bought Together (for now, same category products)
+    // TODO: Implement based on order data when available
+    const boughtTogether = await Product.find({
+      category: product.category,
+      _id: { $ne: product._id },
+      status: 'active',
+      tags: { $in: product.tags }
+    })
+      .limit(3)
+      .select('title slug price images _id');
+
+    recommendations.bought = boughtTogether;
+
+    // 4. Recently Viewed (for now, random recent products)
+    // TODO: Implement based on user session/localStorage
+    const recentProducts = await Product.find({
+      _id: { $ne: product._id },
+      status: 'active',
+    })
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .select('title slug price images _id');
+
+    recommendations.recent = recentProducts;
+
+    res.json({
+      success: true,
+      data: recommendations,
     });
   } catch (error) {
     next(error);

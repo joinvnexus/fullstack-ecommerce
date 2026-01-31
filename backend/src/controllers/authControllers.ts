@@ -1,6 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 import User from '../models/User.js';
 import RefreshToken from '../models/RefreshToken.js';
+import PasswordReset from '../models/PasswordReset.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { emailService } from '../services/email.service.js';
 import logger from '../utils/logger.js';
@@ -371,6 +373,112 @@ export const updateAddress = async (req: AuthenticatedRequest, res: Response, ne
       success: true,
       message: 'Address updated successfully',
       data: userData.addresses,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Forgot password - request password reset
+export const forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      throw new AppError('Email is required', 400);
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    // Even if user not found, don't reveal that
+    // Just return success to prevent email enumeration
+    if (!user) {
+      res.json({
+        success: true,
+        message: 'If an account with that email exists, a password reset link will be sent.',
+      });
+      return;
+    }
+
+    // Delete any existing reset tokens for this user
+    await PasswordReset.deleteMany({ userId: user._id });
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    // Save reset token to database
+    await PasswordReset.create({
+      userId: user._id,
+      token: hashedToken,
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+    });
+
+    // Send password reset email
+    try {
+      await emailService.sendPasswordResetEmail(user, resetToken);
+    } catch (emailError) {
+      logger.error('Failed to send password reset email:', emailError);
+      throw new AppError('Failed to send password reset email. Please try again.', 500);
+    }
+
+    res.json({
+      success: true,
+      message: 'If an account with that email exists, a password reset link will be sent.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Reset password with token
+export const resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      throw new AppError('Token and new password are required', 400);
+    }
+
+    if (newPassword.length < 6) {
+      throw new AppError('Password must be at least 6 characters', 400);
+    }
+
+    // Hash the token to find it in the database
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Find valid reset token
+    const resetTokenDoc = await PasswordReset.findOne({
+      token: hashedToken,
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (!resetTokenDoc) {
+      throw new AppError('Invalid or expired reset token', 400);
+    }
+
+    // Find user
+    const user = await User.findById(resetTokenDoc.userId);
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    // Update user's password
+    user.password = newPassword;
+    await user.save();
+
+    // Delete the reset token
+    await PasswordReset.deleteOne({ _id: resetTokenDoc._id });
+
+    // Log the user out of all devices (optional - invalidate all refresh tokens)
+    await RefreshToken.deleteMany({ userId: user._id });
+
+    logger.info(`✅ Password reset successful for user: ${user.email}`);
+
+    res.json({
+      success: true,
+      message: 'Password reset successful. Please log in with your new password.',
     });
   } catch (error) {
     next(error);

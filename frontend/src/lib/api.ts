@@ -50,6 +50,9 @@ export const authApi = {
   addAddress: (data: AddressData) => api.post('/auth/me/address', data),
   updateAddress: (index: number, data: AddressData) => api.put(`/auth/addresses/${index}`, data),
   deleteAddress: (index: number) => api.delete(`/auth/me/address/${index}`),
+  // Password reset
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (token: string, newPassword: string) => api.post('/auth/reset-password', { token, newPassword }),
 };
 
 // Products API

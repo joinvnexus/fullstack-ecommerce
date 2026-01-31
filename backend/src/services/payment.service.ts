@@ -8,22 +8,73 @@ import logger from '../utils/logger.js';
 import { emailService } from './email.service.js';
 
 export class PaymentService {
-  private stripe: Stripe;
+  private stripe: Stripe | null = null;
+  private initialized = false;
+  private webhookSecret: string = '';
 
   constructor() {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY || " ", {
-      apiVersion: '2023-10-16' as any,
-    });
+    this.initialize();
+  }
+
+  private initialize(): void {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    // Validate required environment variables
+    if (!stripeSecretKey) {
+      logger.error('❌ STRIPE_SECRET_KEY environment variable is required');
+      this.initialized = false;
+      return;
+    }
+
+    if (!stripeWebhookSecret) {
+      logger.error('❌ STRIPE_WEBHOOK_SECRET environment variable is required');
+      this.initialized = false;
+      return;
+    }
+
+    // Validate key format (basic check)
+    if (!stripeSecretKey.startsWith('sk_')) {
+      logger.error('❌ Invalid STRIPE_SECRET_KEY format. Expected sk_test_ or sk_live_');
+      this.initialized = false;
+      return;
+    }
+
+    if (!stripeWebhookSecret.startsWith('whsec_')) {
+      logger.error('❌ Invalid STRIPE_WEBHOOK_SECRET format. Expected whsec_ prefix');
+      this.initialized = false;
+      return;
+    }
+
+    try {
+      this.stripe = new Stripe(stripeSecretKey, {
+        apiVersion: '2023-10-16' as any,
+      });
+      this.webhookSecret = stripeWebhookSecret;
+      this.initialized = true;
+      logger.info('✅ Stripe payment service initialized successfully');
+    } catch (error) {
+      logger.error('❌ Failed to initialize Stripe:', error);
+      this.initialized = false;
+    }
+  }
+
+  private ensureInitialized(): void {
+    if (!this.initialized || !this.stripe) {
+      throw new Error('Stripe payment service is not properly configured. Please check your environment variables.');
+    }
   }
 
   // Create Stripe payment intent
   async createStripePaymentIntent(order: IOrder) {
+    this.ensureInitialized();
+    
     try {
       // Convert amount to cents (Stripe uses smallest currency unit)
       const amount = Math.round(order.totals.grandTotal * 100);
 
       // Create payment intent
-      const paymentIntent = await this.stripe.paymentIntents.create({
+      const paymentIntent = await this.stripe!.paymentIntents.create({
         amount,
         currency: order.currency.toLowerCase(),
         metadata: {
@@ -246,6 +297,8 @@ export class PaymentService {
 
   // Create refund
   async createRefund(orderId: string, amount?: number) {
+    this.ensureInitialized();
+    
     try {
       const order = await Order.findById(orderId);
       
@@ -253,7 +306,7 @@ export class PaymentService {
         throw new Error('Order or charge ID not found');
       }
 
-          const refundParams: Stripe.RefundCreateParams = {
+      const refundParams: Stripe.RefundCreateParams = {
         charge: order.payment.chargeId,
         metadata: {
           orderId: order._id.toString(),
@@ -265,9 +318,7 @@ export class PaymentService {
         refundParams.amount = Math.round(amount * 100);
       }
 
-
-
-      const refund = await this.stripe.refunds.create(refundParams);
+      const refund = await this.stripe!.refunds.create(refundParams);
 
       // Update order status after successful refund
       await Order.findByIdAndUpdate(orderId, {
@@ -294,11 +345,13 @@ export class PaymentService {
 
   // Verify Stripe signature
   verifyStripeSignature(payload: string, signature: string) {
+    this.ensureInitialized();
+    
     try {
-      return this.stripe.webhooks.constructEvent(
+      return this.stripe!.webhooks.constructEvent(
         payload,
         signature,
-        process.env.STRIPE_WEBHOOK_SECRET! || ''
+        this.webhookSecret
       );
     } catch (error) {
       logger.error('Error verifying Stripe signature:', error);
@@ -308,5 +361,3 @@ export class PaymentService {
 }
 
 export const paymentService = new PaymentService();
-// cd backend
-// npm install stripe @types/stripe

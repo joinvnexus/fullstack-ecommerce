@@ -4,14 +4,16 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, AlertCircle } from 'lucide-react';
 import useCartStore from '@/store/cartStore';
 import { useAuth } from '@/hooks/useAuth';
-import { useSearch } from '@/hooks/useSearch';
+import ErrorState from '@/components/ui/ErrorState';
+
 const CartPage = () => {
-  const { cart, isLoading, addItem, updateQuantity, removeItem, clearCart, initializeCart, mergeCart } = useCartStore();
+  const { cart, isLoading, error, addItem, updateQuantity, removeItem, clearCart, initializeCart, mergeCart } = useCartStore();
   const { user } = useAuth();
   const [isMerging, setIsMerging] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
     initializeCart();
@@ -29,6 +31,8 @@ const CartPage = () => {
       setIsMerging(true);
       await mergeCart();
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to merge cart';
+      setLocalError(message);
       console.error('Failed to merge cart:', error);
     } finally {
       setIsMerging(false);
@@ -42,6 +46,8 @@ const CartPage = () => {
     try {
       await updateQuantity(itemId, newQuantity);
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update quantity';
+      setLocalError(message);
       console.error('Failed to update quantity:', error);
     }
   };
@@ -51,6 +57,8 @@ const CartPage = () => {
       try {
         await removeItem(itemId);
       } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to remove item';
+        setLocalError(message);
         console.error('Failed to remove item:', error);
       }
     }
@@ -61,11 +69,14 @@ const CartPage = () => {
       try {
         await clearCart();
       } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to clear cart';
+        setLocalError(message);
         console.error('Failed to clear cart:', error);
       }
     }
   };
 
+  // Loading state - show skeleton
   if (isLoading || isMerging) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -81,6 +92,22 @@ const CartPage = () => {
               <div className="h-64 bg-gray-300 rounded"></div>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || localError) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <ErrorState
+            title="Unable to load cart"
+            message={error || localError || 'An unexpected error occurred'}
+            onRetry={initializeCart}
+            retryLabel="Try Again"
+          />
         </div>
       </div>
     );

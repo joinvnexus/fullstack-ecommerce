@@ -2,11 +2,12 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Filter, Grid, List, ChevronDown, X } from 'lucide-react';
+import { Filter, Grid, List, ChevronDown } from 'lucide-react';
 import ProductCard from '../components/products/ProductCard';
 import ProductListSkeleton from '../components/products/ProductListSkeleton';
 import ProductFilters from '../components/products/ProductFilters';
 import Pagination from '../components/products/Pagination';
+import ErrorState from '@/components/ui/ErrorState';
 import { productsApi, categoriesApi } from '@/lib/api';
 import { Product, Category } from '@/types';
 
@@ -27,6 +28,7 @@ const ProductsContent = () => {
   const [selectedRating, setSelectedRating] = useState(0);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 12,
@@ -58,6 +60,7 @@ const ProductsContent = () => {
 
   const fetchProducts = async () => {
     try {
+      setError(null);
       setIsLoading(true);
       const params: any = {
         page: pagination.page,
@@ -77,6 +80,8 @@ const ProductsContent = () => {
       setProducts(response.data);
       setPagination(response.pagination);
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load products';
+      setError(message);
       console.error('Error fetching products:', error);
     } finally {
       setIsLoading(false);
@@ -219,10 +224,21 @@ const ProductsContent = () => {
               </div>
             </div>
 
-            {/* Products grid/list */}
+            {/* Products grid/list - Loading state with skeleton */}
             {isLoading ? (
-              <ProductListSkeleton count={pagination.limit} />
+              <ProductListSkeleton count={pagination.limit} viewMode={viewMode} />
+            ) : error ? (
+              // Error state
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <ErrorState
+                  title="Unable to load products"
+                  message={error}
+                  onRetry={fetchProducts}
+                  retryLabel="Try Again"
+                />
+              </div>
             ) : products.length === 0 ? (
+              // Empty state
               <div className="bg-white rounded-lg shadow-md p-12 text-center">
                 <div className="text-gray-400 mb-4">No products found</div>
                 <p className="text-gray-600 mb-6">Try adjusting your filters or search terms</p>

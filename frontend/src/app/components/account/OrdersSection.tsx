@@ -18,7 +18,7 @@ const OrdersSection: React.FC = () => {
   const fetchOrders = async () => {
     try {
       const response = await ordersApi.getMyOrders();
-      setOrders(response.data);
+      setOrders(response.data.data);
     } catch (error) {
       console.error('Failed to fetch orders:', error);
     } finally {
@@ -39,7 +39,7 @@ const OrdersSection: React.FC = () => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-xl font-semibold mb-6">My Orders</h2>
-      {orders.length === 0 ? (
+      {(orders?.length ?? 0) === 0 ? (
         <div className="text-center py-12">
           <Package className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-4 text-lg font-medium text-gray-900">No orders.</h3>

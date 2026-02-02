@@ -65,7 +65,7 @@ const OrdersPage = () => {
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-6">My Orders</h2>
 
-        {orders.length === 0 ? (
+        {(orders?.length ?? 0) === 0 ? (
           <div className="text-center py-12">
             <Package className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-4 text-lg font-medium text-gray-900">No orders yet</h3>

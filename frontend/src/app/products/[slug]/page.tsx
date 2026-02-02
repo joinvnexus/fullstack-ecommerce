@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, notFound } from 'next/navigation';
-import Image from 'next/image';
 import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw } from 'lucide-react';
 import { productsApi } from '@/lib/api';
 import { Product } from '@/types';
@@ -13,6 +12,8 @@ import ProductReviews from '@/app/components/products/ProductReviews';
 import ProductRecommendations from '@/app/components/products/ProductRecommendations';
 import RelatedProducts from '@/app/components/products/RelatedProducts';
 import BreadcrumbNavigation from '@/app/components/layout/BreadcrumbNavigation';
+import ProductDetailsSkeleton from '@/app/components/products/ProductDetailsSkeleton';
+import ErrorState from '@/components/ui/ErrorState';
 
 const ProductDetailPage = () => {
   const params = useParams();
@@ -22,6 +23,7 @@ const ProductDetailPage = () => {
   const [selectedVariant, setSelectedVariant] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -30,11 +32,14 @@ const ProductDetailPage = () => {
 
   const fetchProduct = async () => {
     try {
+      setError(null);
       setIsLoading(true);
       const response = await productsApi.getBySlug(slug);
       setProduct(response.data.product);
       setRelatedProducts(response.data.relatedProducts);
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load product';
+      setError(message);
       console.error('Error fetching product:', error);
     } finally {
       setIsLoading(false);
@@ -48,7 +53,6 @@ const ProductDetailPage = () => {
   };
 
   const handleAddToCart = () => {
-    // Implement cart functionality
     console.log('Add to cart:', {
       productId: product?._id,
       quantity,
@@ -58,30 +62,30 @@ const ProductDetailPage = () => {
 
   const handleBuyNow = () => {
     handleAddToCart();
-    // Navigate to checkout
   };
 
+  // Loading state - show ProductDetailsSkeleton
   if (isLoading) {
+    return <ProductDetailsSkeleton />;
+  }
+
+  // Error state - show ErrorState
+  if (error && !product) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse">
-            <div className="h-6 bg-gray-300 rounded w-1/4 mb-4"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="h-96 bg-gray-300 rounded"></div>
-              <div className="space-y-4">
-                <div className="h-8 bg-gray-300 rounded w-3/4"></div>
-                <div className="h-6 bg-gray-300 rounded w-1/2"></div>
-                <div className="h-4 bg-gray-300 rounded w-full"></div>
-                <div className="h-4 bg-gray-300 rounded w-2/3"></div>
-              </div>
-            </div>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <ErrorState
+            title="Product not found"
+            message={error}
+            onRetry={fetchProduct}
+            retryLabel="Try Again"
+          />
         </div>
       </div>
     );
   }
 
+  // Product not found (API returned success but no product)
   if (!product) {
     notFound();
   }
@@ -204,13 +208,13 @@ const ProductDetailPage = () => {
                   Buy Now
                 </button>
                 <WishlistButton 
-    productId={product._id}
-    productName={product.title}
-    size="lg"
-    variant="button"
-    showLabel
-    className="flex-1"
-  />
+                  productId={product._id}
+                  productName={product.title}
+                  size="lg"
+                  variant="button"
+                  showLabel
+                  className="flex-1"
+                />
               </div>
             </div>
 
@@ -252,7 +256,7 @@ const ProductDetailPage = () => {
         <div className="mt-16">
           <ProductReviews
             productId={product._id}
-            reviews={[]} // Would come from API
+            reviews={[]}
             averageRating={4.0}
             totalReviews={0}
             onReviewSubmit={(review) => console.log('New review:', review)}

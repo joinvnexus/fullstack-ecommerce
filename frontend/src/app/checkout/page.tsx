@@ -31,6 +31,7 @@ import { ordersApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Product, ProductImage } from "@/types";
+import ErrorState from "@/components/ui/ErrorState";
 
 // Payment components
 import StripeCheckout from "../components/payments/StripeCheckout";
@@ -108,6 +109,7 @@ const CheckoutPage = () => {
     shipping: true,
     payment: true,
   });
+  const [orderError, setOrderError] = useState<string | null>(null);
 
   const {
     register,
@@ -149,6 +151,7 @@ const CheckoutPage = () => {
 
   const onSubmit = async (data: CheckoutFormData) => {
     try {
+      setOrderError(null);
       setIsSubmitting(true);
 
       const res = await ordersApi.create({
@@ -161,9 +164,9 @@ const CheckoutPage = () => {
       setCreatedOrder(res.data);
       setPaymentStep("payment");
     } catch (err) {
-      console.error("Order creation error:", err);
       const errorMessage = err instanceof Error ? err.message : 'Order creation failed';
-      alert(`Order creation failed: ${errorMessage}`);
+      setOrderError(errorMessage);
+      console.error("Order creation error:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -173,6 +176,26 @@ const CheckoutPage = () => {
     clearCart();
     router.push("/checkout/success");
   };
+
+  // Loading state while cart is loading
+  if (cartLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-8"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 space-y-6">
+                <div className="h-64 bg-gray-200 rounded"></div>
+                <div className="h-64 bg-gray-200 rounded"></div>
+              </div>
+              <div className="h-96 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Empty cart state
   if (!cartLoading && (!cart || cart.items.length === 0)) {
@@ -229,7 +252,7 @@ const CheckoutPage = () => {
                     orderId={createdOrder._id}
                     amount={totalAmount}
                     onSuccess={handlePaymentSuccess}
-                    onError={(error: string) => alert(error)}
+                    onError={(error: string) => setOrderError(error)}
                   />
                 </Elements>
               )}
@@ -239,7 +262,7 @@ const CheckoutPage = () => {
                   orderId={createdOrder._id}
                   amount={totalAmount}
                   onSuccess={handlePaymentSuccess}
-                  onError={(error: string) => alert(error)}
+                  onError={(error: string) => setOrderError(error)}
                 />
               )}
 
@@ -248,7 +271,7 @@ const CheckoutPage = () => {
                   orderId={createdOrder._id}
                   amount={totalAmount}
                   onSuccess={handlePaymentSuccess}
-                  onError={(error: string) => alert(error)}
+                  onError={(error: string) => setOrderError(error)}
                 />
               )}
 
@@ -328,6 +351,18 @@ const CheckoutPage = () => {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="max-w-6xl mx-auto">
+        {/* Error state for order creation */}
+        {orderError && (
+          <div className="mb-6">
+            <ErrorState
+              title="Order creation failed"
+              message={orderError}
+              onRetry={() => setOrderError(null)}
+              retryLabel="Try Again"
+            />
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Form Sections */}
           <div className="lg:col-span-2 space-y-6">
@@ -503,46 +538,38 @@ const CheckoutPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {shippingMethods.map((method, index) => (
+                  {shippingMethods.map((method) => (
                     <label
-                      key={index}
+                      key={method.name}
                       className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${
                         selectedShippingMethod.name === method.name
-                          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500"
+                          ? "border-blue-500 bg-blue-50"
                           : "border-gray-200 hover:border-gray-300"
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         <input
                           type="radio"
-                          value={JSON.stringify(method)}
-                          {...register("shippingMethod", {
-                            setValueAs: (value) => JSON.parse(value),
-                          })}
-                          className="w-5 h-5 text-blue-600 focus:ring-blue-500"
-                          defaultChecked={index === 0}
+                          {...register("shippingMethod.name")}
+                          value={method.name}
+                          onChange={() => setValue("shippingMethod", method)}
+                          className="w-4 h-4 text-blue-600"
                         />
                         <div>
-                          <div className="flex items-center gap-2">
-                            <Package className="w-5 h-5 text-gray-400" />
-                            <span className="font-medium text-gray-900">{method.name}</span>
-                          </div>
-                          <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                            <Clock className="w-4 h-4" />
-                            {method.description}
-                          </p>
+                          <div className="font-medium">{method.name}</div>
+                          <div className="text-sm text-gray-500">{method.description}</div>
                         </div>
                       </div>
-                      <span className="font-semibold text-gray-900">
+                      <div className="font-semibold">
                         {method.cost === 0 ? "Free" : `$${method.cost.toFixed(2)}`}
-                      </span>
+                      </div>
                     </label>
                   ))}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Payment Method Section */}
+            {/* Payment Method */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -553,222 +580,134 @@ const CheckoutPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {/* Stripe */}
-                  <label
-                    className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${
-                      selectedPaymentMethod === "stripe"
-                        ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[
+                    { id: "stripe", name: "Stripe", icon: CreditCard },
+                    { id: "bkash", name: "bKash", icon: Smartphone },
+                    { id: "nagad", name: "Nagad", icon: Smartphone },
+                  ].map((method) => (
+                    <label
+                      key={method.id}
+                      className={`flex flex-col items-center p-4 border rounded-lg cursor-pointer transition-all ${
+                        selectedPaymentMethod === method.id
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
                       <input
                         type="radio"
-                        value="stripe"
                         {...register("paymentMethod")}
-                        className="w-5 h-5 text-blue-600 focus:ring-blue-500"
+                        value={method.id}
+                        className="sr-only"
                       />
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-7 bg-indigo-600 rounded flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">Stripe</span>
-                        </div>
-                        <div>
-                          <span className="font-medium text-gray-900">Credit/Debit Card</span>
-                          <p className="text-sm text-gray-500">Visa, Mastercard, American Express</p>
-                        </div>
-                      </div>
-                    </div>
-                    <CreditCard className="w-6 h-6 text-gray-400" />
-                  </label>
-
-                  {/* bKash */}
-                  <label
-                    className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${
-                      selectedPaymentMethod === "bkash"
-                        ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        value="bkash"
-                        {...register("paymentMethod")}
-                        className="w-5 h-5 text-blue-600 focus:ring-blue-500"
-                      />
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-7 bg-pink-500 rounded flex items-center justify-center">
-                          <Smartphone className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <span className="font-medium text-gray-900">bKash</span>
-                          <p className="text-sm text-gray-500">Mobile financial service</p>
-                        </div>
-                      </div>
-                    </div>
-                    <span className="text-pink-500 font-bold">bKash</span>
-                  </label>
-
-                  {/* Nagad */}
-                  <label
-                    className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${
-                      selectedPaymentMethod === "nagad"
-                        ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        value="nagad"
-                        {...register("paymentMethod")}
-                        className="w-5 h-5 text-blue-600 focus:ring-blue-500"
-                      />
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-7 bg-orange-500 rounded flex items-center justify-center">
-                          <Smartphone className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <span className="font-medium text-gray-900">Nagad</span>
-                          <p className="text-sm text-gray-500">Digital financial service</p>
-                        </div>
-                      </div>
-                    </div>
-                    <span className="text-orange-500 font-bold">Nagad</span>
-                  </label>
+                      <method.icon className="w-6 h-6 mb-2 text-gray-600" />
+                      <span className="font-medium">{method.name}</span>
+                    </label>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Order Notes */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Notes (Optional)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <textarea
-                  {...register("notes")}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
-                  placeholder="Add any special instructions for your order..."
-                />
               </CardContent>
             </Card>
           </div>
 
           {/* Right Column - Order Summary */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ShoppingBag className="w-5 h-5" />
-                  Order Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {/* Cart Items */}
-                <div className="space-y-4 max-h-80 overflow-y-auto mb-4">
-                  {cart?.items.map((item: any) => {
-                    const productName = getProductName(item.productId);
-                    const productImage = getProductImage(item.productId);
-                    const itemPrice = item.unitPrice || item.price || 0;
-                    
-                    return (
-                      <div key={item._id} className="flex items-center gap-3">
-                        <div className="relative w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                          {productImage ? (
-                            <Image
-                              src={productImage}
-                              alt={productName}
-                              fill
-                              className="object-cover"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = "none";
-                              }}
-                            />
-                          ) : null}
-                          <div className={`w-full h-full flex items-center justify-center text-gray-400 ${productImage ? "hidden" : ""}`}>
-                            <Package className="w-8 h-8" />
+            <div className="bg-white rounded-lg shadow-md p-6 sticky top-24">
+              <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
+              
+              {/* Cart Items */}
+              <div className="max-h-64 overflow-y-auto mb-4 space-y-3">
+                {cart?.items.map((item) => {
+                  const imageUrl = getProductImage(item.productId as Product);
+                  return (
+                    <div key={item._id} className="flex items-center gap-3">
+                      <div className="relative w-16 h-16 rounded-md overflow-hidden flex-shrink-0">
+                        {imageUrl && isValidImageUrl(imageUrl) ? (
+                          <Image
+                            src={imageUrl}
+                            alt={getProductName(item.productId)}
+                            fill
+                            className="object-cover"
+                            sizes="64px"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                            <Package className="w-6 h-6 text-gray-400" />
                           </div>
-                          <span className="absolute -top-1 -right-1 w-5 h-5 bg-gray-900 text-white text-xs rounded-full flex items-center justify-center">
-                            {item.quantity}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 truncate">{productName}</p>
-                          {item.variantId && (
-                            <p className="text-sm text-gray-500">{item.variantId.name || "Variant"}</p>
-                          )}
-                        </div>
-                        <p className="font-medium text-gray-900">
-                          ${(itemPrice * item.quantity).toFixed(2)}
+                        )}
+                        <span className="absolute -top-1 -right-1 bg-gray-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                          {item.quantity}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {getProductName(item.productId)}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          ${item.unitPrice.toFixed(2)} each
                         </p>
                       </div>
-                    );
-                  })}
-                </div>
+                      <div className="text-sm font-medium">
+                        ${(item.unitPrice * item.quantity).toFixed(2)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
 
-                {/* Price Breakdown */}
-                <div className="space-y-3 pt-4 border-t">
-                  <div className="flex justify-between text-gray-600">
-                    <span>Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-600">
-                    <span className="flex items-center gap-1">
-                      <Truck className="w-4 h-4" />
-                      Shipping
-                    </span>
-                    <span className={shippingCost === 0 ? "text-green-600" : ""}>
-                      {shippingCost === 0 ? "Free" : `$${shippingCost.toFixed(2)}`}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-gray-600">
-                    <span>Tax (10%)</span>
-                    <span>${tax.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-lg font-bold text-gray-900 pt-3 border-t">
-                    <span>Total</span>
-                    <span>${totalAmount.toFixed(2)}</span>
-                  </div>
+              {/* Totals */}
+              <div className="border-t border-gray-200 pt-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Subtotal</span>
+                  <span className="font-medium">${subtotal.toFixed(2)}</span>
                 </div>
-
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                  size="lg"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-5 h-5 mr-2" />
-                      ${totalAmount.toFixed(2)} - Pay Now
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </>
-                  )}
-                </Button>
-
-                {/* Trust Badges */}
-                <div className="mt-4 flex items-center justify-center gap-4 text-sm text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <Shield className="w-4 h-4 text-green-500" />
-                    <span>Secure</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Check className="w-4 h-4 text-green-500" />
-                    <span>Protected</span>
-                  </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Shipping</span>
+                  <span className="font-medium">
+                    {shippingCost === 0 ? "Free" : `$${shippingCost.toFixed(2)}`}
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Tax (10%)</span>
+                  <span className="font-medium">${tax.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-2">
+                  <span>Total</span>
+                  <span>${totalAmount.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                size="lg"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    Place Order
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </>
+                )}
+              </Button>
+
+              {/* Security badges */}
+              <div className="mt-4 flex items-center justify-center gap-4 text-gray-400">
+                <div className="flex items-center gap-1 text-xs">
+                  <Lock className="w-3 h-3" />
+                  <span>SSL</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <Shield className="w-3 h-3" />
+                  <span>Secure</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </form>

@@ -7,6 +7,7 @@ import ProductCard from '@/app/components/products/ProductCard';
 import ProductListSkeleton from '@/app/components/products/ProductListSkeleton';
 import ProductFilters from '@/app/components/products/ProductFilters';
 import BreadcrumbNavigation from '@/app/components/layout/BreadcrumbNavigation';
+import ErrorState from '@/components/ui/ErrorState';
 import { productsApi, categoriesApi } from '@/lib/api';
 import { Product, Category } from '@/types';
 
@@ -22,6 +23,7 @@ const CategoryPageContent = () => {
   const [sortOrder, setSortOrder] = useState('desc');
   const [showFilters, setShowFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 12,
@@ -50,6 +52,7 @@ const CategoryPageContent = () => {
 
   const fetchCategoryAndProducts = async () => {
     try {
+      setError(null);
       setIsLoading(true);
       const [categoryResponse, productsResponse] = await Promise.all([
         categoriesApi.getBySlug(slug),
@@ -60,6 +63,8 @@ const CategoryPageContent = () => {
       setProducts(productsResponse.data);
       setPagination(productsResponse.pagination);
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load category';
+      setError(message);
       console.error('Error fetching category and products:', error);
     } finally {
       setIsLoading(false);
@@ -77,6 +82,7 @@ const CategoryPageContent = () => {
 
   const fetchProducts = async () => {
     try {
+      setError(null);
       setIsLoading(true);
       const params: any = {
         page: pagination.page,
@@ -97,6 +103,8 @@ const CategoryPageContent = () => {
       setProducts(response.data);
       setPagination(response.pagination);
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load products';
+      setError(message);
       console.error('Error fetching products:', error);
     } finally {
       setIsLoading(false);
@@ -139,15 +147,100 @@ const CategoryPageContent = () => {
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
-  if (!category && !isLoading) {
+  // Loading state
+  if (isLoading && !category) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-8">
+            <div className="h-6 bg-gray-200 rounded w-1/4 mb-4 animate-pulse"></div>
+            <div className="h-10 bg-gray-200 rounded w-1/2 mb-4 animate-pulse"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+          </div>
+          <div className="flex flex-col lg:flex-row gap-8">
+            <aside className="lg:w-64">
+              <div className="bg-white rounded-lg shadow-md p-6 animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                </div>
+              </div>
+            </aside>
+            <div className="flex-1">
+              <ProductListSkeleton count={pagination.limit} viewMode={viewMode} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && !category) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">Category Not Found</h2>
-            <p className="mt-2 text-gray-600">
-              The category you're looking for doesn't exist.
-            </p>
+          <ErrorState
+            title="Category not found"
+            message={error}
+            onRetry={fetchCategoryAndProducts}
+            retryLabel="Try Again"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Product fetch error (category loaded but products failed)
+  if (error && category) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <BreadcrumbNavigation
+            categoryPath={category ? [category] : []}
+          />
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              {category.name}
+            </h1>
+          </div>
+          <div className="flex flex-col lg:flex-row gap-8">
+            <aside className={`lg:w-64 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+              <ProductFilters
+                categories={categories.filter(cat =>
+                  cat.parent === category?._id || cat._id === category?._id
+                )}
+                selectedCategory={selectedSubCategory}
+                onCategoryChange={(slug) => {
+                  setSelectedSubCategory(slug);
+                  setPagination(prev => ({ ...prev, page: 1 }));
+                }}
+                minPrice={minPrice}
+                maxPrice={maxPrice}
+                onPriceChange={handlePriceFilter}
+                selectedBrands={selectedBrands}
+                onBrandsChange={handleBrandsChange}
+                selectedRating={selectedRating}
+                onRatingChange={handleRatingChange}
+                inStockOnly={inStockOnly}
+                onInStockChange={handleInStockChange}
+                onReset={handleFilterReset}
+                onClose={() => setShowFilters(false)}
+                isMobile={showFilters}
+              />
+            </aside>
+            <div className="flex-1">
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <ErrorState
+                  title="Unable to load products"
+                  message={error}
+                  onRetry={fetchProducts}
+                  retryLabel="Try Again"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -276,9 +369,9 @@ const CategoryPageContent = () => {
               </div>
             </div>
 
-            {/* Products grid/list */}
+            {/* Products grid/list - Loading state */}
             {isLoading ? (
-              <ProductListSkeleton count={pagination.limit} />
+              <ProductListSkeleton count={pagination.limit} viewMode={viewMode} />
             ) : products.length === 0 ? (
               <div className="bg-white rounded-lg shadow-md p-12 text-center">
                 <div className="text-gray-400 mb-4">No products found</div>

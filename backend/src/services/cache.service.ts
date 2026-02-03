@@ -13,16 +13,10 @@ class CacheServiceImpl implements CacheService {
   private redisErrorLogged = false;
 
   constructor() {
-    // Initialize Redis if URL is provided
     const redisUrl = process.env.REDIS_URL;
-    
+
     if (!redisUrl || redisUrl.includes('localhost')) {
-      // Skip Redis initialization for local development or invalid URLs
-      if (!redisUrl) {
-        console.info('ℹ️  Redis not configured - caching disabled');
-      } else {
-        console.warn('⚠️  REDIS_URL contains localhost - caching disabled (use a Redis provider for production)');
-      }
+      console.warn('⚠️  REDIS_URL not configured properly - caching disabled');
       return;
     }
 
@@ -31,11 +25,14 @@ class CacheServiceImpl implements CacheService {
         maxRetriesPerRequest: 3,
         enableReadyCheck: true,
         lazyConnect: true,
+        tls: {} // TLS required for Upstash
       };
 
       this.redis = new Redis(redisUrl, options);
 
-      this.redis.connect().catch((err) => {
+      this.redis.connect().then(() => {
+        console.info('✅ Redis connected successfully');
+      }).catch((err) => {
         if (!this.redisErrorLogged) {
           console.warn('⚠️  Redis connection failed - caching disabled:', err.message);
           this.redisErrorLogged = true;
@@ -50,10 +47,6 @@ class CacheServiceImpl implements CacheService {
         }
         this.redis = null;
       });
-
-      this.redis.on('connect', () => {
-        console.info('✅ Redis connected successfully');
-      });
     } catch (error) {
       console.warn('⚠️  Failed to initialize Redis - caching disabled');
       this.redis = null;
@@ -65,7 +58,7 @@ class CacheServiceImpl implements CacheService {
     try {
       const cached = await this.redis.get(key);
       return cached ? JSON.parse(cached) : null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -74,8 +67,8 @@ class CacheServiceImpl implements CacheService {
     if (!this.redis) return;
     try {
       await this.redis.setex(key, ttl, JSON.stringify(data));
-    } catch (error) {
-      // Silently fail - caching is optional
+    } catch {
+      // silently fail
     }
   }
 
@@ -83,24 +76,16 @@ class CacheServiceImpl implements CacheService {
     if (!this.redis) return;
     try {
       const keys = await this.redis.keys('products:*');
-      if (keys.length > 0) {
-        await this.redis.del(...keys);
-      }
-    } catch (error) {
-      // Silently fail
-    }
+      if (keys.length > 0) await this.redis.del(...keys);
+    } catch {}
   }
 
   async invalidateProductCache(productId: string): Promise<void> {
     if (!this.redis) return;
     try {
       const keys = await this.redis.keys(`product:${productId}*`);
-      if (keys.length > 0) {
-        await this.redis.del(...keys);
-      }
-    } catch (error) {
-      // Silently fail
-    }
+      if (keys.length > 0) await this.redis.del(...keys);
+    } catch {}
   }
 }
 

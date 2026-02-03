@@ -30,8 +30,8 @@ interface WishlistStore {
   createWishlist: (name: string) => Promise<void>;
   addToWishlist: (wishlistId: string, productId: string, notes?: string) => Promise<void>;
   removeFromWishlist: (wishlistId: string, productId: string) => Promise<void>;
-  moveItem: (fromWishlistId: string, toWishlistId: string, productId: string, notes?: string) => Promise<void>;
-  updateWishlist: (wishlistId: string, updates: Partial<Wishlist>) => Promise<void>;
+  moveItem: (fromWishlistId: string, toWishlistId: string, productId: string) => Promise<void>;
+  updateWishlist: (wishlistId: string, updates: { name: string }) => Promise<void>;
   deleteWishlist: (wishlistId: string) => Promise<void>;
   checkProductInWishlist: (productId: string) => Promise<{
     isInWishlist: boolean;
@@ -148,14 +148,13 @@ const useWishlistStore = create<WishlistStore>()(
         }
       },
 
-      moveItem: async (fromWishlistId: string, toWishlistId: string, productId: string, notes?: string) => {
+      moveItem: async (fromWishlistId: string, toWishlistId: string, productId: string) => {
         try {
           set({ isLoading: true, error: null });
           const response = await wishlistApi.moveItem({
             fromWishlistId,
             toWishlistId,
             productId,
-            notes,
           });
           
           set(state => ({
@@ -184,7 +183,7 @@ const useWishlistStore = create<WishlistStore>()(
         }
       },
 
-      updateWishlist: async (wishlistId: string, updates: Partial<Wishlist>) => {
+      updateWishlist: async (wishlistId: string, updates: { name: string }) => {
         try {
           set({ isLoading: true, error: null });
           const response = await wishlistApi.updateWishlist(wishlistId, updates);

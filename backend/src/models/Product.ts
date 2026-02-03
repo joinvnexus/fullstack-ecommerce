@@ -74,6 +74,7 @@ const ProductSchema: Schema = new Schema(
       enum: ['draft', 'active', 'archived'],
       default: 'draft',
     },
+    isFeatured: { type: Boolean, default: false },
     seo: {
       title: { type: String },
       description: { type: String },
@@ -84,7 +85,25 @@ const ProductSchema: Schema = new Schema(
 );
 
 // Indexes
+// Primary query patterns
 ProductSchema.index({ category: 1, status: 1, price: 1 });
 ProductSchema.index({ 'price.amount': 1 });
+
+// Status-based queries (product listings, filters)
+ProductSchema.index({ status: 1, createdAt: -1 });
+ProductSchema.index({ status: 1, 'price.amount': 1 });
+
+// Featured products queries
+ProductSchema.index({ isFeatured: 1, status: 1, createdAt: -1 });
+
+// Tag-based queries
+ProductSchema.index({ tags: 1, status: 1 });
+
+// Admin product management
+ProductSchema.index({ status: 1, category: 1 });
+ProductSchema.index({ sku: 1 });
+
+// Text search index for title and description
+ProductSchema.index({ title: 'text', description: 'text', 'seo.keywords': 'text' });
 
 export default mongoose.model<IProduct>('Product', ProductSchema);

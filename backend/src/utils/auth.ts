@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import type { SignOptions } from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
 
@@ -7,6 +8,7 @@ export interface JwtPayload {
   userId: string;
   email: string;
   role: "customer" | "admin";
+  tokenId?: string; // For refresh token rotation
 }
 
 class AuthUtils {
@@ -44,10 +46,12 @@ class AuthUtils {
   }
 
   // Generate refresh token
-  static generateRefreshToken(payload: JwtPayload): string {
+  static generateRefreshToken(payload: Omit<JwtPayload, 'tokenId'>): { token: string; tokenId: string } {
+    const tokenId = crypto.randomUUID();
     const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET as string;
     const options: SignOptions = { expiresIn: "30d" };
-    return jwt.sign(payload, JWT_REFRESH_SECRET, options);
+    const token = jwt.sign({ ...payload, tokenId }, JWT_REFRESH_SECRET, options);
+    return { token, tokenId };
   }
 
   // Verify refresh token
@@ -59,6 +63,30 @@ class AuthUtils {
       return null;
     }
   }
+
+  // Set authentication cookies
+  static setAuthCookies(res: Response, accessToken: string, refreshTokenResult: { token: string; tokenId: string }): void {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict' as const,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    };
+
+    res.cookie('accessToken', accessToken, {
+      ...cookieOptions,
+      maxAge: (Number(process.env.JWT_EXPIRE) || 7 * 24 * 60 * 60) * 1000,
+    });
+
+    res.cookie('refreshToken', refreshTokenResult.token, cookieOptions);
+  }
+
+  // Clear authentication cookies
+  static clearAuthCookies(res: Response): void {
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+  }
 }
 
 // Authentication middleware
@@ -68,7 +96,7 @@ export const authenticate = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const token = req.header("Authorization")?.replace("Bearer ", "");
+    const token = req.cookies.accessToken;
 
     if (!token) {
       res.status(401).json({ message: "Authentication required" });

@@ -9,11 +9,13 @@ import { Order } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import AccountLayout from '@/app/components/account/AccountLayout';
 import LoadingSpinner from '@/app/components/ui/LoadingSpinner';
+import ErrorState from '@/components/ui/ErrorState';
 
 const OrdersPage = () => {
   const { user, isLoading: authLoading } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -30,33 +32,49 @@ const OrdersPage = () => {
 
   const fetchOrders = async () => {
     try {
+      setError(null);
       setIsLoading(true);
       const response = await ordersApi.getMyOrders();
-      setOrders(response.data);
+      setOrders(response.data.data);
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load orders';
+      setError(message);
       console.error('Failed to fetch orders:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-
-
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner />
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
   const renderContent = () => {
+    // Loading state
     if (isLoading) {
       return (
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-center py-12">
-            <LoadingSpinner />
+            <LoadingSpinner size="lg" />
           </div>
+        </div>
+      );
+    }
+
+    // Error state
+    if (error) {
+      return (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <ErrorState
+            title="Unable to load orders"
+            message={error}
+            onRetry={fetchOrders}
+            retryLabel="Try Again"
+          />
         </div>
       );
     }
@@ -65,7 +83,7 @@ const OrdersPage = () => {
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-6">My Orders</h2>
 
-        {orders.length === 0 ? (
+        {(orders?.length ?? 0) === 0 ? (
           <div className="text-center py-12">
             <Package className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-4 text-lg font-medium text-gray-900">No orders yet</h3>
@@ -121,7 +139,6 @@ const OrdersPage = () => {
 
   return (
     <AccountLayout activeTab="orders" onTabChange={(tab) => {
-      // Navigate to the selected tab
       if (tab === 'profile') router.push('/account');
       else if (tab === 'addresses') router.push('/account');
       else if (tab === 'payment') router.push('/account');

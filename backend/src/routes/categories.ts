@@ -1,5 +1,6 @@
 import express from 'express';
 import Category from '../models/Category.js';
+import Product from '../models/Product.js';
 import { authenticate, authorizeAdmin } from '../utils/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
 import mongoose from 'mongoose';
@@ -9,9 +10,9 @@ const router = express.Router();
 // Get all categories (public)
 router.get('/', async (req, res, next) => {
   try {
-    const categories = await Category.find()
+    const categories = await Category.find({}, 'name slug description image parent children treePath sortOrder seoMeta createdAt updatedAt')
       .sort({ sortOrder: 1, name: 1 })
-      .populate('children', 'name slug');
+      .populate('children', 'name slug image');
 
     // Convert to hierarchical structure
     const categoryMap = new Map();
@@ -52,15 +53,14 @@ router.get('/', async (req, res, next) => {
 router.get('/:slug', async (req, res, next) => {
   try {
     const category = await Category.findOne({ slug: req.params.slug })
-      .populate('parent', 'name slug')
-      .populate('children', 'name slug sortOrder');
+      .populate('parent', 'name slug image')
+      .populate('children', 'name slug image sortOrder');
 
     if (!category) {
       throw new AppError('Category not found', 404);
     }
 
     // Get products count in this category
-    const Product = require('../models/Product').default;
     const productCount = await Product.countDocuments({
       category: category._id,
       status: 'active',
@@ -190,7 +190,6 @@ router.delete('/:id', authenticate, authorizeAdmin, async (req, res, next) => {
     }
 
     // Check if category has products
-    const Product = require('../models/Product').default;
     const productCount = await Product.countDocuments({ category: categoryId });
     if (productCount > 0) {
       throw new AppError(

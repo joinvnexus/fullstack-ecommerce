@@ -11,6 +11,7 @@ export interface IOrderItem {
 }
 
 export interface IOrderAddress {
+  fullName?: string;
   street: string;
   city: string;
   state: string;
@@ -72,6 +73,7 @@ const OrderItemSchema: Schema = new Schema({
 });
 
 const AddressSchema: Schema = new Schema({
+  fullName: { type: String },
   street: { type: String, required: true },
   city: { type: String, required: true },
   state: { type: String, required: true },
@@ -84,7 +86,7 @@ const AddressSchema: Schema = new Schema({
 const PaymentInfoSchema: Schema = new Schema({
   provider: {
     type: String,
-    enum: ['pending', 'stripe', 'bkash', 'nagad', 'sslcommerz'],
+    enum: ['stripe', 'bkash', 'nagad', 'sslcommerz'],
     required: true,
   },
   intentId: { type: String },

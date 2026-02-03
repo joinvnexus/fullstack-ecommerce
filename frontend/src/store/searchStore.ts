@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { searchApi } from '@/lib/api';
+import { AutocompleteParams } from '@/types';
 
 // AbortController instances for cancelling requests
 let searchAbortController: AbortController | null = null;
@@ -7,10 +8,14 @@ let suggestionsAbortController: AbortController | null = null;
 
 interface SearchState {
   query: string;
-  results: any[];
-  suggestions: any;
+  results: unknown[];
+  suggestions: {
+    products: unknown[];
+    categories: string[];
+    tags: string[];
+  };
   popularSearches: string[];
-  trendingProducts: any[];
+  trendingProducts: unknown[];
   isLoading: boolean;
   error: string | null;
   totalResults: number;
@@ -25,10 +30,14 @@ interface SearchState {
     sortOrder: 'asc' | 'desc';
   };
 
+  // Cache flags
+  popularSearchesLoaded: boolean;
+  trendingProductsLoaded: boolean;
+
   // Actions
   setQuery: (query: string) => void;
   setFilters: (filters: Partial<SearchState['filters']>) => void;
-  search: (params?: any) => Promise<void>;
+  search: (params?: Record<string, unknown>) => Promise<void>;
   getSuggestions: (query: string) => Promise<void>;
   getPopularSearches: () => Promise<void>;
   getTrendingProducts: () => Promise<void>;
@@ -55,6 +64,8 @@ const useSearchStore = create<SearchState>((set, get) => ({
     sortBy: 'relevance',
     sortOrder: 'desc',
   },
+  popularSearchesLoaded: false,
+  trendingProductsLoaded: false,
 
   setQuery: (query: string) => {
     set({ query });
@@ -80,12 +91,12 @@ const useSearchStore = create<SearchState>((set, get) => ({
       const searchParams = {
         q: query,
         page: params.page || 1,
-        limit: params.limit || 20,
+        limit: params.limit || 12,
         ...filters,
         ...params,
       };
 
-      const response = await searchApi.searchProducts(searchParams, { signal: searchAbortController.signal });
+      const response = await searchApi.searchProducts(searchParams as Record<string, unknown>, { signal: searchAbortController.signal });
 
       set({
         results: response.data.products,
@@ -94,13 +105,14 @@ const useSearchStore = create<SearchState>((set, get) => ({
         totalPages: response.data.totalPages,
         isLoading: false,
       });
-    } catch (error: any) {
-      if (error.name === 'AbortError' || error.message === 'canceled') {
+    } catch (error: unknown) {
+      if (error instanceof Error && (error.name === 'AbortError' || error.message === 'canceled')) {
         // Silently ignore aborted requests
         return;
       }
+      const errorMessage = error instanceof Error ? error.message : 'Search failed';
       set({
-        error: error.message,
+        error: errorMessage,
         isLoading: false,
       });
       throw error;
@@ -120,10 +132,10 @@ const useSearchStore = create<SearchState>((set, get) => ({
         return;
       }
 
-      const response = await searchApi.getSuggestions({ q: query }, { signal: suggestionsAbortController.signal });
+      const response = await searchApi.getSuggestions({ q: query } as AutocompleteParams, { signal: suggestionsAbortController.signal });
       set({ suggestions: response.data });
-    } catch (error: any) {
-      if (error.name === 'AbortError' || error.message === 'canceled') {
+    } catch (error: unknown) {
+      if (error instanceof Error && (error.name === 'AbortError' || error.message === 'canceled')) {
         // Silently ignore aborted requests
         return;
       }
@@ -132,18 +144,24 @@ const useSearchStore = create<SearchState>((set, get) => ({
   },
 
   getPopularSearches: async () => {
+    const { popularSearchesLoaded } = get();
+    if (popularSearchesLoaded) return;
+
     try {
       const response = await searchApi.getPopularSearches();
-      set({ popularSearches: response.data });
+      set({ popularSearches: response.data, popularSearchesLoaded: true });
     } catch (error) {
       console.error('Failed to get popular searches:', error);
     }
   },
 
   getTrendingProducts: async () => {
+    const { trendingProductsLoaded } = get();
+    if (trendingProductsLoaded) return;
+
     try {
       const response = await searchApi.getTrendingProducts();
-      set({ trendingProducts: response.data });
+      set({ trendingProducts: response.data, trendingProductsLoaded: true });
     } catch (error) {
       console.error('Failed to get trending products:', error);
     }

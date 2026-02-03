@@ -4,17 +4,17 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSearch } from "@/hooks/useSearch";
 import { categoriesApi } from "@/lib/api";
-import ProductCard from "@/app/components/ui/ProductCard"; // তোমার স্ট্রাকচার অনুসারে path
-import Pagination from "@/app/components/ui/Pagination"; // যদি না থাকে, নিচে দিবো
- import { Checkbox } from "@/app/components/ui/Checkbox"; // shadcn/ui বা custom
- import { Slider } from "@/app/components/ui/Slider";
+import ProductCard from "@/app/components/products/ProductCard"; // তোমার স্ট্রাকচার অনুসারে path
+import Pagination from "@/app/components/products/Pagination";
+ import { Checkbox } from "@/app/components/search/Checkbox"; // shadcn/ui বা custom
+ import { Slider } from "@/app/components/search/Slider";
  import {
    Select,
    SelectContent,
    SelectItem,
    SelectTrigger,
    SelectValue,
- } from "@/app/components/ui/Select";
+ } from "@/app/components/search/Select";
 import { Loader2, SlidersHorizontal, X,  } from "lucide-react";
 import SearchBar from "@/app/components/search/SearchBar";
 
@@ -279,11 +279,15 @@ function SearchPage() {
                 </div>
 
                 {totalPages > 1 && (
-                  <div className="mt-12 flex justify-center">
+                  <div className="mt-12">
                     <Pagination
                       currentPage={currentPage}
                       totalPages={totalPages}
+                      totalItems={totalResults}
+                      itemsPerPage={12}
                       onPageChange={(page) => performSearch(page)}
+                      showInfo={true}
+                      className="justify-center"
                     />
                   </div>
                 )}

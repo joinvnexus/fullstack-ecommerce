@@ -2,21 +2,28 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, notFound } from 'next/navigation';
-import Image from 'next/image';
 import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw } from 'lucide-react';
 import { productsApi } from '@/lib/api';
 import { Product } from '@/types';
 import WishlistButton from '@/app/components/wishlist/WishlistButton';
+import ProductGallery from '@/app/components/products/ProductGallery';
+import ProductVariants from '@/app/components/products/ProductVariants';
+import ProductReviews from '@/app/components/products/ProductReviews';
+import ProductRecommendations from '@/app/components/products/ProductRecommendations';
+import RelatedProducts from '@/app/components/products/RelatedProducts';
+import BreadcrumbNavigation from '@/app/components/layout/BreadcrumbNavigation';
+import ProductDetailsSkeleton from '@/app/components/products/ProductDetailsSkeleton';
+import ErrorState from '@/components/ui/ErrorState';
 
 const ProductDetailPage = () => {
   const params = useParams();
   const slug = params.slug as string;
   
   const [product, setProduct] = useState<Product | null>(null);
-  const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariant, setSelectedVariant] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -25,11 +32,14 @@ const ProductDetailPage = () => {
 
   const fetchProduct = async () => {
     try {
+      setError(null);
       setIsLoading(true);
       const response = await productsApi.getBySlug(slug);
       setProduct(response.data.product);
       setRelatedProducts(response.data.relatedProducts);
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load product';
+      setError(message);
       console.error('Error fetching product:', error);
     } finally {
       setIsLoading(false);
@@ -43,7 +53,6 @@ const ProductDetailPage = () => {
   };
 
   const handleAddToCart = () => {
-    // Implement cart functionality
     console.log('Add to cart:', {
       productId: product?._id,
       quantity,
@@ -53,30 +62,30 @@ const ProductDetailPage = () => {
 
   const handleBuyNow = () => {
     handleAddToCart();
-    // Navigate to checkout
   };
 
+  // Loading state - show ProductDetailsSkeleton
   if (isLoading) {
+    return <ProductDetailsSkeleton />;
+  }
+
+  // Error state - show ErrorState
+  if (error && !product) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse">
-            <div className="h-6 bg-gray-300 rounded w-1/4 mb-4"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="h-96 bg-gray-300 rounded"></div>
-              <div className="space-y-4">
-                <div className="h-8 bg-gray-300 rounded w-3/4"></div>
-                <div className="h-6 bg-gray-300 rounded w-1/2"></div>
-                <div className="h-4 bg-gray-300 rounded w-full"></div>
-                <div className="h-4 bg-gray-300 rounded w-2/3"></div>
-              </div>
-            </div>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <ErrorState
+            title="Product not found"
+            message={error}
+            onRetry={fetchProduct}
+            retryLabel="Try Again"
+          />
         </div>
       </div>
     );
   }
 
+  // Product not found (API returned success but no product)
   if (!product) {
     notFound();
   }
@@ -85,58 +94,20 @@ const ProductDetailPage = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <nav className="mb-8">
-          <ol className="flex items-center space-x-2 text-sm text-gray-600">
-            <li>
-              <a href="/" className="hover:text-blue-600">Home</a>
-            </li>
-            <li>/</li>
-            <li>
-              <a href="/products" className="hover:text-blue-600">Products</a>
-            </li>
-            <li>/</li>
-            <li className="text-gray-900">{product.title}</li>
-          </ol>
-        </nav>
+        <div className="mb-8">
+          <BreadcrumbNavigation
+            items={[
+              { label: 'Home', href: '/' },
+              { label: 'Products', href: '/products' },
+              { label: product.title, isActive: true }
+            ]}
+          />
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Product images */}
           <div>
-            {/* Main image */}
-            <div className="relative h-96 md:h-[500px] rounded-lg overflow-hidden bg-white shadow-lg mb-4">
-              <Image
-                src={product.images[selectedImage]?.url || '/placeholder.jpg'}
-                alt={product.images[selectedImage]?.alt || product.title}
-                fill
-                className="object-contain p-4"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
-            </div>
-
-            {/* Thumbnail images */}
-            {product.images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto py-2">
-                {product.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={`flex-shrink-0 relative w-20 h-20 rounded overflow-hidden border-2 ${
-                      selectedImage === index
-                        ? 'border-blue-600'
-                        : 'border-transparent'
-                    }`}
-                  >
-                    <Image
-                      src={image.url}
-                      alt={image.alt}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
+            <ProductGallery images={product.images} title={product.title} />
           </div>
 
           {/* Product info */}
@@ -177,35 +148,16 @@ const ProductDetailPage = () => {
             </div>
 
             {/* Variants */}
-            {product.variants.map((variant) => (
-              <div key={variant.name} className="mb-6">
-                <h4 className="font-medium mb-2">{variant.name}</h4>
-                <div className="flex flex-wrap gap-2">
-                  {variant.options.map((option) => (
-                    <button
-                      key={option.name}
-                      onClick={() => setSelectedVariant(prev => ({
-                        ...prev,
-                        [variant.name]: option.name
-                      }))}
-                      className={`px-4 py-2 border rounded-md ${
-                        selectedVariant[variant.name] === option.name
-                          ? 'border-blue-600 bg-blue-50 text-blue-700'
-                          : 'border-gray-300 hover:border-gray-400'
-                      }`}
-                    >
-                      {option.name}
-                      {option.priceAdjustment !== 0 && (
-                        <span className="ml-1 text-sm">
-                          {option.priceAdjustment > 0 ? '+' : ''}
-                          ${option.priceAdjustment}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
+            <ProductVariants
+              variants={product.variants}
+              selectedVariants={selectedVariant}
+              onVariantChange={(variantName, optionName) =>
+                setSelectedVariant(prev => ({
+                  ...prev,
+                  [variantName]: optionName
+                }))
+              }
+            />
 
             {/* Quantity and actions */}
             <div className="mb-8">
@@ -256,13 +208,13 @@ const ProductDetailPage = () => {
                   Buy Now
                 </button>
                 <WishlistButton 
-    productId={product._id}
-    productName={product.title}
-    size="lg"
-    variant="button"
-    showLabel
-    className="flex-1"
-  />
+                  productId={product._id}
+                  productName={product.title}
+                  size="lg"
+                  variant="button"
+                  showLabel
+                  className="flex-1"
+                />
               </div>
             </div>
 
@@ -300,35 +252,33 @@ const ProductDetailPage = () => {
           </div>
         </div>
 
+        {/* Product Reviews */}
+        <div className="mt-16">
+          <ProductReviews
+            productId={product._id}
+            reviews={[]}
+            averageRating={4.0}
+            totalReviews={0}
+            onReviewSubmit={(review) => console.log('New review:', review)}
+          />
+        </div>
+
+        {/* Product Recommendations */}
+        <div className="mt-16">
+          <ProductRecommendations
+            productId={product._id}
+            currentProduct={product}
+            onProductClick={(product) => console.log('Product clicked:', product)}
+          />
+        </div>
+
         {/* Related Products */}
-        {relatedProducts.length > 0 && (
-          <div className="mt-16">
-            <h2 className="text-2xl font-bold mb-8">Related Products</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {relatedProducts.map((relatedProduct) => (
-                <div key={relatedProduct._id} className="bg-white rounded-lg shadow-md p-4">
-                  <div className="relative h-40 mb-3">
-                    <Image
-                      src={relatedProduct.images[0]?.url || '/placeholder.jpg'}
-                      alt={relatedProduct.images[0]?.alt || relatedProduct.title}
-                      fill
-                      className="object-cover rounded"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                    />
-                  </div>
-                  <h3 className="font-medium hover:text-blue-600 mb-2">
-                    <a href={`/products/${relatedProduct.slug}`}>
-                      {relatedProduct.title}
-                    </a>
-                  </h3>
-                  <div className="font-bold">
-                    ${relatedProduct.price.amount.toFixed(2)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="mt-16">
+          <RelatedProducts
+            products={relatedProducts}
+            title="Related Products"
+          />
+        </div>
       </div>
     </div>
   );

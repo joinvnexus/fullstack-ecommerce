@@ -128,7 +128,8 @@ export const wishlistApi = {
   getWishlist: (wishlistId: string) => api.get(`/wishlist/${wishlistId}`),
   updateWishlist: (wishlistId: string, data: { name: string }) => api.put(`/wishlist/${wishlistId}`, data),
   deleteWishlist: (wishlistId: string) => api.delete(`/wishlist/${wishlistId}`),
-  addToWishlist: (wishlistId: string, data: { productId: string }) => api.post(`/wishlist/${wishlistId}/items`, data),
+  addToWishlist: (wishlistId: string, data: { productId: string; notes?: string }) =>
+    api.post(`/wishlist/${wishlistId}/items`, data),
   removeFromWishlist: (wishlistId: string, productId: string) => 
     api.delete(`/wishlist/${wishlistId}/items/${productId}`),
   moveItem: (data: { fromWishlistId: string; toWishlistId: string; productId: string }) => api.post('/wishlist/move-item', data),

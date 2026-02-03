@@ -28,7 +28,7 @@ interface WishlistStore {
   loadWishlists: () => Promise<void>;
   loadDefaultWishlist: () => Promise<void>;
   createWishlist: (name: string) => Promise<void>;
-  addToWishlist: (wishlistId: string, productId: string) => Promise<void>;
+  addToWishlist: (wishlistId: string, productId: string, notes?: string) => Promise<void>;
   removeFromWishlist: (wishlistId: string, productId: string) => Promise<void>;
   moveItem: (fromWishlistId: string, toWishlistId: string, productId: string) => Promise<void>;
   updateWishlist: (wishlistId: string, updates: { name: string }) => Promise<void>;
@@ -102,10 +102,10 @@ const useWishlistStore = create<WishlistStore>()(
         }
       },
 
-      addToWishlist: async (wishlistId: string, productId: string) => {
+      addToWishlist: async (wishlistId: string, productId: string, notes?: string) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await wishlistApi.addToWishlist(wishlistId, { productId });
+          const response = await wishlistApi.addToWishlist(wishlistId, { productId, notes });
           
           set(state => ({
             wishlists: state.wishlists.map(wishlist =>

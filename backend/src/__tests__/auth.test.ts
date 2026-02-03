@@ -14,7 +14,13 @@ describe('AuthUtils', () => {
       expect(typeof token).toBe('string');
 
       const verified = AuthUtils.verifyToken(token);
-      expect(verified).toEqual(payload);
+      expect(verified).not.toBeNull();
+      // JWT tokens include exp and iat fields, so we check the core payload matches
+      expect(verified).toMatchObject({
+        userId: payload.userId,
+        email: payload.email,
+        role: payload.role,
+      });
     });
 
     it('should return null for invalid token', () => {
@@ -39,7 +45,14 @@ describe('AuthUtils', () => {
       expect(typeof tokenResult.tokenId).toBe('string');
 
       const verified = AuthUtils.verifyRefreshToken(tokenResult.token);
-      expect(verified).toEqual({ ...payload, tokenId: tokenResult.tokenId });
+      expect(verified).not.toBeNull();
+      // JWT tokens include exp and iat fields, so we check the core payload matches
+      expect(verified).toMatchObject({
+        userId: payload.userId,
+        email: payload.email,
+        role: payload.role,
+        tokenId: tokenResult.tokenId,
+      });
     });
 
     it('should return null for invalid refresh token', () => {

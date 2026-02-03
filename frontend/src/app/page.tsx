@@ -1,15 +1,21 @@
-import HeroSection from './components/home/HeroSection';
+import ModernHeroSection from './components/home/ModernHeroSection';
+import StatsSection from './components/home/StatsSection';
 import FeaturedProducts from './components/home/FeaturedProducts';
-// import CategoriesSection from '@/components/home/CategoriesSection';
-// import PromoBanner from '@/components/home/PromoBanner';
+import CategoriesShowcase from './components/home/CategoriesShowcase';
+import FeaturesSection from './components/home/FeaturesSection';
+import TestimonialsSection from './components/home/TestimonialsSection';
+import NewsletterSection from './components/home/NewsletterSection';
 
 export default function Home() {
   return (
     <div className="min-h-screen">
-      <HeroSection />
+      <ModernHeroSection />
+      <StatsSection />
       <FeaturedProducts />
-      {/* <CategoriesSection /> */}
-      {/* <PromoBanner /> */}
+      <CategoriesShowcase />
+      <FeaturesSection />
+      <TestimonialsSection />
+      <NewsletterSection />
     </div>
   );
 }

@@ -2,6 +2,38 @@ import mongoose from 'mongoose';
 import Product from '../models/Product.js';
 import { AppError } from '../middleware/errorHandler.js';
 
+// Sanitize user input to prevent NoSQL injection
+function sanitizeForRegex(input: string): string {
+  if (!input || typeof input !== 'string') {
+    return '';
+  }
+  // Escape all special regex characters to prevent injection
+  return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Validate sort field to prevent injection
+const ALLOWED_SORT_FIELDS = [
+  'createdAt',
+  'updatedAt',
+  'title',
+  'price',
+  'stock',
+  'score',
+  '_score',
+  'relevance',
+];
+
+function isValidSortField(field: string): boolean {
+  return ALLOWED_SORT_FIELDS.includes(field);
+}
+
+// Validate sort order
+const ALLOWED_SORT_ORDERS = ['asc', 'desc'];
+
+function isValidSortOrder(order: string): boolean {
+  return ALLOWED_SORT_ORDERS.includes(order);
+}
+
 export interface SearchOptions {
   query: string;
   page?: number;
@@ -28,6 +60,14 @@ export interface SearchResult {
 }
 
 export class SearchService {
+  private readonly defaultSearchIndex: string;
+  private readonly autocompleteIndex: string;
+
+  constructor() {
+    this.defaultSearchIndex = process.env.MONGODB_SEARCH_INDEX || 'default';
+    this.autocompleteIndex = process.env.MONGODB_AUTOCOMPLETE_INDEX || 'autocomplete';
+  }
+
   // Search products using MongoDB Atlas Search
   async searchProducts(options: SearchOptions): Promise<SearchResult> {
     try {
@@ -48,14 +88,14 @@ export class SearchService {
       if (query && query.trim()) {
         pipeline.push({
           $search: {
-            index: 'default', // Your search index name
+            index: this.defaultSearchIndex,
             compound: {
               should: [
                 {
                   text: {
                     query: query,
                     path: 'title',
-                    score: { boost: { value: 3 } }, // Title matches are more important
+                    score: { boost: { value: 3 } },
                     fuzzy: {
                       maxEdits: 2,
                       prefixLength: 3,
@@ -99,7 +139,6 @@ export class SearchService {
           },
         });
       } else {
-        // If no query, just match all (but sort by relevance doesn't apply)
         pipeline.push({ $match: {} });
       }
 
@@ -107,7 +146,9 @@ export class SearchService {
       const matchStage: any = { $match: {} };
 
       if (filters.category) {
-        matchStage.$match.category = new mongoose.Types.ObjectId(filters.category);
+        if (mongoose.Types.ObjectId.isValid(filters.category)) {
+          matchStage.$match.category = new mongoose.Types.ObjectId(filters.category);
+        }
       }
 
       if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
@@ -127,11 +168,9 @@ export class SearchService {
       if (filters.status) {
         matchStage.$match.status = filters.status;
       } else {
-        // Default filter for active products
         matchStage.$match.status = 'active';
       }
 
-      // Only add match stage if there are filters
       if (Object.keys(matchStage.$match).length > 0) {
         pipeline.push(matchStage);
       }
@@ -143,15 +182,14 @@ export class SearchService {
 
       // Add sorting
       if (query && query.trim()) {
-        // For search results, sort by score first
         pipeline.push({ $sort: { score: { $meta: 'searchScore' } } });
       } else if (sort.field === 'relevance' || sort.field === '_score') {
-        // If no query but relevance sort requested, sort by createdAt
         pipeline.push({ $sort: { createdAt: -1 } });
       } else {
-        // Custom sorting
+        const sortField = isValidSortField(sort.field) ? sort.field : 'createdAt';
+        const sortOrder = isValidSortOrder(sort.order) ? sort.order : 'desc';
         const sortStage: any = { $sort: {} };
-        sortStage.$sort[sort.field] = sort.order === 'asc' ? 1 : -1;
+        sortStage.$sort[sortField] = sortOrder === 'asc' ? 1 : -1;
         pipeline.push(sortStage);
       }
 
@@ -188,12 +226,11 @@ export class SearchService {
         }
       );
 
-      // Execute search
       const products = await Product.aggregate(pipeline);
 
-      // Calculate facets/categories for search results
+      // Calculate facets
       const facetPipeline = [
-        ...pipeline.slice(0, -4), // Remove pagination and projection stages
+        ...pipeline.slice(0, -4),
         {
           $group: {
             _id: '$category',
@@ -239,9 +276,7 @@ export class SearchService {
       };
     } catch (error) {
       console.error('Search error:', error);
-      
-      // Fallback to simple text search if Atlas Search fails
-      return this.fallbackSearch(options);
+      throw new AppError('Search failed', 500);
     }
   }
 
@@ -257,21 +292,19 @@ export class SearchService {
 
     const skip = (page - 1) * limit;
 
-    // Build query
     const searchQuery: any = { status: 'active' };
 
-    // Text search using regex for fallback
-    if (query && query.trim()) {
+    const sanitizedQuery = sanitizeForRegex(query);
+    if (sanitizedQuery) {
       searchQuery.$or = [
-        { title: { $regex: query, $options: 'i' } },
-        { description: { $regex: query, $options: 'i' } },
-        { tags: { $regex: query, $options: 'i' } },
-        { sku: { $regex: query, $options: 'i' } },
+        { title: { $regex: sanitizedQuery, $options: 'i' } },
+        { description: { $regex: sanitizedQuery, $options: 'i' } },
+        { tags: { $regex: sanitizedQuery, $options: 'i' } },
+        { sku: { $regex: sanitizedQuery, $options: 'i' } },
       ];
     }
 
-    // Apply filters
-    if (filters.category) {
+    if (filters.category && mongoose.Types.ObjectId.isValid(filters.category)) {
       searchQuery.category = new mongoose.Types.ObjectId(filters.category);
     }
 
@@ -289,16 +322,15 @@ export class SearchService {
       searchQuery.stock = filters.inStock ? { $gt: 0 } : { $lte: 0 };
     }
 
-    // Build sort
     let sortOptions: any = {};
-    if (query && query.trim()) {
-      // For text search, sort by relevance (title match first, then description)
-      sortOptions = { title: 1 }; // Simple sort for now
+    if (sanitizedQuery) {
+      sortOptions = { title: 1 };
     } else {
-      sortOptions[sort.field] = sort.order === 'asc' ? 1 : -1;
+      const sortField = isValidSortField(sort.field) ? sort.field : 'createdAt';
+      const sortOrder = isValidSortOrder(sort.order) ? sort.order : 'desc';
+      sortOptions[sortField] = sortOrder === 'asc' ? 1 : -1;
     }
 
-    // Execute query
     const [products, total] = await Promise.all([
       Product.find(searchQuery)
         .populate('category', 'name slug')
@@ -323,7 +355,7 @@ export class SearchService {
       const pipeline = [
         {
           $search: {
-            index: 'autocomplete',
+            index: this.autocompleteIndex,
             autocomplete: {
               query: query,
               path: 'title',
@@ -351,9 +383,9 @@ export class SearchService {
     } catch (error) {
       console.error('Autocomplete error:', error);
       
-      // Fallback
+      const sanitizedQuery = sanitizeForRegex(query);
       const products = await Product.find({
-        title: { $regex: query, $options: 'i' },
+        title: { $regex: sanitizedQuery, $options: 'i' },
         status: 'active',
       })
         .select('title slug images price')
@@ -363,7 +395,7 @@ export class SearchService {
     }
   }
 
-  // Get search suggestions (categories, brands, etc.)
+  // Get search suggestions
   async getSearchSuggestions(query: string): Promise<any> {
     const [products, categories, tags] = await Promise.all([
       this.autocomplete(query, 5),
@@ -379,11 +411,12 @@ export class SearchService {
   }
 
   private async suggestCategories(query: string): Promise<any[]> {
-    const Category = mongoose.model('Category');
-    
     try {
+      const Category = mongoose.model('Category');
+      const sanitizedQuery = sanitizeForRegex(query);
+      
       return await Category.find({
-        name: { $regex: query, $options: 'i' },
+        name: { $regex: sanitizedQuery, $options: 'i' },
       })
         .select('name slug')
         .limit(3);
@@ -393,9 +426,10 @@ export class SearchService {
   }
 
   private async suggestTags(query: string): Promise<string[]> {
+    const sanitizedQuery = sanitizeForRegex(query);
     try {
       const products = await Product.find({
-        tags: { $regex: query, $options: 'i' },
+        tags: { $regex: sanitizedQuery, $options: 'i' },
         status: 'active',
       })
         .select('tags')
@@ -406,7 +440,6 @@ export class SearchService {
         tag.toLowerCase().includes(query.toLowerCase())
       );
 
-      // Remove duplicates and limit
       return [...new Set(matchingTags)].slice(0, 5);
     } catch (error) {
       return [];
@@ -415,8 +448,6 @@ export class SearchService {
 
   // Get popular searches
   async getPopularSearches(limit: number = 10): Promise<string[]> {
-    // In a real app, you'd track search queries
-    // For now, return some default popular searches
     return [
       'smartphone',
       'laptop',
@@ -431,10 +462,8 @@ export class SearchService {
     ].slice(0, limit);
   }
 
-  // Get trending products (based on views/purchases)
+  // Get trending products
   async getTrendingProducts(limit: number = 8): Promise<any[]> {
-    // In a real app, you'd track product views/purchases
-    // For now, return recently added products
     return Product.find({ status: 'active' })
       .sort({ createdAt: -1 })
       .limit(limit)

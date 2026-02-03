@@ -1,66 +1,42 @@
-# ===============================
+# ===========================================
+# Frontend specific ignores
+# ===========================================
+
 # Dependencies
-# ===============================
 node_modules/
-backend/node_modules/
 
-.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# ===============================
-# Testing
-# ===============================
-coverage/
-
-# ===============================
-# Next.js / Frontend
-# ===============================
+# Next.js build output
 .next/
 out/
 build/
 
-# ===============================
-# Backend build
-# ===============================
-backend/dist/
-
-# ===============================
 # Environment variables
-# ===============================
 .env
 .env.*
-backend/.env
-backend/.env.*
 
-# ===============================
-# Logs / Debug
-# ===============================
+# Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# ===============================
-# Vercel
-# ===============================
-.vercel
+# Coverage
+coverage/
 
-# ===============================
-# TypeScript
-# ===============================
+# TypeScript build info
 *.tsbuildinfo
 next-env.d.ts
 
-# ===============================
-# OS / Editor
-# ===============================
+# OS/Editor
 .DS_Store
 Thumbs.db
-*.pem
 .vscode/
 .idea/
+*.swp
+*.swo
+*.tmp
+
+# Temporary files
+.cache/
+.tmp/

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { authApi } from '@/lib/api';
+import { authApi, fetchCsrfToken, clearCsrfToken } from '@/lib/api';
 import { User, LoginCredentials, RegisterData, UpdateProfileData, ChangePasswordData, AddressData } from '@/types';
 import React from 'react';
 
@@ -38,9 +38,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    // Check authentication status by fetching profile
-    fetchProfile().finally(() => {
-      setIsLoading(false);
+    // Fetch CSRF token for subsequent POST/PUT/DELETE requests
+    fetchCsrfToken().finally(() => {
+      // Check authentication status by fetching profile
+      fetchProfile().finally(() => {
+        setIsLoading(false);
+      });
     });
   }, []);
 
@@ -96,7 +99,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     try {
-      await authApi.logout();
+       await authApi.logout();
+       clearCsrfToken();
     } catch (error) {
       // Ignore logout errors
     } finally {

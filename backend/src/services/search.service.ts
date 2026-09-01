@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import Product from '../models/Product.js';
 import { AppError } from '../middleware/errorHandler.js';
+import logger from '../utils/logger.js';
 
 // Sanitize user input to prevent NoSQL injection
 function sanitizeForRegex(input: string): string {
@@ -264,7 +265,7 @@ export class SearchService {
           })),
         };
       } catch (error) {
-        console.error('Error calculating facets:', error);
+        logger.error('Error calculating facets:', error);
       }
 
       return {
@@ -275,7 +276,7 @@ export class SearchService {
         facets,
       };
     } catch (error) {
-      console.error('Search error:', error);
+      logger.error('Search error:', error);
       throw new AppError('Search failed', 500);
     }
   }
@@ -381,7 +382,7 @@ export class SearchService {
 
       return await Product.aggregate(pipeline);
     } catch (error) {
-      console.error('Autocomplete error:', error);
+      logger.error('Autocomplete error:', error);
       
       const sanitizedQuery = sanitizeForRegex(query);
       const products = await Product.find({

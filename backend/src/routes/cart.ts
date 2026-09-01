@@ -1,7 +1,7 @@
 import express from "express";
 import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
-import { authenticate } from "../utils/auth.js";
+import { authenticate } from "../middleware/authMiddleware.js";
 import { validate } from "../utils/validation.js";
 import { addToCartSchema } from "../utils/validation.js";
 import { AppError } from "../middleware/errorHandler.js";

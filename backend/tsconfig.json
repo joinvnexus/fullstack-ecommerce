@@ -1,18 +1,18 @@
 {
   "compilerOptions": {
-    "target": "ES2020",          // JavaScript ES2020 version compile korbe
-    "module": "node16",        // Node.js ESM modules
-    "lib": ["ES2020"],          // ES2020 features allow korbe
-    "outDir": "./dist",         // Compiled files jabe "dist" folder e
-    "rootDir": "./src",            // Source files current directory theke
-    "strict": true,             // Strict TypeScript checking enable
-    "esModuleInterop": true,    // ES6 modules er compatibility
-    "skipLibCheck": true,       // Library files check korbe na (fast compile)
-    "forceConsistentCasingInFileNames": true, // File name case sensitive
-    "resolveJsonModule": true,  // JSON files import kora jabe
-    "moduleResolution": "node16", // Node16 style module resolution for ESM
-    "types": ["node", "jest"],   // Node.js and Jest types include
-    "typeRoots": ["./types", "./node_modules/@types"], // Types er location
+    "target": "ES2020",
+    "module": "node16",
+    "lib": ["ES2020"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node16",
+    "types": ["node", "jest"],
+    "typeRoots": ["./types", "./node_modules/@types"],
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
@@ -23,6 +23,6 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force"
   },
-  "include": ["**/*.ts", "**/*.d.ts"], // .ts sob files include
-  "exclude": ["node_modules", "dist"]  // Ei folder gula exclude
+  "include": ["**/*.ts", "**/*.d.ts"],
+  "exclude": ["node_modules", "dist"]
 }

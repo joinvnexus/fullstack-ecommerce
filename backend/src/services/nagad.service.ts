@@ -2,6 +2,7 @@ import axios from 'axios';
 import crypto from 'crypto';
 import { AppError } from '../middleware/errorHandler.js';
 import Order from '../models/Order.js';
+import logger from '../utils/logger.js';
 
 interface NagadConfig {
   merchantId: string;
@@ -126,7 +127,7 @@ export class NagadService {
         throw new AppError(response.data.reason || 'Payment initialization failed', 400);
       }
     } catch (error: any) {
-      console.error('Error initializing Nagad payment:', error);
+      logger.error('Nagad payment initialization error:', error);
       throw new AppError('Failed to initialize Nagad payment', 500);
     }
   }
@@ -182,7 +183,7 @@ export class NagadService {
         };
       }
     } catch (error: any) {
-      console.error('Error verifying Nagad payment:', error);
+      logger.error('Nagad payment verification error:', error);
       throw new AppError('Failed to verify Nagad payment', 500);
     }
   }

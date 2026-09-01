@@ -1,3 +1,5 @@
+import logger from '../utils/logger.js';
+
 export const paymentDemoService = {
   // Simulate payment processing
   async processPayment(orderId: string, amount: number, method: string) {
@@ -22,10 +24,9 @@ export const paymentDemoService = {
 
   // Simulate bKash payment
   async processBkashPayment(orderId: string, amount: number, phone: string) {
-    console.log(`Simulating bKash payment for order ${orderId}`);
-    console.log(`Amount: ${amount}, Phone: ${phone}`);
+    logger.info(`Processing demo payment for order ${orderId}`);
     
-    // Simulate bKash API call
+    // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 3000));
     
     return {
@@ -39,8 +40,7 @@ export const paymentDemoService = {
 
   // Simulate Nagad payment
   async processNagadPayment(orderId: string, amount: number, phone: string) {
-    console.log(`Simulating Nagad payment for order ${orderId}`);
-    console.log(`Amount: ${amount}, Phone: ${phone}`);
+    logger.info(`Processing demo Nagad payment for order ${orderId}`);
     
     // Simulate Nagad API call
     await new Promise(resolve => setTimeout(resolve, 3000));

@@ -2,6 +2,11 @@
 # Backend specific ignores
 # ===========================================
 
+# Environment variables (NEVER COMMIT)
+.env
+.env.*
+!.env.example
+
 # Dependencies
 node_modules/
 

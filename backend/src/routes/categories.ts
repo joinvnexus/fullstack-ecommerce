@@ -1,7 +1,7 @@
 import express from 'express';
 import Category from '../models/Category.js';
 import Product from '../models/Product.js';
-import { authenticate, authorizeAdmin } from '../utils/auth.js';
+import { authenticate, authorizeAdmin } from '../middleware/authMiddleware.js';
 import { AppError } from '../middleware/errorHandler.js';
 import mongoose from 'mongoose';
 

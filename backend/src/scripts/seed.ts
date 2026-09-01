@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
+import logger from '../utils/logger.js';
 
 import Category from '../models/Category.js';
 import Product from '../models/Product.js';
@@ -13,7 +14,7 @@ import { seedConfig } from './seed.config.js';
 
 const connectDB = async () => {
   await mongoose.connect(process.env.MONGODB_URI!);
-  console.log('✅ MongoDB connected');
+  logger.info('MongoDB connected');
 };
 
 // ------------------ seeders ------------------
@@ -33,7 +34,7 @@ const seedCategories = async (mode: 'reset' | 'update') => {
   const categories = await Category.find();
   const map = new Map(categories.map(c => [c.slug, c._id]));
 
-  console.log(`✅ Categories ${mode}ed`);
+  logger.info(`Categories ${mode}ed`);
   return map;
 };
 
@@ -63,7 +64,7 @@ const seedProducts = async (
     );
   }
 
-  console.log(`✅ Products ${mode}ed`);
+  logger.info(`Products ${mode}ed`);
 };
 
 // ------------------ runner ------------------
@@ -74,8 +75,8 @@ const runSeed = async () => {
 
     const { mode, target } = seedConfig;
 
-    console.log(`🌱 Seed mode: ${mode}`);
-    console.log(`🎯 Seed target: ${target}`);
+    logger.info(`Seed mode: ${mode}`);
+    logger.info(`Seed target: ${target}`);
 
     let categoryMap: Map<string, any> | undefined;
 
@@ -90,10 +91,10 @@ const runSeed = async () => {
       await seedProducts(categoryMap, mode);
     }
 
-    console.log('🎉 Seeding completed');
+    logger.info('Seeding completed');
     process.exit(0);
   } catch (err) {
-    console.error('❌ Seeding failed', err);
+    logger.error('Seeding failed', err);
     process.exit(1);
   }
 };

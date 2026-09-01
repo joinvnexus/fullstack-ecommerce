@@ -1,5 +1,6 @@
 import { Redis } from 'ioredis';
 import type { RedisOptions } from 'ioredis';
+import logger from '../utils/logger.js';
 
 export interface CacheService {
   getCachedProductsList(key: string): Promise<any>;
@@ -16,7 +17,7 @@ class CacheServiceImpl implements CacheService {
     const redisUrl = process.env.REDIS_URL;
 
     if (!redisUrl || redisUrl.includes('localhost')) {
-      console.warn('⚠️  REDIS_URL not configured properly - caching disabled');
+      logger.warn('REDIS_URL not configured properly - caching disabled');
       return;
     }
 
@@ -31,10 +32,10 @@ class CacheServiceImpl implements CacheService {
       this.redis = new Redis(redisUrl, options);
 
       this.redis.connect().then(() => {
-        console.info('✅ Redis connected successfully');
+        logger.info('Redis connected successfully');
       }).catch((err) => {
         if (!this.redisErrorLogged) {
-          console.warn('⚠️  Redis connection failed - caching disabled:', err.message);
+        logger.warn(`Redis connection failed - caching disabled: ${err.message}`);
           this.redisErrorLogged = true;
         }
         this.redis = null;
@@ -42,13 +43,13 @@ class CacheServiceImpl implements CacheService {
 
       this.redis.on('error', (err) => {
         if (!this.redisErrorLogged) {
-          console.warn('⚠️  Redis error - caching disabled:', err.message);
+        logger.warn(`Redis error - caching disabled: ${err.message}`);
           this.redisErrorLogged = true;
         }
         this.redis = null;
       });
     } catch (error) {
-      console.warn('⚠️  Failed to initialize Redis - caching disabled');
+      logger.warn('Failed to initialize Redis - caching disabled');
       this.redis = null;
     }
   }

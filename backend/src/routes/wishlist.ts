@@ -1,7 +1,7 @@
 import express from 'express';
 import Wishlist, { type IWishlist } from '../models/Wishlist.js';
 import Product from '../models/Product.js';
-import { authenticate } from '../utils/auth.js';
+import { authenticate } from '../middleware/authMiddleware.js';
 import { AppError } from '../middleware/errorHandler.js';
 import mongoose from 'mongoose';
 

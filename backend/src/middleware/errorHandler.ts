@@ -1,5 +1,6 @@
 
 import type { Request, Response, NextFunction } from 'express';
+import logger from '../utils/logger.js';
 
 export class AppError extends Error {
   statusCode: number;
@@ -31,7 +32,7 @@ export const errorHandler = (
   next: NextFunction
 ): void => {
   // Log error
-  console.error('Error:', {
+   logger.error('Error:', {
     message: err.message,
     name: err.name,
     stack: err.stack,
@@ -51,7 +52,7 @@ export const errorHandler = (
 
   // Handle Zod validation errors
   if (err.name === 'ValidationError' && (err as any).errors) {
-    console.error('Zod Validation Error:', (err as any).errors);
+     logger.error('Zod Validation Error:', (err as any).errors);
     res.status(400).json({
       success: false,
       message: 'Validation failed',
@@ -62,7 +63,7 @@ export const errorHandler = (
 
   // Handle Mongoose validation errors
   if ((err as any).name === 'ValidationError') {
-    console.error('Mongoose Validation Error:', (err as any).errors);
+     logger.error('Mongoose Validation Error:', (err as any).errors);
     res.status(400).json({
       success: false,
       message: 'Validation Error',

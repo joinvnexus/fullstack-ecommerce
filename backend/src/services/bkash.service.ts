@@ -2,6 +2,7 @@ import axios from 'axios';
 import crypto from 'crypto';
 import { AppError } from '../middleware/errorHandler.js';
 import Order from '../models/Order.js';
+import logger from '../utils/logger.js';
 
 interface BkashConfig {
   appKey: string;
@@ -56,7 +57,7 @@ export class BkashService {
 
       return this.token || ''; // Return the token or an empty string if null
     } catch (error: any) {
-      console.error('Error getting bKash token:', error);
+      logger.error('bKash token error:', error);
       throw new AppError('Failed to get bKash token', 500);
     }
   }
@@ -104,7 +105,7 @@ export class BkashService {
         success: response.data.statusCode === '0000',
       };
     } catch (error: any) {
-      console.error('Error creating bKash payment:', error);
+      logger.error('bKash payment creation error:', error);
       throw new AppError('Failed to create bKash payment', 500);
     }
   }
@@ -140,7 +141,7 @@ export class BkashService {
 
       return response.data;
     } catch (error: any) {
-      console.error('Error executing bKash payment:', error);
+      logger.error('bKash payment execution error:', error);
       throw new AppError('Failed to execute bKash payment', 500);
     }
   }
@@ -162,7 +163,7 @@ export class BkashService {
 
       return response.data;
     } catch (error: any) {
-      console.error('Error querying bKash payment:', error);
+      logger.error('bKash payment query error:', error);
       throw new AppError('Failed to query bKash payment', 500);
     }
   }

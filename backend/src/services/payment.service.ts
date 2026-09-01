@@ -344,7 +344,7 @@ export class PaymentService {
   }
 
   // Verify Stripe signature
-  verifyStripeSignature(payload: string, signature: string) {
+  verifyStripeSignature(payload: string | Buffer, signature: string) {
     this.ensureInitialized();
     
     try {

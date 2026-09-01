@@ -3,11 +3,12 @@ import Order from '../models/Order.js';
 import Cart from '../models/Cart.js';
 import Product from '../models/Product.js';
 import User from '../models/User.js';
-import { authenticate, authorizeAdmin } from '../utils/auth.js';
+import { authenticate, authorizeAdmin } from '../middleware/authMiddleware.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { paymentService } from '../services/payment.service.js';
 import mongoose from 'mongoose';
 import { validate, createOrderSchema } from '../utils/validation.js';
+import logger from '../utils/logger.js';
 
 const router = express.Router();
 
@@ -23,8 +24,6 @@ router.post('/', authenticate, validate(createOrderSchema), async (req, res, nex
       notes,
       guestId
     } = req.body;
-
-    console.log('Order creation request:', { userId, shippingAddress, shippingMethod });
 
     // Get user cart (or merge guest cart first)
     let cart;
@@ -111,7 +110,7 @@ router.post('/', authenticate, validate(createOrderSchema), async (req, res, nex
       notes,
     };
 
-    console.log('Order data prepared:', orderData);
+    logger.info('Order data prepared');
 
     // Use MongoDB transaction
     const session = await mongoose.startSession();
@@ -191,7 +190,7 @@ router.post('/', authenticate, validate(createOrderSchema), async (req, res, nex
 
       // Commit transaction
       await session.commitTransaction();
-      console.log('Order created successfully:', order.orderNumber);
+      logger.info(`Order created successfully: ${order.orderNumber}`);
     } catch (error) {
       await session.abortTransaction();
       throw error;

@@ -1,6 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
-import { authenticate, authorizeAdmin } from "../utils/auth.js";
+import { authenticate, authorizeAdmin } from "../middleware/authMiddleware.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { paymentService } from "../services/payment.service.js";
 import Order from "../models/Order.js";
@@ -50,7 +50,7 @@ router.post("/stripe/webhook", async (req, res, next) => {
 
     // Verify webhook signature
     const event = paymentService.verifyStripeSignature(
-      JSON.stringify(req.body),
+      req.body,
       signature
     );
 

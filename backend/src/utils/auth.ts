@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import type { SignOptions } from "jsonwebtoken";
-import type { Request, Response, NextFunction } from "express";
+import type { Response } from "express";
 
 export interface JwtPayload {
   userId: string;
@@ -88,55 +88,5 @@ class AuthUtils {
     res.clearCookie('refreshToken');
   }
 }
-
-// Authentication middleware
-export const authenticate = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const token = req.cookies.accessToken;
-
-    if (!token) {
-      res.status(401).json({ message: "Authentication required" });
-      return;
-    }
-
-    const decoded = AuthUtils.verifyToken(token);
-
-    if (!decoded) {
-      res.status(401).json({ message: "Invalid or expired token" });
-      return;
-    }
-
-    // Attach user info to request
-    (req as any).user = decoded;
-    next();
-  } catch {
-    res.status(401).json({ message: "Authentication failed" });
-  }
-};
-
-// Admin authorization middleware
-export const authorizeAdmin = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  const user = (req as any).user;
-
-  if (!user) {
-    res.status(401).json({ message: "Authentication required" });
-    return;
-  }
-
-  if (user.role !== "admin") {
-    res.status(403).json({ message: "Admin access required" });
-    return;
-  }
-
-  next();
-};
 
 export default AuthUtils;

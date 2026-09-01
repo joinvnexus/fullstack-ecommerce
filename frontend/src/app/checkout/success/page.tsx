@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle, Package, Home, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
+import { ordersApi } from '@/lib/api';
 
 const CheckoutSuccessContent = () => {
   const searchParams = useSearchParams();
@@ -21,13 +22,8 @@ const CheckoutSuccessContent = () => {
 
   const fetchOrder = async () => {
     try {
-      const response = await fetch(`/api/orders/${orderId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      const data = await response.json();
-      setOrder(data.data);
+      const response = await ordersApi.getOrder(orderId);
+      setOrder(response.data);
     } catch (error) {
       console.error('Failed to fetch order:', error);
     } finally {

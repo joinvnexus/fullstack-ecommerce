@@ -3,18 +3,64 @@ import { PaginatedResponse, Product, Category, User, Cart, Order, LoginCredentia
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
+// CSRF token — stored in memory only (NOT localStorage — XSS vulnerable)
+let csrfToken: string | null = null;
+
+export const fetchCsrfToken = async (): Promise<string> => {
+  if (csrfToken) return csrfToken;
+  try {
+    const response = await axios.get(`${API_URL}/csrf-token`, {
+      withCredentials: true,
+    });
+    csrfToken = response.data.csrfToken;
+    return csrfToken;
+  } catch (error) {
+    console.error('Failed to fetch CSRF token:', error);
+    return '';
+  }
+};
+
+export const clearCsrfToken = (): void => {
+  csrfToken = null;
+};
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Include cookies
+  withCredentials: true,
+});
+
+// Request interceptor — attach CSRF token to unsafe methods
+const unsafeMethods = ['post', 'put', 'delete', 'patch'];
+api.interceptors.request.use((config) => {
+  if (csrfToken && unsafeMethods.includes(config.method || '')) {
+    config.headers['X-CSRF-Token'] = csrfToken;
+  }
+  return config;
 });
 
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response.data,
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
+    // Handle CSRF token expiry — refetch and retry once
+    if (
+      error.response?.status === 403 &&
+      error.config &&
+      !error.config.__isRetry
+    ) {
+      try {
+        await fetchCsrfToken();
+        error.config.__isRetry = true;
+        error.config.headers['X-CSRF-Token'] = csrfToken;
+        return api(error.config);
+      } catch {
+        // Fall through to normal error handling
+      }
+    }
+
     // Ignore aborted requests
     if (error.name === 'AbortError' || error.message === 'canceled') {
       return Promise.reject(error);
@@ -23,10 +69,8 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Don't redirect for auth/me since it's expected when not logged in
       if (error.config?.url?.includes('/auth/me')) {
-        console.log('401 for /auth/me, not redirecting');
         return Promise.reject(error);
       }
-      console.log('401 Unauthorized, redirecting to login');
       // Redirect to login
       window.location.href = '/login';
     }

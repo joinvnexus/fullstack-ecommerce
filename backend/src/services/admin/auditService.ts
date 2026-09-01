@@ -1,4 +1,5 @@
 import AuditLog from '../../models/AuditLog.js';
+import logger from '../../utils/logger.js';
 
 export interface AuditData {
   adminId: string;
@@ -28,7 +29,7 @@ export const logAdminAction = async (data: AuditData): Promise<void> => {
     await auditLog.save();
   } catch (error) {
     // Log error but don't throw - audit logging shouldn't break main functionality
-    console.error('Audit logging failed:', error);
+    logger.error('Audit logging failed:', error);
   }
 };
 
@@ -120,5 +121,5 @@ export const cleanOldAuditLogs = async (daysOld: number = 90): Promise<void> => 
   cutoffDate.setDate(cutoffDate.getDate() - daysOld);
 
   await AuditLog.deleteMany({ createdAt: { $lt: cutoffDate } });
-  console.log(`Cleaned audit logs older than ${daysOld} days`);
+  logger.info(`Cleaned audit logs older than ${daysOld} days`);
 };

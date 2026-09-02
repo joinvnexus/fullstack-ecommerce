@@ -13,7 +13,7 @@ export const fetchCsrfToken = async (): Promise<string> => {
       withCredentials: true,
     });
     csrfToken = response.data.csrfToken;
-    return csrfToken;
+    return csrfToken ?? '';
   } catch (error) {
     console.error('Failed to fetch CSRF token:', error);
     return '';
@@ -49,11 +49,11 @@ api.interceptors.response.use(
     if (
       error.response?.status === 403 &&
       error.config &&
-      !error.config.__isRetry
+      !(error.config as any).__isRetry
     ) {
       try {
         await fetchCsrfToken();
-        error.config.__isRetry = true;
+        (error.config as any).__isRetry = true;
         error.config.headers['X-CSRF-Token'] = csrfToken;
         return api(error.config);
       } catch {

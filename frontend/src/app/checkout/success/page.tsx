@@ -21,6 +21,10 @@ const CheckoutSuccessContent = () => {
   }, [orderId]);
 
   const fetchOrder = async () => {
+    if (!orderId) {
+      setIsLoading(false);
+      return;
+    }
     try {
       const response = await ordersApi.getOrder(orderId);
       setOrder(response.data);

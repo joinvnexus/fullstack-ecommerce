@@ -122,37 +122,6 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// Get single product by slug (public)
-router.get('/:slug', async (req, res, next) => {
-  try {
-    const product = await Product.findOne({ slug: req.params.slug })
-      .populate('category', 'name slug');
-
-    if (!product) {
-      throw new AppError('Product not found', 404);
-    }
-
-    // Get related products (same category)
-    const relatedProducts = await Product.find({
-      category: product.category,
-      _id: { $ne: product._id },
-      status: 'active',
-    })
-      .limit(4)
-      .select('title slug price images');
-
-    res.json({
-      success: true,
-      data: {
-        product,
-        relatedProducts,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
 // Create product (admin only)
 router.post(
   '/',
@@ -452,6 +421,37 @@ router.get('/category/:categorySlug', async (req, res, next) => {
         limit: Number(limit),
         total,
         totalPages,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get single product by slug (public) — must come after more specific routes
+router.get('/:slug', async (req, res, next) => {
+  try {
+    const product = await Product.findOne({ slug: req.params.slug })
+      .populate('category', 'name slug');
+
+    if (!product) {
+      throw new AppError('Product not found', 404);
+    }
+
+    // Get related products (same category)
+    const relatedProducts = await Product.find({
+      category: product.category,
+      _id: { $ne: product._id },
+      status: 'active',
+    })
+      .limit(4)
+      .select('title slug price images');
+
+    res.json({
+      success: true,
+      data: {
+        product,
+        relatedProducts,
       },
     });
   } catch (error) {

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Package, ShoppingBag } from 'lucide-react';
 import { ordersApi } from '@/lib/api';
-import { Order } from '@/types';
+import { Order, PaginatedResponse } from '@/types';
 import LoadingSpinner from '../ui/LoadingSpinner';
 
 const OrdersSection: React.FC = () => {
@@ -18,7 +18,7 @@ const OrdersSection: React.FC = () => {
   const fetchOrders = async () => {
     try {
       const response = await ordersApi.getMyOrders();
-      setOrders(response.data.data);
+      setOrders((response as unknown as PaginatedResponse<Order>).data);
     } catch (error) {
       console.error('Failed to fetch orders:', error);
     } finally {

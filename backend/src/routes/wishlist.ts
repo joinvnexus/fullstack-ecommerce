@@ -348,34 +348,7 @@ router.delete('/:wishlistId', async (req, res, next) => {
   }
 });
 
-// Get wishlist by ID
-router.get('/:wishlistId', async (req, res, next) => {
-  try {
-    const { wishlistId } = req.params;
-    const userId = (req as any).user.userId;
-
-    const wishlist = await Wishlist.findOne({
-      _id: wishlistId,
-      userId,
-    }).populate({
-      path: 'items.productId',
-      select: 'title slug description price images stock status variants',
-    });
-
-    if (!wishlist) {
-      throw new AppError('Wishlist not found', 404);
-    }
-
-    res.json({
-      success: true,
-      data: wishlist,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Check if product is in any wishlist
+// Check if product is in any wishlist — must come before /:wishlistId
 router.get('/check/:productId', async (req, res, next) => {
   try {
     const { productId } = req.params;
@@ -397,6 +370,33 @@ router.get('/check/:productId', async (req, res, next) => {
     res.json({
       success: true,
       data: isInWishlist,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get wishlist by ID
+router.get('/:wishlistId', async (req, res, next) => {
+  try {
+    const { wishlistId } = req.params;
+    const userId = (req as any).user.userId;
+
+    const wishlist = await Wishlist.findOne({
+      _id: wishlistId,
+      userId,
+    }).populate({
+      path: 'items.productId',
+      select: 'title slug description price images stock status variants',
+    });
+
+    if (!wishlist) {
+      throw new AppError('Wishlist not found', 404);
+    }
+
+    res.json({
+      success: true,
+      data: wishlist,
     });
   } catch (error) {
     next(error);

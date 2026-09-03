@@ -3,13 +3,14 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IAuditLog extends Document {
   adminId: mongoose.Types.ObjectId;
   action: string; // 'create', 'update', 'delete'
-  resource: string; // 'product', 'order', 'user', etc.
+  resource: string; // 'product', 'order', 'user'
   resourceId: string;
   oldValues?: any;
   newValues?: any;
   ip: string;
   userAgent: string;
-  timestamp: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const AuditLogSchema: Schema = new Schema(
@@ -27,7 +28,7 @@ const AuditLogSchema: Schema = new Schema(
 );
 
 // Index for efficient querying
-AuditLogSchema.index({ adminId: 1, timestamp: -1 });
-AuditLogSchema.index({ resource: 1, timestamp: -1 });
+AuditLogSchema.index({ adminId: 1, createdAt: -1 });
+AuditLogSchema.index({ resource: 1, createdAt: -1 });
 
 export default mongoose.model<IAuditLog>('AuditLog', AuditLogSchema);

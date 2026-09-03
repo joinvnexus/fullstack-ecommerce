@@ -47,20 +47,19 @@ export const loginLimiter = createLimiter({
   legacyHeaders: false,
   message: 'Too many login attempts, please try again later.',
   keyGenerator: (req: any) => ipKeyGenerator(req as any),
-  handler: (req: any, res: any) => {
+  handler: async (req: any, res: any) => {
     const ip = req.ip || 'unknown';
     logger.warn(`Login rate limit exceeded: ${req.method} ${req.path} IP: ${ip}`);
-    void blockIP(ip);
+    await blockIP(ip);
     res.status(429).json({
       success: false,
       message: 'Too many login attempts. Account temporarily locked for 30 minutes.',
       retryAfter: 1800,
     });
   },
-  skip: (req: any) => {
+  skip: async (req: any) => {
     const ip = req.ip || 'unknown';
-    void checkBlockedIP(ip);
-    return false;
+    return await checkBlockedIP(ip);
   },
 });
 

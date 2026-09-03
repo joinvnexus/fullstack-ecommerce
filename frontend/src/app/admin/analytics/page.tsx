@@ -29,6 +29,7 @@ import {
 } from 'recharts';
 import { AdminStatsCard } from '../components/AdminStatsCard';
 import { adminApi } from '@/lib/api/adminApi';
+import { toast } from 'sonner';
 
 const AnalyticsPage = () => {
   const [analyticsData, setAnalyticsData] = useState({
@@ -95,11 +96,24 @@ const AnalyticsPage = () => {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      // In real implementation, fetch from API
-      // const response = await adminApi.analytics.getData();
-      // setAnalyticsData(response.data);
-    } catch (error) {
+      const response = await adminApi.dashboard.getStats();
+      const { stats, topProducts } = response.data;
+
+      setAnalyticsData({
+        totalRevenue: stats.totalRevenue,
+        totalOrders: stats.totalOrders,
+        totalCustomers: stats.totalCustomers,
+        conversionRate: analyticsData.conversionRate,
+        averageOrderValue: stats.totalOrders > 0 ? stats.totalRevenue / stats.totalOrders : 0,
+        topProducts: topProducts.map((p: any) => ({ name: p.title || p.name, sales: p.stock || 0 })),
+        revenueByMonth: analyticsData.revenueByMonth,
+        customerAcquisition: analyticsData.customerAcquisition,
+        orderStatusDistribution: analyticsData.orderStatusDistribution,
+        categoryPerformance: analyticsData.categoryPerformance,
+      });
+    } catch (error: any) {
       console.error('Error fetching analytics:', error);
+      toast.error(error.message || 'Failed to fetch analytics data');
     } finally {
       setLoading(false);
     }

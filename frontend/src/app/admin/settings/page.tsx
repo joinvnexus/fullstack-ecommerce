@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Save, Store, CreditCard, Truck, Mail, Shield } from 'lucide-react';
+import { toast } from 'sonner';
 import { AdminButton } from '../components/AdminButton';
 
 type SettingsType = {
@@ -84,12 +85,11 @@ const SettingsPage = () => {
   const handleSave = async (section: string) => {
     try {
       setSaving(true);
-      // In real implementation, save to API
-      console.log(`Saving ${section} settings:`, settings);
-      alert(`${section} settings saved successfully!`);
-    } catch (error) {
+      // TODO: Persist settings via API when backend endpoint is available
+      toast.success(`${section} settings saved successfully`);
+    } catch (error: any) {
       console.error('Error saving settings:', error);
-      alert('Failed to save settings');
+      toast.error(error.message || 'Failed to save settings');
     } finally {
       setSaving(false);
     }

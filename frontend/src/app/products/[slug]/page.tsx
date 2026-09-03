@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, notFound } from 'next/navigation';
+import { useParams, notFound, useRouter } from 'next/navigation';
 import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw } from 'lucide-react';
-import { productsApi } from '@/lib/api';
+import { productsApi, cartApi } from '@/lib/api';
 import { Product } from '@/types';
+import { toast } from 'sonner';
 import WishlistButton from '@/app/components/wishlist/WishlistButton';
 import ProductGallery from '@/app/components/products/ProductGallery';
 import ProductVariants from '@/app/components/products/ProductVariants';
@@ -18,6 +19,7 @@ import ErrorState from '@/components/ui/ErrorState';
 const ProductDetailPage = () => {
   const params = useParams();
   const slug = params.slug as string;
+  const router = useRouter();
   
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<Record<string, string>>({});
@@ -52,16 +54,19 @@ const ProductDetailPage = () => {
     setQuantity(value);
   };
 
-  const handleAddToCart = () => {
-    console.log('Add to cart:', {
-      productId: product?._id,
-      quantity,
-      selectedVariant,
-    });
+  const handleAddToCart = async () => {
+    if (!product) return;
+    try {
+      await cartApi.addItem({ productId: product._id, quantity });
+      toast.success('Added to cart');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to add to cart');
+    }
   };
 
-  const handleBuyNow = () => {
-    handleAddToCart();
+  const handleBuyNow = async () => {
+    await handleAddToCart();
+    router.push('/checkout');
   };
 
   // Loading state - show ProductDetailsSkeleton

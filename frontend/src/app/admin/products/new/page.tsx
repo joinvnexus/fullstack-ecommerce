@@ -14,6 +14,8 @@ import {
   Eye,
   Image as ImageIcon
 } from 'lucide-react';
+import { toast } from 'sonner';
+import { adminApi } from '@/lib/api/adminApi';
 
 const productSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
@@ -111,13 +113,12 @@ const ProductFormPage = () => {
   const onSubmit = async (data: ProductFormData) => {
     try {
       setIsSubmitting(true);
-      console.log('Product data:', data);
-      // In real implementation, submit to API
-      alert('Product saved successfully!');
+      await adminApi.products.create(data);
+      toast.success('Product created successfully');
       router.push('/admin/products');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving product:', error);
-      alert('Failed to save product');
+      toast.error(error.message || 'Failed to save product');
     } finally {
       setIsSubmitting(false);
     }

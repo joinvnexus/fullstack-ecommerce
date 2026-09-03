@@ -127,7 +127,7 @@ export const cartApi = {
 // Orders API
 export const ordersApi = {
   create: (data: CreateOrderData) => api.post<Order>('/orders', data),
-  getMyOrders: (params?: Record<string, unknown>) => api.get<PaginatedResponse<Order>>('/orders/my-orders', { params }),
+  getMyOrders: (params?: Record<string, unknown>) => api.get<Order[]>('/orders/my-orders', { params }),
   getOrder: (id: string) => api.get<Order>(`/orders/${id}`),
 };
 

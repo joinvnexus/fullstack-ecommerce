@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Package, ShoppingBag } from 'lucide-react';
 import { ordersApi } from '@/lib/api';
-import { Order, PaginatedResponse } from '@/types';
+import { Order } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import AccountLayout from '@/app/components/account/AccountLayout';
 import LoadingSpinner from '@/app/components/ui/LoadingSpinner';
@@ -35,7 +35,7 @@ const OrdersPage = () => {
       setError(null);
       setIsLoading(true);
       const response = await ordersApi.getMyOrders();
-      setOrders((response as unknown as PaginatedResponse<Order>).data);
+      setOrders(response.data);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to load orders';
       setError(message);

@@ -85,7 +85,6 @@ backend/
     │       └── products.seed.ts
     └── utils/                    # Utility functions
         ├── auth.ts               # Auth utilities
-        ├── authUtils.ts          # Auth helpers
         ├── logger.ts             # Logging
         ├── rolePermissions.ts    # Role definitions
         └── validation.ts         # Validation schemas
@@ -210,7 +209,8 @@ frontend/
     │   ├── useSearch.ts          # Search hook
     │   └── useWishlist.ts        # Wishlist hook
     ├── lib/                      # Utility libraries
-    │   ├── api.ts                # Main API client
+    │   ├── api.ts                # Main API client (axios + CSRF + interceptor)
+    │   ├── adminApi.ts           # Admin API client
     │   └── utils.ts              # Utility functions
     ├── store/                    # State management
     │   ├── cartStore.ts          # Cart state
@@ -230,7 +230,7 @@ frontend/
 - **Zod** - Validation
 
 ### Frontend
-- **Next.js 14** - React framework
+- **Next.js 16** - React framework
 - **TypeScript** - Type safety
 - **Tailwind CSS** - Styling
 - **Zustand** - State management

@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { CreditCard, CheckCircle } from 'lucide-react';
+import api from '@/lib/api';
+
 
 interface StripeCheckoutProps {
   orderId: string;
@@ -29,21 +31,14 @@ const StripeCheckout = ({ orderId, amount, onSuccess, onError }: StripeCheckoutP
     setError(null);
 
     try {
-      // 1. Create payment intent
-      const response = await fetch('/api/payments/stripe/intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ orderId }),
-      });
+      // 1. Create payment intent via axios API client (CSRF-protected, cookie-auth)
+      const response = await api.post<{ clientSecret: string }>('/payments/stripe/intent', { orderId });
 
-      const { data } = await response.json();
-
-      if (!response.ok) {
+      if (!response.data || !response.data.clientSecret) {
         throw new Error('Failed to create payment intent');
       }
+
+      const clientSecret = response.data.clientSecret;
 
       // 2. Confirm payment with Stripe
       const cardElement = elements.getElement(CardElement);
@@ -53,7 +48,7 @@ const StripeCheckout = ({ orderId, amount, onSuccess, onError }: StripeCheckoutP
       }
 
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
-        data.clientSecret,
+        clientSecret,
         {
           payment_method: {
             card: cardElement,

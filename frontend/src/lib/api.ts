@@ -3,25 +3,54 @@ import { PaginatedResponse, Product, Category, User, Cart, Order, LoginCredentia
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-// CSRF token — stored in memory only (NOT localStorage — XSS vulnerable)
-let csrfToken: string | null = null;
+// CSRF token — stored in sessionStorage (survives page reload, cleared on tab close)
+// NOT localStorage (persistent XSS risk) or pure in-memory (lost on reload)
+const CSRF_TOKEN_KEY = 'csrf_token';
+
+const getStoredCsrfToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return sessionStorage.getItem(CSRF_TOKEN_KEY);
+};
+
+const setStoredCsrfToken = (token: string | null): void => {
+  if (typeof window === 'undefined') return;
+  if (token) {
+    sessionStorage.setItem(CSRF_TOKEN_KEY, token);
+  } else {
+    sessionStorage.removeItem(CSRF_TOKEN_KEY);
+  }
+};
+
+let csrfToken: string | null = getStoredCsrfToken();
+let csrfTokenPromise: Promise<string> | null = null;
 
 export const fetchCsrfToken = async (): Promise<string> => {
   if (csrfToken) return csrfToken;
-  try {
-    const response = await axios.get(`${API_URL}/csrf-token`, {
-      withCredentials: true,
-    });
-    csrfToken = response.data.csrfToken;
-    return csrfToken ?? '';
-  } catch (error) {
-    console.error('Failed to fetch CSRF token:', error);
-    return '';
-  }
+  if (csrfTokenPromise) return csrfTokenPromise;
+
+  csrfTokenPromise = (async () => {
+    try {
+      const response = await axios.get(`${API_URL}/csrf-token`, {
+        withCredentials: true,
+      });
+      const token: string = response.data.csrfToken ?? '';
+      csrfToken = token;
+      setStoredCsrfToken(token);
+      return token;
+    } catch (error) {
+      console.error('Failed to fetch CSRF token:', error);
+      return '';
+    } finally {
+      csrfTokenPromise = null;
+    }
+  })();
+
+  return csrfTokenPromise;
 };
 
 export const clearCsrfToken = (): void => {
   csrfToken = null;
+  setStoredCsrfToken(null);
 };
 
 const api = axios.create({
@@ -32,11 +61,16 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor — attach CSRF token to unsafe methods
+// Request interceptor — proactively fetch CSRF token for unsafe methods
 const unsafeMethods = ['post', 'put', 'delete', 'patch'];
-api.interceptors.request.use((config) => {
-  if (csrfToken && unsafeMethods.includes(config.method || '')) {
-    config.headers['X-CSRF-Token'] = csrfToken;
+api.interceptors.request.use(async (config) => {
+  if (unsafeMethods.includes(config.method || '')) {
+    if (!csrfToken) {
+      await fetchCsrfToken();
+    }
+    if (csrfToken) {
+      config.headers['X-CSRF-Token'] = csrfToken;
+    }
   }
   return config;
 });

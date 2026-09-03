@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { PaginatedResponse, Product, Category, User, Cart, Order, LoginCredentials, RegisterData, UpdateProfileData, ChangePasswordData, AddressData, AddToCartData, UpdateCartItemData, CreateOrderData, SearchParams, AutocompleteParams, DashboardStats, AdminProductData, AdminOrderUpdate } from '@/types';
+import { PaginatedResponse, Product, Category, User, Cart, Order, LoginCredentials, RegisterData, UpdateProfileData, ChangePasswordData, AddressData, AddToCartData, UpdateCartItemData, CreateOrderData, SearchParams, AutocompleteParams } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -141,27 +141,6 @@ export const paymentsApi = {
   executeBkashPayment: (data: { paymentId: string }) => api.post('/payments/bkash/execute', data),
   initializeNagadPayment: (data: { amount: number; orderId: string }) => api.post('/payments/nagad/initialize', data),
   verifyNagadPayment: (data: { paymentRef: string }) => api.post('/payments/nagad/verify', data),
-};
-
-// Admin API
-export const adminApi = {
-  // Dashboard
-  getDashboardStats: () => api.get<DashboardStats>('/admin/dashboard/stats'),
-  
-  // Products
-  getAdminProducts: (params?: Record<string, unknown>) => api.get<PaginatedResponse<Product>>('/admin/products', { params }),
-  createProduct: (data: AdminProductData) => api.post('/admin/products', data),
-  updateProduct: (id: string, data: Partial<AdminProductData>) => api.put(`/admin/products/${id}`, data),
-  deleteProduct: (id: string) => api.delete(`/admin/products/${id}`),
-  bulkProductAction: (data: { action: string; productIds: string[] }) => api.post('/admin/products/bulk', data),
-  
-  // Orders
-  getAdminOrders: (params?: Record<string, unknown>) => api.get<PaginatedResponse<Order>>('/admin/orders', { params }),
-  updateOrderStatus: (id: string, data: AdminOrderUpdate) => api.patch(`/admin/orders/${id}/status`, data),
-  
-  // Users
-  getAdminUsers: (params?: Record<string, unknown>) => api.get<PaginatedResponse<User>>('/admin/users', { params }),
-  updateUserRole: (id: string, data: { role: User['role'] }) => api.patch(`/admin/users/${id}/role`, data),
 };
 
 // Wishlist API

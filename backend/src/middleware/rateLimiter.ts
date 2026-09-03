@@ -39,6 +39,19 @@ const createLimiter = (options: Record<string, unknown>) => {
   return rateLimit(config as any);
 };
 
+// Global rate limiter (applied to all routes via app.use)
+export const createRateLimiter = () => {
+  return createLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: 'Too many requests from this IP, try later',
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: keyByUserOrIp,
+    skip: (req: any) => ['/api/health', '/api/test'].includes(req.path),
+  });
+};
+
 // Login limiter (stricter - prevents brute force)
 export const loginLimiter = createLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes

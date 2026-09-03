@@ -7,7 +7,7 @@ import { AppError } from '../middleware/errorHandler.js';
 import { emailService } from '../services/email.service.js';
 import logger from '../utils/logger.js';
 import AuthUtils from '../utils/auth.js';
-import { generateAndSetTokens, sanitizeUserResponse } from '../utils/authUtils.js';
+import { generateAndSetTokens, sanitizeUserResponse } from '../utils/auth.js';
 import type { AuthenticatedRequest } from '../middleware/authMiddleware.js';
 
 // Register new user

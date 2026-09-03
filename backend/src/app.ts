@@ -16,7 +16,7 @@ import paymentRoutes from "./routes/payments.js";
 import adminRoutes from './routes/admin.js';
 import wishlistRoutes from './routes/wishlist.js';
 import searchRoutes from './routes/search.js';
-import { createRateLimiter } from "./services/rateLimiter.js";
+import { createRateLimiter } from "./middleware/rateLimiter.js";
 
 const app = express();
 

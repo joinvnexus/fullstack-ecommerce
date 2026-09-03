@@ -153,17 +153,9 @@ export const removeFromCartSchema = z.object({
 
 // ===============================
 // CUSTOM VALIDATION ERROR CLASS
+// Imported from errorHandler to avoid duplicate definition
 // ===============================
-
-class ValidationError extends Error {
-  errors: Array<{ path: string; message: string }>;
-
-  constructor(errors: Array<{ path: string; message: string }>) {
-    super('Validation failed');
-    this.name = 'ValidationError';
-    this.errors = errors;
-  }
-}
+import { ValidationError } from '../middleware/errorHandler.js';
 
 // ===============================
 // VALIDATION MIDDLEWARE
@@ -191,4 +183,4 @@ export const validate = (schema: ZodSchema<any>) => {
   };
 };
 
-export { ValidationError };
+export { ValidationError } from '../middleware/errorHandler.js';

@@ -31,6 +31,8 @@ import { AdminStatsCard } from '../components/AdminStatsCard';
 import { adminApi } from '@/lib/api/adminApi';
 import { toast } from 'sonner';
 
+const CURRENCY_SYMBOL = '৳';
+
 const AnalyticsPage = () => {
   const [analyticsData, setAnalyticsData] = useState({
     totalRevenue: 245000,
@@ -145,7 +147,7 @@ const AnalyticsPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <AdminStatsCard
           title="Total Revenue"
-          value={`৳${analyticsData.totalRevenue.toLocaleString()}`}
+          value={`${CURRENCY_SYMBOL}${analyticsData.totalRevenue.toLocaleString()}`}
           icon={DollarSign}
           color="green"
           trend={{ value: 12.5, label: 'from last month' }}
@@ -185,7 +187,7 @@ const AnalyticsPage = () => {
                 <XAxis dataKey="month" stroke="#666" />
                 <YAxis stroke="#666" />
                 <Tooltip formatter={(value, name) => [
-                  name === 'revenue' ? `৳${(value || 0).toLocaleString()}` : (value || 0),
+                  name === 'revenue' ? `${CURRENCY_SYMBOL}${(value || 0).toLocaleString()}` : (value || 0),
                   name === 'revenue' ? 'Revenue' : 'Orders'
                 ]} />
                 <Area
@@ -262,7 +264,7 @@ const AnalyticsPage = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis type="number" stroke="#666" />
                 <YAxis dataKey="category" type="category" stroke="#666" width={100} />
-                <Tooltip formatter={(value) => [`৳${(value || 0).toLocaleString()}`, 'Revenue']} />
+                <Tooltip formatter={(value) => [`${CURRENCY_SYMBOL}${(value || 0).toLocaleString()}`, 'Revenue']} />
                 <Bar dataKey="revenue" fill="#F59E0B" />
               </BarChart>
             </ResponsiveContainer>

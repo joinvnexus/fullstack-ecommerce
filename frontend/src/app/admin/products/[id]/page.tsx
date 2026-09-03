@@ -16,6 +16,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { adminApi, Product } from '@/lib/api/adminApi';
+import { categoriesApi } from '@/lib/api';
 import LoadingSpinner from '@/app/components/ui/LoadingSpinner';
 
 const productSchema = z.object({
@@ -60,13 +61,8 @@ const ProductEditPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [previewImage, setPreviewImage] = useState<string>('');
-  const [categories, setCategories] = useState([
-    { id: '1', name: 'Electronics' },
-    { id: '2', name: 'Clothing' },
-    { id: '3', name: 'Home & Kitchen' },
-    { id: '4', name: 'Books' },
-    { id: '5', name: 'Sports' },
-  ]);
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
 
   const {
     register,
@@ -117,7 +113,26 @@ const ProductEditPage = () => {
 
   useEffect(() => {
     fetchProduct();
+    fetchCategories();
   }, [productId]);
+
+  const fetchCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+      const response = await categoriesApi.getAll();
+      const data = response.data;
+      setCategories(
+        (data || []).map((cat: any) => ({
+          id: cat._id?.toString?.() || cat.id || cat._id,
+          name: cat.name,
+        }))
+      );
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
 
   const fetchProduct = async () => {
     if (!productId) return;

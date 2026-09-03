@@ -23,6 +23,21 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
   ]
 };
 
+// Helper function to check if a role has a specific permission
+export const hasPermission = (role: string, resource: string, action: string): boolean => {
+  const permissions = ROLE_PERMISSIONS[role] || [];
+
+  if (permissions.includes('*')) return true;
+
+  const requiredPermission = `${resource}.${action}`;
+  return permissions.includes(requiredPermission);
+};
+
+// Helper function to get all permissions for a role
+export const getRolePermissions = (role: string): string[] => {
+  return ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS] || [];
+};
+
 // Available roles (for future expansion)
 export const AVAILABLE_ROLES = ['customer', 'admin', 'manager', 'support', 'vendor'];
 

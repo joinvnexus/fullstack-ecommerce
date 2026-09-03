@@ -123,7 +123,7 @@ An exhaustive 21-phase audit of the repository at `E:\webdevlopment-learn\fullst
 | # | Location | Issue |
 |---|----------|-------|
 | F1 | `backend/.env.example:4` | ✅ **Resolved**: `${VAR}` expansion syntax was invalid in `.env` files. **Fixed**: replaced with literal placeholder values (`your_user`, `your_password`, etc.) and added trailing comment explaining no interpolation is available. |
-| F2 | `frontend/` directory | **No ESLint config** (`eslint`, `eslint-config`, `.eslintrc.*` — all absent); `next lint` would fail |
+| F2 | `frontend/` directory | ✅ **Resolved**: **No ESLint config** (`eslint`, `eslint-config-next`, `.eslintrc.*` — all absent); `next lint` would fail. **Fixed**: installed `eslint@9` + `eslint-config-next@16.3.4`, created `eslint.config.js` (flat config), updated `lint` script. ESLint reports 65 errors, 44 warnings in existing code. |
 | F3 | `backend/src/models/AuditLog.ts` | ✅ **Resolved**: Index was on `{ timestamp: 1 }` but schema uses `{ timestamps: true }` creating `createdAt`/`updatedAt`. **Verified current code**: index uses `createdAt: -1` (line 31), matching the `timestamps: true` field name. No fix needed. |
 | F4 | `backend/src/middleware/rateLimiter.ts:29-33` | ✅ **Resolved**: `loginLimiter.handler` used `void blockIP(ip)` (async-void bug) and `skip` used `void checkBlockedIP(ip)` then returned `false`. **Fixed** (via consolidation in Item 9/A2): handler now `await blockIP(ip)`, skip now `return await checkBlockedIP(ip)`. |
 | F5 | `backend/src/lib/api.ts:31` / `frontend/src/lib/api.ts:4` | `baseURL: process.env.NEXT_PUBLIC_API_URL` — no fallback if env var is undefined; requests silently fail to `undefined/api/...` |

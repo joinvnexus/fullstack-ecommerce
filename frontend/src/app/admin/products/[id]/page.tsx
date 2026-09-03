@@ -33,7 +33,7 @@ const productSchema = z.object({
   tags: z.array(z.object({ name: z.string().min(1, 'Tag name is required') })).optional(),
   status: z.enum(['draft', 'active', 'archived']),
   images: z.array(z.object({
-    url: z.string().url('Invalid URL'),
+    url: z.string().min(1, 'Image URL is required'),
     alt: z.string().min(1, 'Alt text is required'),
     isPrimary: z.boolean(),
   })).min(1, 'At least one image is required'),

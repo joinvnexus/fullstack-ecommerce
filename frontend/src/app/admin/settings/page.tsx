@@ -14,10 +14,7 @@ type SettingsType = {
   timezone: string;
   stripeEnabled: boolean;
   stripePublicKey: string;
-  stripeSecretKey: string;
   bkashEnabled: boolean;
-  bkashAppKey: string;
-  bkashAppSecret: string;
   nagadEnabled: boolean;
   freeShippingThreshold: number;
   standardShippingRate: number;
@@ -26,7 +23,6 @@ type SettingsType = {
   smtpHost: string;
   smtpPort: string;
   smtpUser: string;
-  smtpPassword: string;
   sessionTimeout: number;
   passwordMinLength: number;
   twoFactorEnabled: boolean;
@@ -56,10 +52,7 @@ const SettingsPage = () => {
     // Payment Settings
     stripeEnabled: true,
     stripePublicKey: 'pk_test_...',
-    stripeSecretKey: 'sk_test_...',
     bkashEnabled: true,
-    bkashAppKey: 'bkash_app_key',
-    bkashAppSecret: 'bkash_app_secret',
     nagadEnabled: false,
 
     // Shipping Settings
@@ -72,7 +65,6 @@ const SettingsPage = () => {
     smtpHost: 'smtp.gmail.com',
     smtpPort: '587',
     smtpUser: 'noreply@shopeasy.com',
-    smtpPassword: 'password',
 
     // Security Settings
     sessionTimeout: 24,
@@ -120,10 +112,7 @@ const SettingsPage = () => {
       fields: [
         { key: 'stripeEnabled', label: 'Enable Stripe', type: 'checkbox' as const },
         { key: 'stripePublicKey', label: 'Stripe Public Key', type: 'text' as const, dependsOn: 'stripeEnabled' },
-        { key: 'stripeSecretKey', label: 'Stripe Secret Key', type: 'password' as const, dependsOn: 'stripeEnabled' },
         { key: 'bkashEnabled', label: 'Enable bKash', type: 'checkbox' as const },
-        { key: 'bkashAppKey', label: 'bKash App Key', type: 'text' as const, dependsOn: 'bkashEnabled' },
-        { key: 'bkashAppSecret', label: 'bKash App Secret', type: 'password' as const, dependsOn: 'bkashEnabled' },
         { key: 'nagadEnabled', label: 'Enable Nagad', type: 'checkbox' as const },
       ],
     },
@@ -146,7 +135,6 @@ const SettingsPage = () => {
         { key: 'smtpHost', label: 'SMTP Host', type: 'text' as const },
         { key: 'smtpPort', label: 'SMTP Port', type: 'text' as const },
         { key: 'smtpUser', label: 'SMTP Username', type: 'text' as const },
-        { key: 'smtpPassword', label: 'SMTP Password', type: 'password' as const },
       ],
     },
     {

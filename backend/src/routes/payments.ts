@@ -210,12 +210,22 @@ router.post("/bkash/create", authenticate, async (req, res, next) => {
   }
 });
 
-router.post("/bkash/execute", async (req, res, next) => {
+router.post("/bkash/execute", authenticate, async (req, res, next) => {
   try {
     const { paymentID } = req.body;
+    const userId = (req as any).user.userId;
 
     if (!paymentID) {
       throw new AppError("Payment ID required", 400);
+    }
+
+    // Verify order ownership before executing
+    const order = await Order.findOne({ "payment.intentId": paymentID });
+    if (!order) {
+      throw new AppError("Order not found", 404);
+    }
+    if (order.userId.toString() !== userId) {
+      throw new AppError("Order not found", 404);
     }
 
     // Execute payment
@@ -309,12 +319,22 @@ router.post("/nagad/initialize", authenticate, async (req, res, next) => {
   }
 });
 
-router.post("/nagad/verify", async (req, res, next) => {
+router.post("/nagad/verify", authenticate, async (req, res, next) => {
   try {
     const { paymentRefId } = req.body;
+    const userId = (req as any).user.userId;
 
     if (!paymentRefId) {
       throw new AppError("Payment Reference ID required", 400);
+    }
+
+    // Verify order ownership before verifying payment
+    const order = await Order.findOne({ "payment.intentId": paymentRefId });
+    if (!order) {
+      throw new AppError("Order not found", 404);
+    }
+    if (order.userId.toString() !== userId) {
+      throw new AppError("Order not found", 404);
     }
 
     // Verify payment

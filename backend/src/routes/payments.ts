@@ -7,6 +7,7 @@ import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import { bkashService } from "../services/bkash.service.js";
 import { nagadService } from "../services/nagad.service.js";
+import logger from "../utils/logger.js";
 
 const router = express.Router();
 
@@ -352,42 +353,70 @@ router.post("/nagad/verify", authenticate, async (req, res, next) => {
 router.post("/nagad/callback", async (req, res, next) => {
   try {
     const callbackData = req.body;
+    const paymentReferenceId = callbackData.paymentReferenceId;
 
-    // Update order based on callback
-    const order = await Order.findOne({ "payment.intentId": callbackData.paymentReferenceId });
-    if (order) {
-      if (callbackData.status === "Success") {
-        await Order.findOneAndUpdate(
-          { "payment.intentId": callbackData.paymentReferenceId },
-          {
-            status: "processing",
-            "payment.status": "succeeded",
-            "payment.transactionId": callbackData.trxId,
-            updatedAt: new Date(),
-          }
-        );
+    if (!paymentReferenceId) {
+      logger.warn('Nagad callback missing paymentReferenceId');
+      return res.redirect(`${process.env.FRONTEND_URL}/checkout/failed`);
+    }
 
-        res.redirect(`${process.env.FRONTEND_URL}/checkout/success`);
-      } else {
-        // Payment failed, update status and restore stock
+    const order = await Order.findOne({ "payment.intentId": paymentReferenceId });
+    if (!order) {
+      logger.warn('Nagad callback received for unknown order', { paymentReferenceId });
+      return res.redirect(`${process.env.FRONTEND_URL}/checkout/failed`);
+    }
+
+    if (order.payment.status === 'succeeded') {
+      logger.info('Nagad callback already processed', { paymentReferenceId, orderId: order._id });
+      return res.redirect(`${process.env.FRONTEND_URL}/checkout/success`);
+    }
+
+    try {
+      const verificationResult = await nagadService.verifyPayment(paymentReferenceId);
+      
+      if (!verificationResult.success || verificationResult.status !== 'Success') {
+        logger.warn('Nagad payment verification failed', { 
+          paymentReferenceId, 
+          status: verificationResult.status,
+          message: verificationResult.message 
+        });
+        
         await Order.findOneAndUpdate(
-          { "payment.intentId": callbackData.paymentReferenceId },
+          { "payment.intentId": paymentReferenceId },
           {
-            status: "pending",
+            status: 'pending',
             "payment.status": "failed",
             updatedAt: new Date(),
           }
         );
-        // Restore stock
-        for (const item of order.items) {
-          await Product.findByIdAndUpdate(item.productId, {
-            $inc: { stock: item.quantity },
-          });
-        }
-        res.redirect(`${process.env.FRONTEND_URL}/checkout/failed?reason=${callbackData.reason}`);
+        
+        return res.redirect(`${process.env.FRONTEND_URL}/checkout/failed?reason=${encodeURIComponent(verificationResult.message || 'Payment verification failed')}`);
       }
-    } else {
-      res.redirect(`${process.env.FRONTEND_URL}/checkout/failed`);
+
+      await Order.findOneAndUpdate(
+        { "payment.intentId": paymentReferenceId },
+        {
+          status: 'processing',
+          "payment.status": "succeeded",
+          "payment.transactionId": verificationResult.transactionId || callbackData.trxId,
+          updatedAt: new Date(),
+        }
+      );
+
+      logger.info('Nagad payment verified and order updated', { 
+        paymentReferenceId, 
+        orderId: order._id,
+        transactionId: verificationResult.transactionId 
+      });
+
+      res.redirect(`${process.env.FRONTEND_URL}/checkout/success`);
+    } catch (verificationError) {
+      logger.error('Nagad callback verification error', { 
+        paymentReferenceId, 
+        error: verificationError instanceof Error ? verificationError.message : 'Unknown error'
+      });
+      
+      return res.redirect(`${process.env.FRONTEND_URL}/checkout/failed`);
     }
   } catch (error) {
     next(error);

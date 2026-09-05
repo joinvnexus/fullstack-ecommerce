@@ -58,8 +58,16 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
     getSessionIdentifier: (req) => req.ip || req.socket.remoteAddress || 'unknown',
     getCsrfTokenFromRequest: (req) => req.headers['x-csrf-token'] as string | undefined,
     ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
-    skipCsrfProtection: (req) => req.path.startsWith('/api/payments/stripe/webhook'),
-});
+    skipCsrfProtection: (req) => {
+      const path = req.path;
+      // Provider webhooks/callbacks are server-to-server and do not carry browser CSRF tokens.
+      // They must rely on provider-specific authenticity verification instead.
+      if (path.startsWith('/api/payments/stripe/webhook')) return true;
+      if (path === '/api/payments/bkash/callback') return true;     // bKash callback verified via bkashService.verifyCallback()
+      if (path === '/api/payments/nagad/callback') return true;     // Nagad callback — P0-5: signature verification required
+      return false;
+    },
+  });
 
 // CSRF middleware (protects all non-safe methods except skipped routes)
 app.use(doubleCsrfProtection);

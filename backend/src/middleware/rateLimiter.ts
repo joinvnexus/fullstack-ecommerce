@@ -4,7 +4,7 @@ import logger from '../utils/logger.js';
 import { getRedisClient } from '../config/redis.js';
 
 const keyByUserOrIp = (req: any) =>
-  req.user ? `user_${req.user.userId}` : ipKeyGenerator(req);
+  req.user ? `user_${req.user.userId}` : ipKeyGenerator(req.ip);
 
 const redisClient = getRedisClient();
 
@@ -59,7 +59,7 @@ export const loginLimiter = createLimiter({
   standardHeaders: true,
   legacyHeaders: false,
   message: 'Too many login attempts, please try again later.',
-  keyGenerator: (req: any) => ipKeyGenerator(req as any),
+  keyGenerator: (req: any) => ipKeyGenerator(req.ip),
   handler: async (req: any, res: any) => {
     const ip = req.ip || 'unknown';
     logger.warn(`Login rate limit exceeded: ${req.method} ${req.path} IP: ${ip}`);
@@ -70,10 +70,6 @@ export const loginLimiter = createLimiter({
       retryAfter: 1800,
     });
   },
-  skip: async (req: any) => {
-    const ip = req.ip || 'unknown';
-    return await checkBlockedIP(ip);
-  },
 });
 
 // Register limiter (prevents spam registration)
@@ -83,7 +79,7 @@ export const registerLimiter = createLimiter({
   standardHeaders: true,
   legacyHeaders: false,
   message: 'Too many registration attempts, please try again later.',
-  keyGenerator: (req: any) => ipKeyGenerator(req as any),
+  keyGenerator: (req: any) => ipKeyGenerator(req.ip),
   handler: (req: any, res: any) => {
     logger.warn(`Register rate limit exceeded: ${req.method} ${req.path} IP: ${req.ip}`);
     res.status(429).json({
@@ -145,7 +141,7 @@ export const forgotPasswordLimiter = createLimiter({
   standardHeaders: true,
   legacyHeaders: false,
   message: 'Too many password reset attempts, please try again later.',
-  keyGenerator: (req: any) => ipKeyGenerator(req as any),
+  keyGenerator: (req: any) => ipKeyGenerator(req.ip),
   handler: (req: any, res: any) => {
     logger.warn(`Forgot password rate limit exceeded: ${req.method} ${req.path} IP: ${req.ip}`);
     res.status(429).json({
